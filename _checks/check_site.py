@@ -194,8 +194,11 @@ def main() -> int:
                 anchor_targets[key].add(target)
 
         # --- заглушки, запретные фразы, опечатки ---
+        # placeholder="+7 900 000-00-00" — это подсказка формата ввода,
+        # а не телефон компании: вырезаем такие атрибуты перед проверкой.
+        scan = re.sub(r'placeholder="[^"]*"', "", raw[f])
         for pattern, label in PLACEHOLDER_PATTERNS:
-            if re.search(pattern, raw[f], re.I):
+            if re.search(pattern, scan, re.I):
                 problems.append(f"{rel}: заглушка в публикации — {label}")
         low = page.text.lower()
         for phrase, why in FORBIDDEN_PHRASES:
