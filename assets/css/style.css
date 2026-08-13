@@ -19,6 +19,10 @@
   --maxw:1240px;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
+/* The `hidden` attribute is weaker than any class-based display rule, so a
+   class like .lead__done{display:flex} would silently override it and leave
+   "hidden" blocks visible. Neutralised once, globally. */
+[hidden]{display:none !important;}
 html{scroll-behavior:smooth;}
 /* Anchor targets must clear the sticky header, otherwise headings land underneath it */
 section[id], main[id]{scroll-margin-top:140px;}
@@ -351,14 +355,17 @@ footer{padding:72px 0 28px;}
 .article-header h1{font-size:clamp(28px,4vw,44px); margin-bottom:16px;}
 .article-header .meta{font-size:13px; color:var(--text-faint); display:flex; gap:16px; flex-wrap:wrap;}
 .article-body{max-width:760px; font-size:16px; color:var(--text-dim);}
-.article-body h2{font-family:'Oswald',sans-serif; text-transform:none; letter-spacing:0; color:var(--text); font-size:24px; font-weight:600; margin:40px 0 16px;}
-.article-body h3{font-family:'Oswald',sans-serif; text-transform:none; letter-spacing:0; color:var(--text); font-size:19px; font-weight:600; margin:28px 0 12px;}
-.article-body p{margin-bottom:18px; line-height:1.7;}
-.article-body ul, .article-body ol{margin:0 0 18px 20px; line-height:1.7;}
-.article-body ul{list-style:disc;}
-.article-body ol{list-style:decimal;}
-.article-body li{margin-bottom:8px;}
-.article-body a{color:var(--orange-soft); text-decoration:underline; text-underline-offset:2px;}
+/* Wrapped in :where() so these carry zero specificity — a descendant rule
+   like `.article-body h2` (0,1,1) would otherwise silently beat any future
+   single-class modifier (0,1,0) applied to the same heading. */
+:where(.article-body) h2{font-family:'Oswald',sans-serif; text-transform:none; letter-spacing:0; color:var(--text); font-size:24px; font-weight:600; margin:40px 0 16px;}
+:where(.article-body) h3{font-family:'Oswald',sans-serif; text-transform:none; letter-spacing:0; color:var(--text); font-size:19px; font-weight:600; margin:28px 0 12px;}
+:where(.article-body) p{margin-bottom:18px; line-height:1.7;}
+:where(.article-body) ul, :where(.article-body) ol{margin:0 0 18px 20px; line-height:1.7;}
+:where(.article-body) ul{list-style:disc;}
+:where(.article-body) ol{list-style:decimal;}
+:where(.article-body) li{margin-bottom:8px;}
+:where(.article-body) a{color:var(--orange-soft); text-decoration:underline; text-underline-offset:2px;}
 .article-body blockquote{
   border-left:2px solid var(--orange); padding:6px 0 6px 20px; margin:24px 0; color:var(--text);
   font-family:'Oswald',sans-serif; font-size:18px; font-weight:500; text-transform:none; letter-spacing:0;
