@@ -20,6 +20,8 @@
 }
 *{box-sizing:border-box; margin:0; padding:0;}
 html{scroll-behavior:smooth;}
+/* Anchor targets must clear the sticky header, otherwise headings land underneath it */
+section[id], main[id]{scroll-margin-top:140px;}
 body{
   background:var(--bg);
   color:var(--text);
@@ -95,7 +97,7 @@ header{
 }
 .logo .mark span{transform:rotate(-45deg); display:block;}
 .logo small{color:var(--text-faint); font-family:'Manrope',sans-serif; font-weight:600; font-size:10.5px; letter-spacing:0.14em; display:block; text-transform:uppercase;}
-nav.mainnav{display:flex; gap:34px;}
+nav.mainnav{display:flex; gap:26px;}
 nav.mainnav a{
   font-size:13.5px; font-weight:600; letter-spacing:0.03em; text-transform:uppercase;
   color:var(--text-dim); transition:color .15s;
@@ -103,6 +105,8 @@ nav.mainnav a{
 }
 nav.mainnav a:hover, nav.mainnav a.active{color:var(--text);}
 nav.mainnav a.active{color:var(--orange);}
+/* CTA duplicated inside the mobile dropdown — hidden while the desktop nav is shown */
+nav.mainnav .nav-cta{display:none;}
 .nav-right{display:flex; align-items:center; gap:22px;}
 .phone-block{text-align:right; display:none;}
 .phone-block .num{font-family:'Oswald',sans-serif; font-weight:600; font-size:16px;}
@@ -119,9 +123,13 @@ nav.mainnav a.active{color:var(--orange);}
 .btn-ghost{border-color:var(--panel-line); color:var(--text);}
 .btn-ghost:hover{border-color:var(--orange); color:var(--orange);}
 .btn-sm{padding:10px 18px; font-size:12px;}
-.burger{display:none; width:40px; height:40px; border:1px solid var(--panel-line); align-items:center; justify-content:center; background:none;}
+.burger{
+  display:none; width:44px; height:44px; border:1px solid var(--panel-line);
+  flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  background:none; flex-shrink:0;
+}
 .burger span, .burger::before, .burger::after{content:''; display:block; width:18px; height:2px; background:var(--text);}
-.burger{flex-direction:column; gap:4px;}
+.burger[aria-expanded="true"]{border-color:var(--orange);}
 
 /* ===== HERO ===== */
 .hero{position:relative; overflow:hidden; border-bottom:1px solid var(--panel-line);}
@@ -178,12 +186,12 @@ section{padding:96px 0; position:relative;}
 /* ===== BRANDS ===== */
 .brands-sec{padding:56px 0; border-top:1px solid var(--panel-line); border-bottom:1px solid var(--panel-line); background:var(--panel);}
 .marquee{overflow:hidden; position:relative;}
-.marquee-track{display:flex; gap:64px; width:max-content; animation:scroll 32s linear infinite;}
+.marquee-track{display:flex; gap:44px; width:max-content; animation:scroll 32s linear infinite;}
 .marquee-track span{
-  font-family:'Oswald',sans-serif; font-size:24px; font-weight:600; letter-spacing:0.04em;
-  color:var(--text-faint); white-space:nowrap; display:flex; align-items:center; gap:64px;
+  font-family:'Oswald',sans-serif; font-size:clamp(18px,2.4vw,24px); font-weight:600; letter-spacing:0.04em;
+  color:var(--text-faint); white-space:nowrap; display:flex; align-items:center; gap:44px;
 }
-.marquee-track span::after{content:'/'; color:var(--panel-line); margin-left:64px;}
+.marquee-track span::after{content:'/'; color:var(--panel-line);}
 @keyframes scroll{from{transform:translateX(0);} to{transform:translateX(-50%);}}
 
 /* ===== PROCESS ===== */
@@ -232,19 +240,23 @@ section{padding:96px 0; position:relative;}
 
 /* ===== CALC / LEAD FORM ===== */
 .calc-sec{background:var(--panel-alt); border-top:1px solid var(--panel-line); border-bottom:1px solid var(--panel-line);}
-.calc-grid{display:grid; grid-template-columns:0.9fr 1.1fr; gap:60px; align-items:start;}
+/* minmax(0,…) instead of a bare fr: a bare fr track cannot shrink below its
+   content's min-content width, and the long <select> option would otherwise
+   force the whole column — and the page — wider than the viewport. */
+.calc-grid{display:grid; grid-template-columns:minmax(0,0.9fr) minmax(0,1.1fr); gap:60px; align-items:start;}
 .calc-list li{display:flex; gap:14px; padding:16px 0; border-top:1px solid var(--panel-line); font-size:14.5px; color:var(--text-dim);}
 .calc-list li:last-child{border-bottom:1px solid var(--panel-line);}
 .calc-list li .chk{color:var(--teal); font-family:'Oswald',sans-serif; font-weight:700; flex-shrink:0;}
 form.lead{background:var(--bg); border:1px solid var(--panel-line); padding:36px;}
-.form-row{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;}
-.field{display:flex; flex-direction:column; gap:8px;}
+.form-row{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; margin-bottom:16px;}
+.field{display:flex; flex-direction:column; gap:8px; min-width:0;}
 .field.full{grid-column:1/-1;}
 .field label{font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-faint);}
 .field input, .field select, .field textarea{
   background:var(--panel); border:1px solid var(--panel-line); color:var(--text);
   padding:12px 14px; font-family:'Manrope',sans-serif; font-size:14.5px; border-radius:var(--radius);
   outline:none; transition:border-color .15s;
+  width:100%; min-width:0; max-width:100%;
 }
 .field input:focus, .field select:focus, .field textarea:focus{border-color:var(--orange);}
 .field textarea{resize:vertical; min-height:80px;}
@@ -358,25 +370,78 @@ footer{padding:72px 0 28px;}
 .article-cta p{font-family:'Oswald',sans-serif; font-size:17px; color:var(--text); max-width:400px; text-transform:none;}
 .article-nav{max-width:760px; margin-top:56px; padding-top:28px; border-top:1px solid var(--panel-line); font-size:13px; color:var(--text-faint);}
 
-@media (max-width: 980px){
-  nav.mainnav, .phone-block, .topbar{display:none;}
+/* Wide content inside articles scrolls in its own container instead of
+   pushing the page sideways */
+.table-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch; margin:24px 0;}
+.table-wrap table{margin:0; min-width:440px;}
+
+/* ===== TABLET / MOBILE =====
+   The nav collapses at 1120px, not 980px: with six links plus the CTA the
+   desktop row runs out of breathing room well before the old breakpoint. */
+@media (max-width: 1120px){
+  .phone-block, .topbar{display:none;}
   .burger{display:flex;}
+  section[id], main[id]{scroll-margin-top:96px;}
+
+  nav.mainnav{
+    display:none;
+    position:absolute; top:100%; left:0; right:0;
+    flex-direction:column; gap:0;
+    background:var(--panel);
+    padding:6px 32px 22px;
+    border-bottom:1px solid var(--panel-line);
+    max-height:calc(100vh - 100%); overflow-y:auto;
+  }
+  nav.mainnav.open{display:flex;}
+  nav.mainnav a{padding:14px 0; border-bottom:1px solid var(--panel-line); font-size:14px;}
+  nav.mainnav .nav-cta{
+    display:inline-flex; margin-top:18px; border-bottom:none; width:100%;
+  }
+  /* header CTA gets compact so logo + button + burger fit the row */
+  .nav-right{gap:14px;}
+  .nav-right > .btn{padding:11px 16px; font-size:12px;}
+
   .hero-inner{grid-template-columns:1fr; padding-top:48px;}
   .hero-art{height:280px; order:-1;}
   .stats-strip .wrap{grid-template-columns:repeat(2,1fr);}
   .stat:nth-child(3){border-left:none;}
   .cat-grid, .adv-grid, .listing-grid, .test-grid, .articles-grid{grid-template-columns:repeat(2,1fr);}
-  .calc-grid{grid-template-columns:1fr;}
+  .calc-grid{grid-template-columns:minmax(0,1fr); gap:40px;}
   .foot-grid{grid-template-columns:1fr 1fr;}
-  .proc-item{grid-template-columns:60px 1fr; }
-  .proc-item > div:nth-child(3){grid-column:2;}
+  .proc-item{grid-template-columns:60px 1fr;}
+  /* the description is a <p>, not a <div> — it must span the content column */
+  .proc-item > p{grid-column:2;}
 }
+
 @media (max-width: 620px){
   .wrap{padding:0 20px;}
   section{padding:64px 0;}
+  nav.mainnav{padding:6px 20px 22px;}
   .cat-grid, .adv-grid, .listing-grid, .test-grid, .foot-grid, .articles-grid{grid-template-columns:1fr;}
   .stats-strip .wrap{grid-template-columns:repeat(2,1fr);}
-  .form-row{grid-template-columns:1fr;}
+  .stat{padding:22px 20px;}
+  .form-row{grid-template-columns:minmax(0,1fr);}
   .cta-band .wrap{flex-direction:column; align-items:flex-start;}
   .article-cta{flex-direction:column; align-items:flex-start;}
+  form.lead{padding:24px 20px;}
+  /* 16px keeps iOS Safari from zooming the page when a field gets focus */
+  .field input, .field select, .field textarea{font-size:16px;}
+  /* comfortable tap targets */
+  .social-row a{width:42px; height:42px;}
+  .foot-col ul li{margin-bottom:14px;}
+}
+
+/* Below ~560px the header CTA no longer fits next to the logo and the
+   burger — the duplicate inside the dropdown takes over. */
+@media (max-width: 560px){
+  .nav-right > .btn{display:none;}
+  .navrow{padding:14px 20px;}
+  .logo{font-size:19px;}
+  .logo small{font-size:9.5px;}
+}
+
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto;}
+  .marquee-track{animation:none;}
+  *{transition-duration:.01ms !important;}
 }
