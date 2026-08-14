@@ -33,6 +33,7 @@ TEMPLATE_HUB = (TPL_DIR / "product_hub.html").read_text("utf-8")
 # Страницы, написанные руками. Сборка их не трогает, но учитывает в sitemap.
 HAND_WRITTEN = [
     "/", "/articles/",
+    "/articles/tehnicheskie-harakteristiki-vilochnyh-pogruzchikov.html",
     "/articles/kak-vybrat-ekskavator-iz-kitaya.html",
     "/articles/rastamozhka-spectehniki-2026.html",
     "/articles/lizing-spectehniki-dlya-yurlic.html",
