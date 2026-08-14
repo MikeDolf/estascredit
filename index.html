@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=8">
+<link rel="stylesheet" href="assets/css/style.css?v=9">
 </head>
 <body>
 
@@ -397,7 +397,7 @@
             <div class="form-row">
               <div class="field">
                 <label for="f-type">Тип техники</label>
-                <select id="f-type">
+                <select id="f-type" data-field="type">
                   <option>Экскаватор</option>
                   <option>Фронтальный погрузчик</option>
                   <option>Бульдозер</option>
@@ -409,27 +409,27 @@
               </div>
               <div class="field">
                 <label for="f-brand">Бренд / модель</label>
-                <input id="f-brand" type="text" placeholder="Например, XCMG XE215D">
+                <input id="f-brand" data-field="brand" type="text" placeholder="Например, XCMG XE215D">
               </div>
             </div>
             <div class="form-row">
               <div class="field">
                 <label for="f-name">Ваше имя</label>
-                <input id="f-name" type="text" placeholder="Иван Петров" required>
+                <input id="f-name" data-field="name" type="text" placeholder="Иван Петров" required>
               </div>
               <div class="field">
                 <label for="f-phone">Телефон</label>
-                <input id="f-phone" type="tel" placeholder="+7 900 000-00-00" required>
+                <input id="f-phone" data-field="phone" type="tel" placeholder="+7 900 000-00-00" required>
               </div>
             </div>
             <div class="field full" style="margin-bottom:16px;">
               <label for="f-comment">Комментарий</label>
-              <textarea id="f-comment" placeholder="Расскажите о задачах и сроках"></textarea>
+              <textarea id="f-comment" data-field="comment" placeholder="Расскажите о задачах и сроках"></textarea>
             </div>
             <!-- Ловушка для ботов: людям поле не видно, автозаполнение выключено. -->
             <div class="field full" aria-hidden="true" style="position:absolute; left:-9999px;">
               <label for="f-company">Не заполняйте это поле</label>
-              <input id="f-company" type="text" tabindex="-1" autocomplete="off">
+              <input id="f-company" data-field="company" type="text" tabindex="-1" autocomplete="off">
             </div>
             <button type="submit" class="btn btn-primary">Отправить заявку</button>
             <p class="form-note">Нажимая кнопку, вы соглашаетесь с политикой обработки персональных данных</p>
@@ -536,6 +536,6 @@
   </div>
 </footer>
 
-<script src="assets/js/main.js?v=8"></script>
+<script src="assets/js/main.js?v=9"></script>
 </body>
 </html>

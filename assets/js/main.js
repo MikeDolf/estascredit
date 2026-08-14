@@ -86,15 +86,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // не будет. Разворачивается из _relay/worker.js.
   const LEAD_ENDPOINT = '';
 
-  const leadForm = document.getElementById('leadForm');
-  if (leadForm) {
-    const val = (id) => (document.getElementById(id) || {}).value || '';
+  // Форм на коммерческой странице две — короткая в середине и полная внизу.
+  // Обработчик ищет поля внутри своей формы, а не по глобальному id, иначе
+  // вторая форма забирала бы значения у первой.
+  document.querySelectorAll('form.lead').forEach(leadForm => {
+    const val = (name) => {
+      const el = leadForm.querySelector(`[data-field="${name}"]`);
+      return el ? el.value : '';
+    };
 
     const showSuccess = () => {
       [...leadForm.children].forEach(c => {
         if (!c.classList.contains('form-success')) c.style.display = 'none';
       });
-      const success = document.getElementById('formSuccess');
+      const success = leadForm.querySelector('.form-success');
       if (success) success.style.display = 'block';
     };
 
@@ -126,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     leadForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      if (!val('f-name').trim() || !val('f-phone').trim()) {
+      if (!val('name').trim() || !val('phone').trim()) {
         showMessage('Заполните имя и телефон — без них мы не сможем ответить.', true);
         return;
       }
@@ -145,9 +150,9 @@ document.addEventListener('DOMContentLoaded', () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: val('f-name'), phone: val('f-phone'), type: val('f-type'),
-            brand: val('f-brand'), comment: val('f-comment'),
-            company: val('f-company'),           // honeypot, люди его не видят
+            name: val('name'), phone: val('phone'), type: val('type'),
+            brand: val('brand'), comment: val('comment'),
+            company: val('company'),             // honeypot, люди его не видят
             page: location.pathname,
           }),
         });
@@ -158,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btn) { btn.disabled = false; btn.textContent = label; }
       }
     });
-  }
+  });
 
   // ---- Sticky header shadow ---------------------------------------------
   const header = document.querySelector('header');

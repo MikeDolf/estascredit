@@ -94,6 +94,12 @@ def build_body(p, c) -> str:
     if not cfg.OWN_PRICES_CONFIRMED:
         parts.append("<!-- Блок цен не выводится: site_config.OWN_PRICES_CONFIRMED = False -->")
 
+    if c.logistics:
+        parts.append(f"<h2>Как техника доходит {esc(c.loc)}</h2><p>{esc(c.logistics)}</p>"
+                     f"<p>Маршрут влияет не только на срок, но и на стоимость: разные "
+                     f"плечи считаются по-разному, и в расчёте мы показываем логистику "
+                     f"отдельной строкой, а не растворяем её в цене техники.</p>")
+
     if cfg.DELIVERY_DAYS:
         lo, hi = cfg.DELIVERY_DAYS
         parts.append(f"<h2>Сроки</h2><p>От подписания договора до прибытия {esc(c.gen)} — "
@@ -102,8 +108,73 @@ def build_body(p, c) -> str:
     return "\n        ".join(parts)
 
 
+def build_specs(p, c) -> str:
+    """Таблица классов. Своя у каждого направления, поэтому на страницах
+    разных товаров она разная, а не один блок на всю сетку."""
+    if not p.specs:
+        return ""
+    rows = "".join(
+        f"<tr><td><strong>{esc(a)}</strong></td><td>{esc(b)}</td><td>{esc(d)}</td></tr>"
+        for a, b, d in p.specs)
+    return (
+        f'<div class="article-body" style="margin-top:40px;">'
+        f'<h2>Классы {esc(p.gen)} и под какие задачи</h2>'
+        f'<p>Класс подбирают не по бюджету, а по самому тяжёлому и самому неудобному '
+        f'грузу, который предстоит возить. Машина должна справляться с худшим случаем — '
+        f'именно на нём происходят отказы и опрокидывания.</p>'
+        f'<div class="table-wrap"><table><thead><tr><th>Класс</th>'
+        f'<th>Особенности</th><th>Где применяют</th></tr></thead>'
+        f'<tbody>{rows}</tbody></table></div></div>')
+
+
+def build_checklist(p, c) -> str:
+    if not p.checklist:
+        return ""
+    items = "".join(f"<li><strong>{esc(t)}.</strong> {esc(d)}</li>" for t, d in p.checklist)
+    return (
+        f'<div class="article-body" style="margin-top:40px;">'
+        f'<h2>Что проверить до заказа</h2>'
+        f'<p>Пять пунктов, из-за которых чаще всего приходится менять технику после '
+        f'поставки. Все они уточняются до контракта и ничего не стоят на этом этапе.</p>'
+        f'<ul>{items}</ul></div>')
+
+
+def build_order(p, c) -> str:
+    """Как проходит заказ. Шаги общие, но формулировки привязаны к товару
+    и городу, иначе блок был бы дословно одинаков на всей сетке."""
+    steps = [
+        ("Заявка",
+         f"Уточняем условия работы: где будет работать {p.nom}, какой груз, "
+         f"какие проезды и высота. По этим данным подбираем класс и исполнение."),
+        ("Предложение",
+         f"Присылаем подборку моделей с паспортными характеристиками и полной "
+         f"стоимостью поставки {c.loc} — с разбивкой по всем статьям расходов."),
+        ("Договор",
+         "Комплектация прописывается построчно, а не как «модель такая-то»: "
+         "именно на комплектации возникает большинство расхождений с ожиданиями."),
+        ("Проверка на заводе",
+         "Инженер проверяет технику до отгрузки и присылает фото- и видеоотчёт "
+         "с серийным номером конкретной машины."),
+        ("Доставка и оформление",
+         f"Берём на себя таможенное оформление и доставку {c.loc}. "
+         f"Техника приходит с полным комплектом документов, готовая к регистрации."),
+    ]
+    items = "".join(
+        f'<div class="proc-item"><div class="idx">0{i}</div>'
+        f'<div><span class="tag">{esc(t)}</span><h3>{esc(t)}</h3></div>'
+        f'<p>{esc(d)}</p></div>'
+        for i, (t, d) in enumerate(steps, 1))
+    return (
+        f'<div style="margin-top:48px;">'
+        f'<h2 style="font-family:\'Oswald\',sans-serif; text-transform:none; '
+        f'letter-spacing:0; font-size:24px; margin-bottom:8px;">Как проходит заказ</h2>'
+        f'<div class="process-list">{items}</div></div>')
+
+
 def build_faq(p, c) -> str:
-    qa = city_product.get_faq(c.slug, p.slug)
+    # Свои вопросы пары идут первыми, товарные — следом. Порядок важен:
+    # уникальное должно быть выше шаблонного.
+    qa = list(city_product.get_faq(c.slug, p.slug)) + list(p.faq)
     if not qa:
         return ""
     items = []
@@ -185,7 +256,7 @@ def main() -> int:
             {"@type": "LocalBusiness", "name": cfg.BRAND, "url": cfg.BASE_URL,
              "areaServed": c.nom},
         ]
-        faq_pairs = city_product.get_faq(c.slug, p.slug)
+        faq_pairs = list(city_product.get_faq(c.slug, p.slug)) + list(p.faq)
         if faq_pairs:
             # Вопросы в разметке — те же, что видны на странице.
             # Расхождение видимого и размеченного — нарушение правил Яндекса.
@@ -197,9 +268,12 @@ def main() -> int:
         html = render(TEMPLATE, {
             "title": esc(title), "description": esc(desc), "canonical": cfg.BASE_URL + url,
             "h1": esc(h1), "city_nom": esc(c.nom), "city_loc": esc(c.loc),
-            "product_gen": esc(p.gen),
+            "product_gen": esc(p.gen), "product_nom": esc(p.nom.capitalize()),
             "product_plural_title": esc(p.plural.capitalize()),
             "body": build_body(p, c), "faq": build_faq(p, c),
+            "specs_block": build_specs(p, c),
+            "checklist_block": build_checklist(p, c),
+            "order_block": build_order(p, c),
             "links": links,
             "foot_cities_block": foot_cities_block,
             "foot_products_block": foot_products_block,
