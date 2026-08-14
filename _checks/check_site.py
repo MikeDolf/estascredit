@@ -135,10 +135,9 @@ class Page(HTMLParser):
 
 
 def main() -> int:
-    files = sorted(
-        p for p in ROOT.rglob("*.html")
-        if "_checks" not in p.parts and "node_modules" not in p.parts
-    )
+    # _build содержит шаблоны с плейсхолдерами {{ }} — это не страницы.
+    skip = {"_checks", "_build", "node_modules", ".git"}
+    files = sorted(p for p in ROOT.rglob("*.html") if not skip & set(p.parts))
     if not files:
         print("Не найдено ни одной HTML-страницы")
         return 1
