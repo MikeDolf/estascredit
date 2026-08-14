@@ -26,7 +26,9 @@ from data.cities import CITIES, BY_SLUG as CITY_BY_SLUG
 from data.products import PRODUCTS, BY_SLUG as PROD_BY_SLUG, ROLLOUT_ORDER
 
 ROOT = Path(__file__).resolve().parent.parent
-TEMPLATE = (Path(__file__).parent / "templates" / "product_city.html").read_text("utf-8")
+TPL_DIR = Path(__file__).parent / "templates"
+TEMPLATE = (TPL_DIR / "product_city.html").read_text("utf-8")
+TEMPLATE_HUB = (TPL_DIR / "product_hub.html").read_text("utf-8")
 
 # Страницы, написанные руками. Сборка их не трогает, но учитывает в sitemap.
 HAND_WRITTEN = [
@@ -213,6 +215,93 @@ def main() -> int:
                                  ensure_ascii=False, separators=(",", ":")),
         })
 
+        out = ROOT / url.strip("/") / "index.html"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(html, "utf-8")
+        written.append(url)
+
+    # --- страницы-хабы направлений ---
+    # Без хаба сетка городов висит в воздухе: из каталога на неё не попасть,
+    # и внутренний вес на неё не течёт.
+    for p in PRODUCTS:
+        cities = [c for c in CITIES if (c.slug, p.slug) in in_build]
+        if not cities:
+            continue
+        url = f"/{p.slug}-iz-kitaya/"
+        assert url not in seen, f"Дубль URL {url}"
+        seen[url] = ("hub", p.slug)
+
+        h1 = f"{p.plural.capitalize()} из Китая"
+        title = f"{h1} — поставка под ключ с растаможкой | {cfg.BRAND}"
+        desc = (f"Поставка {p.gen} из Китая под ключ: подбор по задаче, контракт "
+                f"с заводом, инспекция перед отгрузкой, растаможка и доставка "
+                f"в {len(cities)} городов России.")
+
+        body = [
+            f"<p>Возим {esc(p.acc)} напрямую с китайских заводов: подбираем модель "
+            f"под условия работы, заключаем договор, проверяем технику перед "
+            f"отгрузкой и берём на себя таможенное оформление. Заказчик получает "
+            f"машину на своей площадке с полным комплектом документов.</p>"
+        ]
+        if p.used_for:
+            body.append("<h2>Типовые задачи</h2><ul>"
+                        + "".join(f"<li>{esc(x)}</li>" for x in p.used_for) + "</ul>")
+        if p.tonnage:
+            body.append(f"<h2>Что подбираем</h2><p><strong>Грузоподъёмность:</strong> "
+                        f"{esc(', '.join(p.tonnage))}.</p>")
+            if p.variants:
+                body.append(f"<p><strong>Исполнение:</strong> {esc(', '.join(p.variants))}. "
+                            f"Выбор диктуется тем, где машина работает физически, "
+                            f"а не бюджетом: под закрытое помещение, мороз или "
+                            f"запылённую площадку подходят разные варианты.</p>")
+            if p.brands:
+                body.append(f"<p><strong>Заводы:</strong> {esc(', '.join(p.brands))} и другие. "
+                            f"Массовый бренд выигрывает не ценой, а доступностью "
+                            f"запчастей — узел под редкую модель едет из Китая неделями.</p>")
+        body.append(f"<h2>Стоимость</h2><p>Складывается из четырёх частей: "
+                    f"{esc(', '.join(market.PRICE_COMPONENTS))}. Считаем по заявке "
+                    f"с разбивкой по всем статьям — без доплат, всплывающих "
+                    f"на этапе растаможки.</p>")
+
+        cards = "".join(
+            f'<a class="article-card" href="/{p.slug}-iz-kitaya-{c.slug}/">'
+            f'<div class="body"><span class="date">{esc(c.region)}</span>'
+            f'<h3>{esc(nav_label(p, c))}</h3>'
+            f'<span class="readmore">Подробнее →</span></div></a>'
+            for c in shuffle(cities, p.slug))
+
+        hub_graph = [
+            {"@type": "BreadcrumbList", "itemListElement": [
+                {"@type": "ListItem", "position": 1, "name": "Главная", "item": cfg.BASE_URL + "/"},
+                {"@type": "ListItem", "position": 2, "name": h1, "item": cfg.BASE_URL + url},
+            ]},
+            # Для категории правильный шаблон — ItemList, а не Product:
+            # Product обещал бы конкретный товар с ценой, которого здесь нет.
+            {"@type": "ItemList", "name": h1, "numberOfItems": len(cities),
+             "itemListElement": [
+                 {"@type": "ListItem", "position": i,
+                  "name": nav_label(p, c), "url": f"{cfg.BASE_URL}/{p.slug}-iz-kitaya-{c.slug}/"}
+                 for i, c in enumerate(cities, 1)]},
+            {"@type": "LocalBusiness", "name": cfg.BRAND, "url": cfg.BASE_URL,
+             "telephone": cfg.MAX_PHONE_RAW},
+        ]
+
+        html = render(TEMPLATE_HUB, {
+            "title": esc(title), "description": esc(desc), "canonical": cfg.BASE_URL + url,
+            "h1": esc(h1), "product_acc": esc(p.acc),
+            "city_count": f"{len(cities)} городов доставки",
+            "body": "\n        ".join(body), "city_cards": cards,
+            "foot_cities_block": (
+                f'<div class="foot-col"><h4>{esc(p.plural.capitalize())}</h4><ul>'
+                + "".join(f'<li><a href="/{p.slug}-iz-kitaya-{c.slug}/">{esc(c.nom)}</a></li>'
+                          for c in shuffle(cities, p.slug)[:6]) + "</ul></div>"),
+            "root": "../", "asset_version": cfg.ASSET_VERSION,
+            "brand": cfg.BRAND, "tagline": cfg.BRAND_TAGLINE,
+            "contact_label": esc(cfg.CONTACT_LABEL), "contact_href": esc(cfg.CONTACT_HREF),
+            "work_hours": cfg.WORK_HOURS,
+            "jsonld": json.dumps({"@context": "https://schema.org", "@graph": hub_graph},
+                                 ensure_ascii=False, separators=(",", ":")),
+        })
         out = ROOT / url.strip("/") / "index.html"
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(html, "utf-8")
