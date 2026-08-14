@@ -13,7 +13,7 @@ BRAND_TAGLINE = "import machinery"
 
 # Версию поднимать при КАЖДОЙ правке CSS/JS, иначе вернувшийся посетитель
 # получит старый файл из кэша поверх новой разметки.
-ASSET_VERSION = 3
+ASSET_VERSION = 4
 
 # --- Факты о бизнесе -------------------------------------------------------
 # Заполняются владельцем. Рыночные данные конкурентов сюда не переносятся:
@@ -24,10 +24,20 @@ OGRN = None
 LEGAL_ADDRESS = None
 OFFICE_ADDRESS = None
 
-PHONE = None               # None = телефон не публикуем
-EMAIL = "info@estascredit.ru"
+PHONE = None               # обычный телефон не публикуем
+EMAIL = None               # почту с сайта убрали
 TELEGRAM = None
 WHATSAPP = None
+
+# Основной и единственный канал связи — мессенджер MAX.
+MAX_PHONE = "+7 950 646-09-53"
+MAX_PHONE_RAW = "+79506460953"
+# Прямая ссылка на профиль в MAX. Появится, когда будет известен username —
+# до тех пор показываем номер, его добавляют в MAX вручную.
+MAX_LINK = None
+
+CONTACT_LABEL = f"MAX {MAX_PHONE}"
+CONTACT_HREF = MAX_LINK or f"tel:{MAX_PHONE_RAW}"
 
 MIN_ORDER = None           # напр. "1 единица"
 WORK_HOURS = "Пн–Вс 9:00–20:00 (МСК)"
@@ -51,6 +61,6 @@ def missing_facts() -> list[str]:
             gaps.append(name)
     if not OWN_PRICES_CONFIRMED:
         gaps.append("OWN_PRICES_CONFIRMED")
-    if PHONE is None and TELEGRAM is None and WHATSAPP is None:
-        gaps.append("канал связи (кроме почты не задан ни один)")
+    if MAX_LINK is None:
+        gaps.append("MAX_LINK (прямая ссылка на профиль, пока только номер)")
     return gaps

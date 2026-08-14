@@ -80,16 +80,69 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ---- Lead form ---------------------------------------------------------
-  // No backend wired up yet — replace with a real endpoint later.
+  // Адрес прослойки, которая складывает заявку в MAX. Пока он пустой, форма
+  // НЕ показывает «заявка принята»: показать успех и никуда не отправить —
+  // значит потерять обращение и оставить человека ждать ответа, которого
+  // не будет. Разворачивается из _relay/worker.js.
+  const LEAD_ENDPOINT = '';
+
   const leadForm = document.getElementById('leadForm');
   if (leadForm) {
-    leadForm.addEventListener('submit', (e) => {
-      e.preventDefault();
+    const val = (id) => (document.getElementById(id) || {}).value || '';
+
+    const showSuccess = () => {
       [...leadForm.children].forEach(c => {
         if (!c.classList.contains('form-success')) c.style.display = 'none';
       });
       const success = document.getElementById('formSuccess');
       if (success) success.style.display = 'block';
+    };
+
+    const showMessage = (text, isError) => {
+      let box = leadForm.querySelector('.form-msg');
+      if (!box) {
+        box = document.createElement('p');
+        box.className = 'form-msg form-note';
+        leadForm.insertBefore(box, leadForm.querySelector('.form-note'));
+      }
+      box.textContent = text;
+      box.style.color = isError ? '#ff7a45' : '#4fd8c4';
+    };
+
+    leadForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (!val('f-name').trim() || !val('f-phone').trim()) {
+        showMessage('Заполните имя и телефон — без них мы не сможем ответить.', true);
+        return;
+      }
+
+      if (!LEAD_ENDPOINT) {
+        showMessage('Форма пока не подключена. Напишите нам в MAX: +7 950 646-09-53', true);
+        return;
+      }
+
+      const btn = leadForm.querySelector('button[type="submit"]');
+      const label = btn ? btn.textContent : '';
+      if (btn) { btn.disabled = true; btn.textContent = 'Отправляем…'; }
+
+      try {
+        const res = await fetch(LEAD_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: val('f-name'), phone: val('f-phone'), type: val('f-type'),
+            brand: val('f-brand'), comment: val('f-comment'),
+            company: val('f-company'),           // honeypot, люди его не видят
+            page: location.pathname,
+          }),
+        });
+        if (!res.ok) throw new Error(res.status);
+        showSuccess();
+      } catch {
+        showMessage('Не удалось отправить заявку. Напишите нам в MAX: +7 950 646-09-53', true);
+        if (btn) { btn.disabled = false; btn.textContent = label; }
+      }
     });
   }
 

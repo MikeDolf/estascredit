@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=3">
+<link rel="stylesheet" href="assets/css/style.css?v=4">
 </head>
 <body>
 
@@ -25,8 +25,7 @@
     <span>Официальный импортёр спецтехники и автомобилей КНР</span>
     <div class="tb-right">
       <span>Пн–Вс 9:00–20:00 (МСК)</span>
-      <!-- TODO: заменить на реальный email -->
-      <span><b>info@estascredit.ru</b></span>
+      <span><b>MAX +7 950 646-09-53</b></span>
     </div>
   </div>
   <div class="navrow">
@@ -411,6 +410,11 @@
               <label for="f-comment">Комментарий</label>
               <textarea id="f-comment" placeholder="Расскажите о задачах и сроках"></textarea>
             </div>
+            <!-- Ловушка для ботов: людям поле не видно, автозаполнение выключено. -->
+            <div class="field full" aria-hidden="true" style="position:absolute; left:-9999px;">
+              <label for="f-company">Не заполняйте это поле</label>
+              <input id="f-company" type="text" tabindex="-1" autocomplete="off">
+            </div>
             <button type="submit" class="btn btn-primary">Отправить заявку</button>
             <p class="form-note">Нажимая кнопку, вы соглашаетесь с политикой обработки персональных данных</p>
 
@@ -480,10 +484,6 @@
           <div>СИНОТЕХ<small>import machinery</small></div>
         </a>
         <p>Прямые поставки спецтехники и автомобилей из Китая. Подбор, контракт, растаможка и доставка — под ключ.</p>
-        <!-- TODO: указать реальные ссылки на соцсети/мессенджеры -->
-        <div class="social-row">
-          <a href="#">VK</a><a href="#">TG</a><a href="#">WA</a>
-        </div>
       </div>
       <div class="foot-col">
         <h4>Каталог</h4>
@@ -507,7 +507,7 @@
       <div class="foot-col">
         <h4>Контакты</h4>
         <ul>
-          <li><a href="mailto:info@estascredit.ru">info@estascredit.ru</a></li>
+          <li><a href="tel:+79506460953">MAX +7 950 646-09-53</a></li>
         </ul>
       </div>
     </div>
@@ -519,6 +519,6 @@
   </div>
 </footer>
 
-<script src="assets/js/main.js?v=3"></script>
+<script src="assets/js/main.js?v=4"></script>
 </body>
 </html>

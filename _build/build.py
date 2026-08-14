@@ -184,7 +184,7 @@ def main() -> int:
                 {"@type": "ListItem", "position": 2, "name": h1, "item": cfg.BASE_URL + url},
             ]},
             {"@type": "LocalBusiness", "name": cfg.BRAND, "url": cfg.BASE_URL,
-             "email": cfg.EMAIL, "areaServed": c.nom},
+             "telephone": cfg.MAX_PHONE_RAW, "areaServed": c.nom},
         ]
         faq_pairs = city_product.get_faq(c.slug, p.slug)
         if faq_pairs:
@@ -206,7 +206,9 @@ def main() -> int:
             "foot_products_block": foot_products_block,
             "root": "../", "asset_version": cfg.ASSET_VERSION,
             "brand": cfg.BRAND, "tagline": cfg.BRAND_TAGLINE,
-            "email": cfg.EMAIL, "work_hours": cfg.WORK_HOURS,
+            "contact_label": esc(cfg.CONTACT_LABEL),
+            "contact_href": esc(cfg.CONTACT_HREF),
+            "work_hours": cfg.WORK_HOURS,
             "jsonld": json.dumps({"@context": "https://schema.org", "@graph": graph},
                                  ensure_ascii=False, separators=(",", ":")),
         })
