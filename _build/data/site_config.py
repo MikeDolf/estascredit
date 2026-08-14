@@ -13,7 +13,7 @@ BRAND_TAGLINE = "import machinery"
 
 # Версию поднимать при КАЖДОЙ правке CSS/JS, иначе вернувшийся посетитель
 # получит старый файл из кэша поверх новой разметки.
-ASSET_VERSION = 6
+ASSET_VERSION = 8
 
 # --- Факты о бизнесе -------------------------------------------------------
 # Заполняются владельцем. Рыночные данные конкурентов сюда не переносятся:
@@ -30,16 +30,14 @@ TELEGRAM = None
 WHATSAPP = None
 
 # Основной и единственный канал связи — мессенджер MAX.
-MAX_PHONE = "+7 950 646-09-53"
-MAX_PHONE_RAW = "+79506460953"
-# Прямая ссылка на профиль в MAX. Появится, когда будет известен username —
-# до тех пор показываем номер, его добавляют в MAX вручную.
-MAX_LINK = None
+# Прямая ссылка на профиль в MAX. Благодаря ей номера телефона нет на сайте
+# вообще — ни в тексте, ни в разметке, ни в href.
+MAX_LINK = "https://max.ru/u/f9LHodD0cOKyteShoHfqvWGvhHp9vSpUfIj5eQ3q74zQVsWDDMYXDy23WNQ"
 
-# На страницах показываем только значок и слово MAX. Номер остаётся в href —
-# без него ссылка не сработает, поэтому от сборщиков адресов это не прячет.
+# На страницах — значок и слово MAX, ссылка ведёт на профиль. Телефон нигде
+# не участвует, поэтому сборщикам номеров на сайте брать нечего.
 CONTACT_LABEL = "MAX"
-CONTACT_HREF = MAX_LINK or f"tel:{MAX_PHONE_RAW}"
+CONTACT_HREF = MAX_LINK
 
 CONTACT_ICON = (
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
@@ -48,7 +46,8 @@ CONTACT_ICON = (
     'A8.4 8.4 0 0 1 3.6 11.5a8.4 8.4 0 0 1 8.4-8.4h.5a8.4 8.4 0 0 1 8.5 8.4z"/></svg>'
 )
 CONTACT_LINK = (
-    f'<a class="contact-max" href="{CONTACT_HREF}" aria-label="Связаться в MAX">'
+    f'<a class="contact-max" href="{CONTACT_HREF}" target="_blank" rel="noopener" '
+    f'aria-label="Связаться в MAX">'
     f'{CONTACT_ICON}{CONTACT_LABEL}</a>'
 )
 
@@ -74,6 +73,4 @@ def missing_facts() -> list[str]:
             gaps.append(name)
     if not OWN_PRICES_CONFIRMED:
         gaps.append("OWN_PRICES_CONFIRMED")
-    if MAX_LINK is None:
-        gaps.append("MAX_LINK (прямая ссылка на профиль, пока только номер)")
     return gaps

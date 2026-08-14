@@ -186,7 +186,7 @@ def main() -> int:
                 {"@type": "ListItem", "position": 2, "name": h1, "item": cfg.BASE_URL + url},
             ]},
             {"@type": "LocalBusiness", "name": cfg.BRAND, "url": cfg.BASE_URL,
-             "telephone": cfg.MAX_PHONE_RAW, "areaServed": c.nom},
+             "areaServed": c.nom},
         ]
         faq_pairs = city_product.get_faq(c.slug, p.slug)
         if faq_pairs:
@@ -281,8 +281,7 @@ def main() -> int:
                  {"@type": "ListItem", "position": i,
                   "name": nav_label(p, c), "url": f"{cfg.BASE_URL}/{p.slug}-iz-kitaya-{c.slug}/"}
                  for i, c in enumerate(cities, 1)]},
-            {"@type": "LocalBusiness", "name": cfg.BRAND, "url": cfg.BASE_URL,
-             "telephone": cfg.MAX_PHONE_RAW},
+            {"@type": "LocalBusiness", "name": cfg.BRAND, "url": cfg.BASE_URL},
         ]
 
         html = render(TEMPLATE_HUB, {

@@ -98,7 +98,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (success) success.style.display = 'block';
     };
 
-    const showMessage = (text, isError) => {
+    // Ссылка на профиль, а не номер: телефона на сайте нет нигде.
+    const MAX_PROFILE = 'https://max.ru/u/f9LHodD0cOKyteShoHfqvWGvhHp9vSpUfIj5eQ3q74zQVsWDDMYXDy23WNQ';
+
+    const showMessage = (text, isError, withLink) => {
       let box = leadForm.querySelector('.form-msg');
       if (!box) {
         box = document.createElement('p');
@@ -107,6 +110,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       box.textContent = text;
       box.style.color = isError ? '#ff7a45' : '#4fd8c4';
+      if (withLink) {
+        box.appendChild(document.createTextNode(' '));
+        const link = document.createElement('a');
+        link.href = MAX_PROFILE;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.textContent = 'Написать в MAX';
+        link.style.color = 'inherit';
+        link.style.textDecoration = 'underline';
+        box.appendChild(link);
+      }
     };
 
     leadForm.addEventListener('submit', async (e) => {
@@ -118,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (!LEAD_ENDPOINT) {
-        showMessage('Форма пока не подключена. Напишите нам в MAX: +7 950 646-09-53', true);
+        showMessage('Форма пока не подключена.', true, true);
         return;
       }
 
@@ -140,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!res.ok) throw new Error(res.status);
         showSuccess();
       } catch {
-        showMessage('Не удалось отправить заявку. Напишите нам в MAX: +7 950 646-09-53', true);
+        showMessage('Не удалось отправить заявку.', true, true);
         if (btn) { btn.disabled = false; btn.textContent = label; }
       }
     });
