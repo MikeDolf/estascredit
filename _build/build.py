@@ -21,7 +21,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from data import city_product, market, site_config as cfg
+from data import articles as arts, city_product, market, site_config as cfg
 from data.cities import CITIES, BY_SLUG as CITY_BY_SLUG
 from data.products import PRODUCTS, BY_SLUG as PROD_BY_SLUG, ROLLOUT_ORDER
 
@@ -29,15 +29,11 @@ ROOT = Path(__file__).resolve().parent.parent
 TPL_DIR = Path(__file__).parent / "templates"
 TEMPLATE = (TPL_DIR / "product_city.html").read_text("utf-8")
 TEMPLATE_HUB = (TPL_DIR / "product_hub.html").read_text("utf-8")
+TEMPLATE_ARTICLE = (TPL_DIR / "article.html").read_text("utf-8")
 
 # Страницы, написанные руками. Сборка их не трогает, но учитывает в sitemap.
-HAND_WRITTEN = [
-    "/", "/articles/",
-    "/articles/tehnicheskie-harakteristiki-vilochnyh-pogruzchikov.html",
-    "/articles/kak-vybrat-ekskavator-iz-kitaya.html",
-    "/articles/rastamozhka-spectehniki-2026.html",
-    "/articles/lizing-spectehniki-dlya-yurlic.html",
-]
+# Статьи в sitemap попадают из data/articles.py, а не отсюда.
+HAND_WRITTEN = ["/", "/articles/"]
 
 
 def render(tpl: str, ctx: dict) -> str:
@@ -306,8 +302,70 @@ def main() -> int:
         out.write_text(html, "utf-8")
         written.append(url)
 
+    # --- статьи ---
+    arts.check_no_target_overlap()
+    art_urls = [f"/articles/{a.slug}.html" for a in arts.ARTICLES]
+    # Анкор — по заголовку статьи, а не по категории: категории повторяются,
+    # и одинаковая подпись на разные URL сталкивает страницы лбами.
+    def art_label(a) -> str:
+        return a.h1.split(":")[0].strip()
+
+    foot_articles = "".join(
+        f'<li><a href="{a.slug}.html">{esc(art_label(a))}</a></li>'
+        for a in arts.ARTICLES[:4])
+
+    for a in arts.GENERATED:
+        url = f"/articles/{a.slug}.html"
+        others = [x for x in arts.ARTICLES if x.slug != a.slug][:3]
+        related = " · ".join(
+            [f'<a href="{x.slug}.html">{esc(art_label(x))}</a>' for x in others]
+            + ['<a href="index.html">← Все статьи</a>'])
+        graph = [
+            {"@type": "BreadcrumbList", "itemListElement": [
+                {"@type": "ListItem", "position": 1, "name": "Главная", "item": cfg.BASE_URL + "/"},
+                {"@type": "ListItem", "position": 2, "name": "Статьи", "item": cfg.BASE_URL + "/articles/"},
+                {"@type": "ListItem", "position": 3, "name": a.h1, "item": cfg.BASE_URL + url},
+            ]},
+            {"@type": "Article", "headline": a.h1, "description": a.description,
+             "datePublished": a.date, "inLanguage": "ru",
+             "author": {"@type": "Organization", "name": cfg.BRAND},
+             "publisher": {"@type": "Organization", "name": cfg.BRAND},
+             "mainEntityOfPage": cfg.BASE_URL + url},
+            {"@type": "LocalBusiness", "name": cfg.BRAND, "url": cfg.BASE_URL},
+        ]
+        html = render(TEMPLATE_ARTICLE, {
+            "title": esc(f"{a.title} — {cfg.BRAND}"), "og_title": esc(a.h1),
+            "description": esc(a.description), "canonical": cfg.BASE_URL + url,
+            "h1": esc(a.h1), "crumb": esc(a.title), "category": esc(a.category),
+            "date_human": a.date_human, "read_time": a.read_time,
+            "body": a.body.strip(), "related": related, "foot_articles": foot_articles,
+            "cta_text": "Рассчитаем поставку под вашу задачу — с разбивкой по всем статьям расходов",
+            "asset_version": cfg.ASSET_VERSION, "brand": cfg.BRAND,
+            "tagline": cfg.BRAND_TAGLINE, "contact_link": cfg.CONTACT_LINK,
+            "work_hours": cfg.WORK_HOURS,
+            "jsonld": json.dumps({"@context": "https://schema.org", "@graph": graph},
+                                 ensure_ascii=False, separators=(",", ":")),
+        })
+        out = ROOT / "articles" / f"{a.slug}.html"
+        out.write_text(html, "utf-8")
+
+    # Список статей строится из тех же данных — новая статья появляется в нём
+    # сама, без ручной правки, и карточка не может разойтись с заголовком.
+    cards = "".join(
+        f'<a class="article-card" href="{a.slug}.html">'
+        f'<div class="thumb"><span class="cat">{esc(a.category)}</span>'
+        f'<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2.5" '
+        f'stroke-linecap="round" stroke-linejoin="round">{a.icon}</svg></div>'
+        f'<div class="body"><span class="date">{a.date_human} · {a.read_time}</span>'
+        f'<h3>{esc(a.h1)}</h3><p>{esc(a.excerpt)}</p>'
+        f'<span class="readmore">Читать →</span></div></a>'
+        for a in arts.ARTICLES)
+    (ROOT / "articles" / "index.html").write_text(
+        render((TPL_DIR / "articles_index.html").read_text("utf-8"),
+               {"cards": cards, "asset_version": cfg.ASSET_VERSION}), "utf-8")
+
     # --- sitemap строго из результата сборки ---
-    urls = HAND_WRITTEN + written
+    urls = HAND_WRITTEN + art_urls + written
     assert len(urls) == len(set(urls)), "Дубли URL в sitemap"
     body = "".join(
         f"  <url><loc>{cfg.BASE_URL}{u}</loc><changefreq>weekly</changefreq></url>\n"
