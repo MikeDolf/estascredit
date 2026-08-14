@@ -83,6 +83,17 @@ header{
   border-bottom:1px solid var(--panel-line);
 }
 .topbar span b{color:var(--text-dim); font-weight:600;}
+/* Контакт: значок и слово MAX, номер живёт только в href */
+.contact-max{
+  display:inline-flex; align-items:center; gap:7px;
+  font-family:'Oswald',sans-serif; font-weight:600; letter-spacing:0.06em;
+  color:var(--text); transition:color .15s;
+}
+.contact-max svg{width:16px; height:16px; flex-shrink:0;}
+.contact-max:hover{color:var(--orange);}
+.topbar .contact-max{font-size:13px;}
+.foot-col .contact-max{font-size:14px; color:var(--text-dim);}
+.foot-col .contact-max:hover{color:var(--orange);}
 .topbar .tb-right{display:flex; gap:24px;}
 .navrow{
   display:flex; align-items:center; justify-content:space-between;
