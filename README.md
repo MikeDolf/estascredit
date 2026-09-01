@@ -129,6 +129,36 @@ assets/js/main.js            меню, фильтры, сортировка, ф�
 терпимо, но для обложки соцсетей взят кадр без логотипов: обложка представляет
 нас, а не чужую марку.
 
+## Инструменты разработки
+
+Сайту они не нужны — нужны только для пересборки картинок и для скилла дизайна.
+
+```
+brew install node          # для wrangler (приём заявок) и для impeccable
+brew install webp libtiff  # cwebp: кодирование картинок в WebP
+```
+
+**Impeccable** — набор правил дизайна ([impeccable.style](https://impeccable.style)),
+установлен в `.claude/` этого проекта. В git не попадает: из-за `.nojekyll`
+GitHub Pages отдаёт наружу всё содержимое репозитория, и 4,9 МБ чужих файлов
+оказались бы в выкладке сайта. Установка через `npx impeccable install` не
+работает — их эндпоинт скачивания отдаёт битый архив. Рабочий путь:
+
+```
+git clone --depth 1 https://github.com/pbakaus/impeccable /tmp/impeccable
+cd /tmp/impeccable && bun install && bun run build:skills
+cp -R /tmp/impeccable/dist/claude-code/.claude <корень проекта>/
+```
+
+## Что отдаётся наружу
+
+`.nojekyll` отключает Jekyll, поэтому GitHub Pages публикует репозиторий
+целиком: `/_build/`, `/_checks/`, `/_relay/worker.js` и `/.gitignore`
+открываются по прямой ссылке. Секретов там нет — токены воркера живут в
+переменных окружения Cloudflare. Но оригиналы фотографий в `_build/photos/`
+это лишние 6 МБ в каждой выкладке; если захочется убрать, понадобится
+`_config.yml` с `exclude` вместо `.nojekyll` либо публикация через Actions.
+
 ## Публикация
 
 Правки на GitHub Pages появляются через 1–2 минуты после пуша в `main`.

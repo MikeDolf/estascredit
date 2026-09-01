@@ -146,7 +146,7 @@ class Page(HTMLParser):
 
 def main() -> int:
     # _build содержит шаблоны с плейсхолдерами {{ }} — это не страницы.
-    skip = {"_checks", "_build", "node_modules", ".git"}
+    skip = {"_checks", "_build", "node_modules", ".git", ".claude"}
     # Файлы подтверждения прав в Яндекс.Вебмастере и Search Console — это
     # технические заглушки для робота, а не страницы: ни <h1>, ни описания
     # у них быть не должно.
