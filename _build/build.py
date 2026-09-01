@@ -1,0 +1,1088 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Сборка статических страниц estascredit.ru (УралФорклифт).
+
+    python3 _build/build.py            обычная сборка
+    python3 _build/build.py --all      собрать и неуникализированные гео-страницы
+                                        как индексируемые (осознанный риск)
+
+Зачем генератор. Шапка, подвал, меню и SEO-обвязка одинаковы на всех
+страницах. Без сборки правка одного пункта меню — это правка полутора десятков
+файлов, и рано или поздно один из них отстанет. Здесь всё это лежит в одном
+месте, а страницы — производные.
+
+Что скрипт НЕ делает намеренно:
+
+  * не размечает товары через schema.org/Product и Offer. Сейчас все позиции —
+    образцы с условными ценами; отдать такую цену в поисковую выдачу значит
+    показать человеку число, которого не существует. Разметку товаров
+    включаем вместе с реальным прайсом.
+  * не выводит пустые блоки. Нет фактуры — нет заголовка с пустотой под ним.
+  * не индексирует гео-страницы без собственного текста: пока `unique` пуст,
+    страница собирается с noindex и не попадает в sitemap.
+"""
+
+import html
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from data.site import SITE, NAV, FOOTER_COMPANY, FOOTER_LEGAL, FORBIDDEN_WORDING
+from data.catalog import CATEGORIES, CAPACITY_RANGES, LEAD_TYPES
+from data.pages import TRUST_PAGES, LEGAL_PAGES
+from data import cities as cities_data
+
+ROOT = Path(__file__).resolve().parent.parent
+TPL = Path(__file__).resolve().parent / "templates"
+
+# Версия статики в query-строке: меняйте, когда правите css/js, иначе у
+# посетителей останется закешированная старая версия.
+VER = "11"
+
+FORKLIFT_SVG = (
+    '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="{w}" '
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    '<rect x="16" y="62" width="52" height="10" rx="5"/>'
+    '<circle cx="28" cy="78" r="8"/><circle cx="56" cy="78" r="8"/>'
+    '<path d="M24 62 L24 46 L52 46 L62 34 L76 34 L76 54 L62 62 Z"/>'
+    '<rect x="30" y="38" width="16" height="12"/></svg>'
+)
+
+# Силуэт погрузчика заливкой, а не обводкой: на 38 px тонкие линии сливаются,
+# сплошные фигуры читаются. Машина смотрит влево — как на фотографиях в каталоге.
+LOGO_SVG = (
+    '<svg viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">'
+    '<rect x="44" y="14" width="46" height="7" rx="2"/>'      # дуга безопасности
+    '<rect x="83" y="14" width="7" height="38"/>'             # задняя стойка
+    '<rect x="44" y="14" width="7" height="26"/>'             # передняя стойка
+    '<rect x="28" y="10" width="7" height="66"/>'             # мачта
+    '<rect x="21" y="40" width="6" height="36"/>'             # каретка
+    '<rect x="4" y="70" width="24" height="6"/>'              # вилы
+    '<path d="M40 76 V54 h12 l5-10 h26 a5 5 0 0 1 5 5 V76 Z"/>'  # корпус
+    '<circle cx="50" cy="80" r="9"/><circle cx="78" cy="80" r="9"/>'
+    '</svg>'
+)
+
+MAX_SVG = (
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    '<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.8-.8L3 21l1.9-4.6A8.4 8.4 0 0 1 '
+    '3.6 11.5a8.4 8.4 0 0 1 8.4-8.4h.5a8.4 8.4 0 0 1 8.5 8.4z"/></svg>'
+)
+
+
+def e(text):
+    """Экранирование для вставки в атрибут или текст."""
+    return html.escape(str(text or ""), quote=True)
+
+
+def money(value):
+    return "{:,}".format(int(value)).replace(",", " ") + " ₽"
+
+
+def root_prefix(slug):
+    """`../` столько раз, сколько уровней вложенности у страницы."""
+    if not slug:
+        return ""
+    return "../" * len(slug.strip("/").split("/"))
+
+
+def max_link(css_class="contact-max"):
+    return (
+        '<a class="{cls}" href="{url}" target="_blank" rel="noopener" '
+        'aria-label="Связаться в MAX">{svg}MAX</a>'
+    ).format(cls=css_class, url=e(SITE["max_url"]), svg=MAX_SVG)
+
+
+# --------------------------------------------------------------------------
+# Шапка и подвал
+# --------------------------------------------------------------------------
+
+def render_logo(root, href=None):
+    href = href if href is not None else root + "index.html"
+    return (
+        '<a href="{href}" class="logo">'
+        '<span class="mark">{svg}</span>'
+        '<div>{name}<small>{tagline}</small></div></a>'
+    ).format(href=e(href), svg=LOGO_SVG, name=e(SITE["name"]), tagline=e(SITE["tagline"]))
+
+
+def render_header(root, slug, has_form):
+    links = []
+    for label, href in NAV:
+        target = href.split("#")[0].rstrip("/")
+        active = " class=\"active\"" if target and slug.startswith(target) else ""
+        links.append('<a href="{}"{}>{}</a>'.format(e(root + href), active, e(label)))
+
+    # Слева в верхней строке — регион работы, справа канал связи. Телефона
+    # на сайте нет, пока он не появится в data/site.py.
+    topbar_left = "Подбор вилочных погрузчиков · {}".format(SITE["region"])
+    hours = SITE["opening_hours"]
+
+    # Телефон рядом с кнопкой: часть покупателей звонит, а не заполняет форму.
+    phone_block = ""
+    if SITE["phone"]:
+        phone_block = (
+            '<a class="phone-block" href="tel:{href}">'
+            '<span class="num">{num}</span>'
+            '<span class="hrs">{hrs}</span></a>'
+        ).format(href=e(SITE["phone_href"]), num=e(SITE["phone"]),
+                 hrs=e(SITE["opening_hours"] or "Звоните по рабочим дням"))
+
+    return (
+        '<header>\n'
+        '  <div class="topbar">\n'
+        '    <span>{left}</span>\n'
+        '    <div class="tb-right">\n'
+        '      <span>{hours}</span>\n'
+        '      <span>{max}</span>\n'
+        '    </div>\n'
+        '  </div>\n'
+        '  <div class="navrow">\n'
+        '    {logo}\n'
+        '    <nav class="mainnav" id="mainnav">\n'
+        '      {links}\n'
+        '      <a href="{cta}" class="nav-cta btn btn-primary">Оставить заявку</a>\n'
+        '    </nav>\n'
+        '    <div class="nav-right">\n'
+        '      {phone}\n'
+        '      <a href="{cta}" class="btn btn-primary">Оставить заявку</a>\n'
+        '      <button class="burger" type="button" aria-label="Меню" aria-expanded="false" '
+        'aria-controls="mainnav"><span></span></button>\n'
+        '    </div>\n'
+        '  </div>\n'
+        '  <div class="hazard-bar"></div>\n'
+        '</header>'
+    ).format(
+        left=e(topbar_left),
+        hours=e(hours),
+        max=max_link(),
+        logo=render_logo(root),
+        links="\n      ".join(links),
+        phone=phone_block,
+        # На странице без формы вести на #lead нельзя — якоря там нет.
+        cta="#lead" if has_form else e(root + "kontakty/"),
+    )
+
+
+def render_footer(root):
+    catalog_links = "\n          ".join(
+        '<li><a href="{}catalog/{}/">{}</a></li>'.format(e(root), e(c["slug"]), e(c["name"]))
+        for c in CATEGORIES
+    )
+    company_links = "\n          ".join(
+        '<li><a href="{}">{}</a></li>'.format(e(root + href), e(label))
+        for label, href in FOOTER_COMPANY
+    )
+    legal_links = " · ".join(
+        '<a href="{}">{}</a>'.format(e(root + href), e(label))
+        for label, href in FOOTER_LEGAL
+    )
+
+    # Города — отдельной строкой: это и навигация, и внутренняя перелинковка
+    # на гео-страницы.
+    city_links = " · ".join(
+        '<a href="{}{}/">{}</a>'.format(e(root), e("vilochnye-pogruzchiki-" + c["slug"]), e(c["name"]))
+        for c in cities_data.CITIES
+    )
+
+    contacts = ["<li>{}</li>".format(max_link())]
+    if SITE["phone"]:
+        contacts.insert(0, '<li><a href="tel:{}">{}</a></li>'.format(
+            e(SITE["phone_href"]), e(SITE["phone"])))
+    if SITE["address"]:
+        contacts.append("<li>{}, {}</li>".format(e(SITE["postal_code"]), e(SITE["address"])))
+    if SITE["email"]:
+        contacts.append('<li><a href="mailto:{0}">{0}</a></li>'.format(e(SITE["email"])))
+
+    about = SITE.get("footer_about", "")
+
+    return (
+        '<footer>\n'
+        '  <div class="wrap">\n'
+        '    <div class="foot-grid">\n'
+        '      <div class="foot-col foot-about">\n'
+        '        {logo}\n'
+        '        {about}\n'
+        '      </div>\n'
+        '      <div class="foot-col">\n'
+        '        <h2>Каталог</h2>\n'
+        '        <ul>\n          {catalog}\n        </ul>\n'
+        '      </div>\n'
+        '      <div class="foot-col">\n'
+        '        <h2>Компания</h2>\n'
+        '        <ul>\n          {company}\n        </ul>\n'
+        '      </div>\n'
+        '      <div class="foot-col">\n'
+        '        <h2>Контакты</h2>\n'
+        '        <ul>\n          {contacts}\n        </ul>\n'
+        '      </div>\n'
+        '    </div>\n'
+        '    <div class="foot-geo">\n'
+        '      <h2>Города обслуживания</h2>\n'
+        '      <p>{cities}</p>\n'
+        '    </div>\n'
+        '    <div class="foot-bottom">\n'
+        '      <p>© 2026 {name}</p>\n'
+        '      <p>{legal}</p>\n'
+        '    </div>\n'
+        '  </div>\n'
+        '</footer>'
+    ).format(
+        logo=render_logo(root),
+        about="<p>{}</p>".format(e(about)) if about else "",
+        catalog=catalog_links,
+        company=company_links,
+        contacts="\n          ".join(contacts),
+        cities=city_links,
+        name=e(SITE["name"]),
+        legal=legal_links,
+    )
+
+
+# --------------------------------------------------------------------------
+# Повторяющиеся куски страниц
+# --------------------------------------------------------------------------
+
+def render_breadcrumbs(root, trail):
+    """trail — список (название, href или None для текущей страницы)."""
+    parts = []
+    for label, href in trail:
+        if href is None:
+            parts.append("<span>{}</span>".format(e(label)))
+        else:
+            parts.append('<a href="{}">{}</a>'.format(e(root + href), e(label)))
+    return '<div class="breadcrumbs">{}</div>'.format("<span>/</span>".join(parts))
+
+
+def render_lead_form(selected_type=None):
+    options = []
+    for t in LEAD_TYPES:
+        sel = " selected" if t == selected_type else ""
+        options.append("<option{}>{}</option>".format(sel, e(t)))
+
+    return (
+        '  <section id="lead" class="calc-sec">\n'
+        '    <div class="wrap">\n'
+        '      <div class="calc-grid">\n'
+        '        <div>\n'
+        '          <span class="eyebrow">Заявка</span>\n'
+        '          <h2 style="font-size:clamp(26px,3vw,36px); margin:16px 0 24px;">Опишите задачу — подберём технику</h2>\n'
+        '          <p style="color:var(--text-dim); max-width:420px;">Опишите, что и на какую высоту нужно поднимать, '
+        'и в каких условиях работает техника. Ответим с подбором и ценой.</p>\n'
+        '        </div>\n'
+        '        <div>\n'
+        '          <form class="lead" id="leadForm">\n'
+        '            <div class="form-row">\n'
+        '              <div class="field">\n'
+        '                <label for="f-type">Тип техники</label>\n'
+        '                <select id="f-type" data-field="type">{options}</select>\n'
+        '              </div>\n'
+        '              <div class="field">\n'
+        '                <label for="f-brand">Модель</label>\n'
+        '                <input id="f-brand" data-field="brand" type="text">\n'
+        '              </div>\n'
+        '            </div>\n'
+        '            <div class="form-row">\n'
+        '              <div class="field">\n'
+        '                <label for="f-name">Ваше имя</label>\n'
+        '                <input id="f-name" data-field="name" type="text" required>\n'
+        '              </div>\n'
+        '              <div class="field">\n'
+        '                <label for="f-phone">Телефон</label>\n'
+        '                <input id="f-phone" data-field="phone" type="tel" placeholder="+7 900 000-00-00" required>\n'
+        '              </div>\n'
+        '            </div>\n'
+        '            <div class="field full" style="margin-bottom:16px;">\n'
+        '              <label for="f-comment">Комментарий</label>\n'
+        '              <textarea id="f-comment" data-field="comment"></textarea>\n'
+        '            </div>\n'
+        '            <div class="field full" aria-hidden="true" style="position:absolute; left:-9999px;">\n'
+        '              <label for="f-company">Не заполняйте это поле</label>\n'
+        '              <input id="f-company" data-field="company" type="text" tabindex="-1" autocomplete="off">\n'
+        '            </div>\n'
+        '            <button type="submit" class="btn btn-primary">Отправить заявку</button>\n'
+        '            <p class="form-note">Нажимая кнопку, вы соглашаетесь с '
+        '<a href="{root_placeholder}politika-konfidencialnosti/">политикой обработки персональных данных</a></p>\n'
+        '            <div class="form-success" id="formSuccess">\n'
+        '              <svg class="ico" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="4" '
+        'stroke-linecap="round" stroke-linejoin="round"><circle cx="50" cy="50" r="42"/>'
+        '<path d="M32 52 L44 64 L70 36"/></svg>\n'
+        '              <h3>Заявка отправлена</h3>\n'
+        '              <p>Менеджер свяжется с вами в течение рабочего дня.</p>\n'
+        '            </div>\n'
+        '          </form>\n'
+        '        </div>\n'
+        '      </div>\n'
+        '    </div>\n'
+        '  </section>'
+    ).format(options="".join(options), root_placeholder="@ROOT@")
+
+
+def render_photo(product, eager=False):
+    """Фотография позиции.
+
+    width/height обязательны: без них браузер не знает высоту до загрузки
+    и содержимое прыгает (это метрика CLS). srcset отдаёт версию 1600 px
+    экранам с двойной плотностью. Первая карточка грузится сразу, остальные
+    лениво — они ниже первого экрана.
+    """
+    if not product.get("photo"):
+        return FORKLIFT_SVG.format(w="2.5")
+    name = product["photo"]
+    return (
+        '<img src="@ROOT@assets/img/{name}-800.webp" '
+        'srcset="@ROOT@assets/img/{name}-800.webp 800w, '
+        '@ROOT@assets/img/{name}-1600.webp 1600w" '
+        'sizes="(max-width: 620px) 100vw, (max-width: 1120px) 45vw, 30vw" '
+        'width="800" height="{h}" alt="{alt}" loading="{loading}" decoding="async">'
+    ).format(name=e(name), h=product.get("photo_height", 600),
+             alt=e(product.get("photo_alt", product["name"])),
+             loading="eager" if eager else "lazy")
+
+
+def render_product(product):
+    """Карточка позиции в справочнике подбора.
+
+    Здесь нет ни «в наличии», ни цены: наличие подтверждает поставщик под
+    конкретный запрос, цену называет тоже он. Ориентир по бюджету лежит
+    только в data-price — по нему работает фильтр, на странице он не виден.
+    """
+    badge = '<span class="product-badge sample">Образец</span>' if product.get("sample") else ""
+    eager = product["_order"] == 1
+
+    stars = "".join(
+        '<span class="on">★</span>' if i < product.get("rating", 0) else "<span>★</span>"
+        for i in range(5)
+    )
+
+    specs = ['<span>{} кг</span>'.format(product["capacity"])]
+    if product.get("lift"):
+        specs.append("<span>{}</span>".format(e(product["lift"])))
+
+    desc = '<p class="product-desc">{}</p>'.format(e(product["desc"])) if product.get("desc") else ""
+
+    return (
+        '            <div class="product-card" data-capacity="{cap}" '
+        'data-price="{budget}" data-order="{order}">\n'
+        '              <div class="product-img">{badge}{img}</div>\n'
+        '              <div class="product-body">\n'
+        '                <h3>{name}</h3>\n'
+        '                {desc}\n'
+        '                <div class="product-rating">{stars}</div>\n'
+        '                <div class="product-specs">{specs}</div>\n'
+        '                <div class="product-price">Цена по запросу</div>\n'
+        '                <div class="product-actions">\n'
+        '                  <button type="button" class="btn btn-primary" data-buy="select">Подобрать</button>\n'
+        '                </div>\n'
+        '              </div>\n'
+        '            </div>'
+    ).format(
+        cap=product["capacity"],
+        budget=product["budget"],
+        order=product["_order"],
+        badge=badge,
+        img=render_photo(product, eager),
+        name=e(product["name"]),
+        desc=desc,
+        stars=stars,
+        specs="".join(specs),
+    )
+
+
+def render_filters():
+    ranges = "\n          ".join(
+        '<label class="filter-opt"><input type="checkbox" data-filter-group="capacity" '
+        'value="{}"> {}</label>'.format(e(value), e(label))
+        for value, label in CAPACITY_RANGES
+    )
+    return (
+        '        <aside class="filters" id="catalogFilters">\n'
+        '          <h2>Бюджет, ₽</h2>\n'
+        '          <div class="filter-price">\n'
+        '            <input type="number" data-filter-group="price-min" placeholder="от" min="0" '
+        'aria-label="Бюджет от">\n'
+        '            <span>—</span>\n'
+        '            <input type="number" data-filter-group="price-max" placeholder="до" min="0" '
+        'aria-label="Бюджет до">\n'
+        '          </div>\n\n'
+        '          <h2>Грузоподъёмность</h2>\n'
+        '          {ranges}\n\n'
+        '          <button type="button" class="filters-reset">Сбросить фильтры</button>\n'
+        '        </aside>'
+    ).format(ranges=ranges)
+
+
+def render_catalog_body(products, heading):
+    cards = "\n\n".join(render_product(p) for p in products)
+    count = len(products)
+    return (
+      '      <div class="catalog-layout">\n\n'
+      '{filters}\n\n'
+      '        <div>\n'
+      '          <h2 class="catalog-h2">{heading}</h2>\n'
+      '          <button type="button" class="filters-toggle" aria-expanded="false" '
+      'aria-controls="catalogFilters">Фильтры</button>\n\n'
+      '          <div class="sort-bar">\n'
+      '            <span class="count">Показано {count} из {count}</span>\n'
+      '            <div class="sort-field">\n'
+      '              <label for="catalogSort">Сортировка</label>\n'
+      '              <select id="catalogSort" data-sort>\n'
+      '                <option value="default">По умолчанию</option>\n'
+      '                <option value="price-asc">Сначала дешевле</option>\n'
+      '                <option value="price-desc">Сначала дороже</option>\n'
+      '                <option value="capacity">По грузоподъёмности</option>\n'
+      '              </select>\n'
+      '            </div>\n'
+      '          </div>\n\n'
+      '          <div class="product-grid">\n\n{cards}\n\n          </div>\n\n'
+      '          <div class="catalog-pagination">\n'
+      '            <span class="count">Показано {count} из {count}</span>\n'
+      '            <a href="#lead" class="btn btn-ghost btn-sm">Не нашли подходящее — опишите задачу →</a>\n'
+      '          </div>\n'
+      '        </div>\n'
+      '      </div>'
+    ).format(filters=render_filters(), cards=cards, count=count, heading=e(heading))
+
+
+def render_blocks(blocks, root):
+    """Блоки текстовых страниц. Пустой блок не выводится."""
+    out = []
+    for block in blocks:
+        kind = block["type"]
+
+        if kind == "h2" and block.get("text"):
+            out.append("<h2>{}</h2>".format(e(block["text"])))
+
+        elif kind == "p" and block.get("text"):
+            out.append("<p>{}</p>".format(e(block["text"])))
+
+        elif kind in ("ul", "ol") and block.get("items"):
+            items = "".join("<li>{}</li>".format(e(i)) for i in block["items"])
+            out.append("<{0}>{1}</{0}>".format(kind, items))
+
+        elif kind == "faq" and block.get("items"):
+            faq = []
+            for i, (q, a) in enumerate(block["items"]):
+                open_cls = " open" if i == 0 else ""
+                faq.append(
+                    '<div class="faq-item{cls}"><button class="faq-q"><span>{q}</span>'
+                    '<span class="plus">+</span></button>'
+                    '<div class="faq-a"><p>{a}</p></div></div>'.format(cls=open_cls, q=e(q), a=e(a))
+                )
+            out.append('<div class="faq-list">{}</div>'.format("".join(faq)))
+
+        elif kind == "links" and block.get("items"):
+            # Внешние источники: новая вкладка и rel="noopener" — без него
+            # открытая страница получает доступ к window.opener.
+            items = "".join(
+                '<li><a href="{url}" target="_blank" rel="noopener">{text}</a></li>'.format(
+                    url=e(url), text=e(text))
+                for text, url in block["items"]
+            )
+            out.append('<ul class="source-list">{}</ul>'.format(items))
+
+        elif kind == "contacts":
+            out.append(render_contacts())
+
+        elif kind == "map":
+            if SITE["geo_lat"] and SITE["geo_lon"]:
+                # Ссылка на Яндекс.Карты, а не встроенный iframe: карта тянет
+                # сторонние скрипты и тормозит страницу, а нужна она единицам.
+                out.append(
+                    '<p class="map-link"><a href="https://yandex.ru/maps/?pt={lon},{lat}&z=17&l=map" '
+                    'target="_blank" rel="noopener">Открыть {addr} на Яндекс.Картах</a></p>'.format(
+                        lat=e(SITE["geo_lat"]), lon=e(SITE["geo_lon"]),
+                        addr=e(SITE["address"]))
+                )
+
+        elif kind == "reviews" and block.get("items"):
+            cards = "".join(
+                '<div class="test-card"><span class="quote-mark">"</span><p>{text}</p>'
+                '<div class="who"><div class="avatar">{initial}</div><div><b>{who}</b>'
+                '<span>{role}</span></div></div></div>'.format(
+                    text=e(r["text"]), initial=e(r["who"][:1]), who=e(r["who"]), role=e(r.get("role", ""))
+                )
+                for r in block["items"]
+            )
+            out.append('<div class="test-grid">{}</div>'.format(cards))
+
+    return "\n      ".join(out)
+
+
+def render_contacts():
+    """Реквизиты. Выводим только заполненные поля."""
+    rows = []
+    status = ("Самозанятый, плательщик налога на профессиональный доход"
+              if SITE.get("self_employed") else "")
+    fields = [
+        ("Исполнитель", SITE["legal_name"]),
+        ("Статус", status if SITE["legal_name"] else ""),
+        ("ИНН", SITE["inn"]),
+        ("Адрес", "{}, {}, {}".format(SITE["postal_code"], SITE["address_locality"], SITE["address"]) if SITE["address"] else ""),
+        ("Телефон", SITE["phone"]),
+        ("E-mail", SITE["email"]),
+        ("Режим работы", SITE["opening_hours"]),
+    ]
+    for label, value in fields:
+        if value:
+            rows.append("<tr><th>{}</th><td>{}</td></tr>".format(e(label), e(value)))
+
+    table = ""
+    if rows:
+        table = '<div class="table-wrap"><table class="req-table">{}</table></div>'.format("".join(rows))
+
+    channel = '<p class="contact-channel">Связаться с нами: {}</p>'.format(max_link("contact-max"))
+
+    if not rows:
+        # Пока реквизитов нет — честная строка вместо пустой таблицы.
+        notice = ('<p class="notice">Реквизиты будут опубликованы здесь после '
+                  'регистрации. Сейчас связаться можно через мессенджер.</p>')
+        return notice + channel
+
+    return table + channel
+
+
+# --------------------------------------------------------------------------
+# Разметка schema.org
+# --------------------------------------------------------------------------
+
+def build_jsonld(page, canonical, trail):
+    """Граф разметки: Organization + WebSite на всех страницах, плюс тип
+    самой страницы, хлебные крошки и FAQ, если они есть."""
+    domain = SITE["domain"]
+
+    # ProfessionalService, а не Organization с товарами: мы оказываем услугу
+    # подбора, техникой не торгуем. areaServed заменяет адрес — площадки нет.
+    organization = {
+        "@type": "ProfessionalService",
+        "@id": domain + "/#organization",
+        "name": SITE["name"],
+        "url": domain + "/",
+        "serviceType": "Подбор вилочных погрузчиков",
+        "areaServed": {"@type": "AdministrativeArea", "name": SITE["region"]},
+    }
+    if SITE["legal_name"]:
+        organization["founder"] = {"@type": "Person", "name": SITE["legal_name"]}
+    if SITE.get("opening_hours_schema"):
+        organization["openingHours"] = SITE["opening_hours_schema"]
+    if SITE["geo_lat"] and SITE["geo_lon"]:
+        organization["geo"] = {
+            "@type": "GeoCoordinates",
+            "latitude": SITE["geo_lat"],
+            "longitude": SITE["geo_lon"],
+        }
+    if SITE["phone"]:
+        organization["telephone"] = SITE["phone"]
+    if SITE["email"]:
+        organization["email"] = SITE["email"]
+    if SITE["address"]:
+        organization["address"] = {
+            "@type": "PostalAddress",
+            "streetAddress": SITE["address"],
+            "addressLocality": SITE["address_locality"],
+            "postalCode": SITE["postal_code"],
+            "addressRegion": SITE["region"],
+            "addressCountry": "RU",
+        }
+
+    website = {
+        "@type": "WebSite",
+        "@id": domain + "/#website",
+        "url": domain + "/",
+        "name": SITE["name"],
+        "publisher": {"@id": domain + "/#organization"},
+        "inLanguage": "ru-RU",
+    }
+
+    page_node = {
+        "@type": page.get("schema_type", "WebPage"),
+        "@id": canonical,
+        "url": canonical,
+        "name": page["title"],
+        "description": page["description"],
+        "isPartOf": {"@id": domain + "/#website"},
+        "inLanguage": "ru-RU",
+    }
+
+    graph = [page_node, website, organization]
+
+    # Service — на страницах, описывающих саму услугу. Отдельный узел, а не
+    # свойство организации: так поисковик связывает услугу с областью работы.
+    if page.get("service"):
+        graph.append({
+            "@type": "Service",
+            "@id": canonical + "#service",
+            "name": page["service"],
+            "serviceType": "Подбор вилочных погрузчиков",
+            "provider": {"@id": domain + "/#organization"},
+            "areaServed": {"@type": "AdministrativeArea", "name": SITE["region"]},
+            "isRelatedTo": {"@id": domain + "/#website"},
+        })
+
+    if len(trail) > 1:
+        items = []
+        for i, (label, href) in enumerate(trail, start=1):
+            node = {"@type": "ListItem", "position": i, "name": label}
+            if href is not None:
+                node["item"] = domain + "/" + href.replace("index.html", "")
+            items.append(node)
+        breadcrumb_id = canonical + "#breadcrumb"
+        page_node["breadcrumb"] = {"@id": breadcrumb_id}
+        graph.append({
+            "@type": "BreadcrumbList",
+            "@id": breadcrumb_id,
+            "itemListElement": items,
+        })
+
+    faq_items = []
+    for block in page.get("blocks", []):
+        if block["type"] == "faq":
+            faq_items.extend(block.get("items", []))
+    faq_items.extend(page.get("faq", []))
+    if faq_items:
+        graph.append({
+            "@type": "FAQPage",
+            "@id": canonical + "#faq",
+            "mainEntity": [
+                {"@type": "Question", "name": q,
+                 "acceptedAnswer": {"@type": "Answer", "text": a}}
+                for q, a in faq_items
+            ],
+        })
+
+    data = {"@context": "https://schema.org", "@graph": graph}
+    return '<script type="application/ld+json">{}</script>'.format(
+        json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+    )
+
+
+# --------------------------------------------------------------------------
+# Рендер страницы целиком
+# --------------------------------------------------------------------------
+
+BASE = (TPL / "base.html").read_text(encoding="utf-8")
+
+
+def render_page(page):
+    slug = page["slug"]
+    root = root_prefix(slug)
+    canonical = SITE["domain"] + "/" + (slug + "/" if slug else "")
+
+    trail = page.get("trail", [])
+    body = page["body"].replace("@ROOT@", root)
+
+    verification = ""
+    if SITE["yandex_verification"]:
+        verification += '<meta name="yandex-verification" content="{}">\n'.format(e(SITE["yandex_verification"]))
+    if SITE["google_verification"]:
+        verification += '<meta name="google-site-verification" content="{}">\n'.format(e(SITE["google_verification"]))
+
+    robots = ""
+    if page.get("noindex"):
+        robots = '<meta name="robots" content="noindex, follow">\n'
+
+    metrika = ""
+    if SITE["metrika_id"]:
+        metrika = (
+            '<script>(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};'
+            'm[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,'
+            'a.parentNode.insertBefore(k,a)})(window,document,"script",'
+            '"https://mc.yandex.ru/metrika/tag.js","ym");'
+            'ym({id},"init",{clickmap:true,trackLinks:true,accurateTrackBounce:true,webvisor:true});</script>\n'
+            '<noscript><div><img src="https://mc.yandex.ru/watch/{id}" style="position:absolute;left:-9999px" '
+            'alt=""></div></noscript>'
+        ).replace("{id}", str(SITE["metrika_id"]))
+
+    out = BASE
+    for key, value in {
+        "title": e(page["title"]),
+        "description": e(page["description"]),
+        "canonical": e(canonical),
+        "og_type": page.get("og_type", "website"),
+        "site_name": e(SITE["name"]),
+        "domain": e(SITE["domain"]),
+        "robots": robots,
+        "verification": verification,
+        "jsonld": build_jsonld(page, canonical, trail),
+        "metrika": metrika,
+        "root": root,
+        "ver": VER,
+        "header": render_header(root, slug, "id=\"lead\"" in body),
+        "footer": render_footer(root),
+        "body": body,
+    }.items():
+        out = out.replace("{{" + key + "}}", value)
+
+    dest = ROOT / (slug + "/index.html" if slug else "index.html")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(out, encoding="utf-8")
+    return dest
+
+
+# --------------------------------------------------------------------------
+# Страницы
+# --------------------------------------------------------------------------
+
+def page_home():
+    """Главная. Продаёт услугу подбора, а не технику: у нас нет ни склада,
+    ни права называть цену, и текст это прямо проговаривает."""
+    cards = []
+    for c in CATEGORIES:
+        cards.append(
+            '        <a class="listing-card" href="@ROOT@catalog/{slug}/">\n'
+            '          <div class="listing-img">{img}</div>\n'
+            '          <div class="listing-body">\n'
+            '            <div class="brand">Тип двигателя</div>\n'
+            '            <h3>{name}</h3>\n'
+            '            <div class="listing-specs"><span>{total} модели в справочнике</span></div>\n'
+            '            <div class="listing-foot">\n'
+            '              <div class="price">Подбор под задачу</div>\n'
+            '              <span class="btn btn-ghost btn-sm">Смотреть →</span>\n'
+            '            </div>\n'
+            '          </div>\n'
+            '        </a>'.format(
+                slug=e(c["slug"]), img=render_photo(c, eager=True),
+                name=e(c["name"]), total=len(c["products"]),
+            )
+        )
+
+    icons = []
+    for c in CATEGORIES:
+        icons.append(
+            '        <a class="cat-icon-btn" href="@ROOT@catalog/{slug}/">{svg}{name}</a>'.format(
+                slug=e(c["slug"]), svg=FORKLIFT_SVG.format(w="4"), name=e(c["name"])
+            )
+        )
+
+    city_links = "".join(
+        '<li><a href="@ROOT@vilochnye-pogruzchiki-{slug}/">Вилочные погрузчики в {name_in}</a></li>'.format(
+            slug=e(c["slug"]), name_in=e(c["name_in"])
+        )
+        for c in cities_data.CITIES
+    )
+
+    steps = [
+        ("01", "Заявка", "Опишите задачу: что поднимаете, на какую высоту, в помещении или на улице."),
+        ("02", "Подбор", "Присылаем два-три подходящих варианта с характеристиками и ориентиром по бюджету."),
+        ("03", "Поставщик", "Сводим с поставщиком, у которого выбранная техника есть в наличии."),
+        ("04", "Сделка", "Дальше вы работаете с поставщиком напрямую."),
+    ]
+    steps_html = "".join(
+        '<div class="proc-item"><div class="idx">{idx}</div>'
+        '<div><h3>{tag}</h3></div><p>{text}</p></div>'.format(
+            idx=idx, tag=e(tag), text=e(text))
+        for idx, tag, text in steps
+    )
+
+    body = (
+        '  <section id="catalog" style="padding-top:48px;">\n'
+        '    <div class="wrap">\n'
+        '      <h1 class="page-h1">Подбор вилочных погрузчиков в {region_in}</h1>\n'
+        '      <p class="page-intro">Электрические, дизельные и газобаллонные. Опишите задачу — '
+        'что поднимаете, на какую высоту и в каких условиях работает техника — и получите '
+        'подборку подходящих моделей с характеристиками.</p>\n\n'
+        '      <div class="cat-icons">\n{icons}\n      </div>\n\n'
+        '      <h2 class="catalog-h2">Типы вилочных погрузчиков</h2>\n'
+        '      <div class="listing-grid">\n{cards}\n      </div>\n'
+        '    </div>\n'
+        '  </section>\n\n'
+        '  <section id="process" style="padding-top:0;">\n'
+        '    <div class="wrap">\n'
+        '      <div class="section-head"><div><span class="eyebrow">Как это работает</span>\n'
+        '        <h2>Четыре шага до техники</h2></div>\n'
+        '        <p>Подробнее — на странице <a href="@ROOT@kak-rabotaem/" class="inline-link">'
+        'как это работает</a>.</p></div>\n'
+        '      <div class="process-list">{steps}</div>\n'
+        '    </div>\n'
+        '  </section>\n\n'
+        '  <section id="geo" style="padding-top:0;">\n'
+        '    <div class="wrap">\n'
+        '      <div class="section-head"><div><span class="eyebrow">География</span>\n'
+        '        <h2>Где мы работаем</h2></div></div>\n'
+        '      <ul class="geo-list">{cities}</ul>\n'
+        '    </div>\n'
+        '  </section>\n\n'
+        '{form}'
+    ).format(
+        region_in=e(SITE["region_in"]),
+        icons="\n".join(icons),
+        cards="\n".join(cards),
+        steps=steps_html,
+        cities=city_links,
+        form=render_lead_form(),
+    )
+
+    return {
+        "slug": "",
+        "title": "Подбор вилочных погрузчиков в Екатеринбурге и области",
+        "description": "Подбор вилочного погрузчика под задачу склада: электрические, дизельные и газобаллонные модели. Сравним характеристики и грузоподъёмность, поможем выбрать.",
+        "schema_type": "WebPage",
+        "service": "Подбор вилочных погрузчиков",
+        "trail": [("Главная", None)],
+        "body": body,
+    }
+
+
+def page_category(category):
+    products = []
+    for i, p in enumerate(category["products"], start=1):
+        p = dict(p)
+        p["_order"] = i
+        products.append(p)
+
+    others = [c for c in CATEGORIES if c["slug"] != category["slug"]]
+    cross = " · ".join(
+        '<a href="@ROOT@catalog/{}/">{}</a>'.format(e(c["slug"]), e(c["name"].lower()))
+        for c in others
+    )
+
+    intro = '<p class="page-intro">{}</p>'.format(e(category["intro"])) if category["intro"] else ""
+
+    body = (
+        '  <section style="padding-top:40px; padding-bottom:0;">\n'
+        '    <div class="wrap">\n'
+        '      {crumbs}\n'
+        '      <h1 class="page-h1">{h1}</h1>\n'
+        '      {intro}\n'
+        '    </div>\n'
+        '  </section>\n\n'
+        '  <section style="padding-top:32px;">\n'
+        '    <div class="wrap">\n'
+        '{catalog}\n'
+        '      <p class="cross-links">Другие типы двигателя: {cross}</p>\n'
+        '    </div>\n'
+        '  </section>\n\n'
+        '{form}'
+    ).format(
+        crumbs=render_breadcrumbs("@ROOT@", [
+            ("Главная", "index.html"),
+            ("Каталог", "index.html#catalog"),
+            (category["name"], None),
+        ]),
+        h1=e(category["h1"]),
+        intro=intro,
+        catalog=render_catalog_body(products, "{}: модели и характеристики".format(category["name"])),
+        cross=cross,
+        form=render_lead_form(),
+    )
+
+    return {
+        "slug": "catalog/" + category["slug"],
+        "title": category["title"],
+        "description": category["description"],
+        "schema_type": "CollectionPage",
+        "service": "Подбор: {}".format(category["name"].lower()),
+        "trail": [("Главная", "index.html"), ("Каталог", "index.html#catalog"), (category["name"], None)],
+        "body": body,
+    }
+
+
+def page_text(spec):
+    content = render_blocks(spec["blocks"], "@ROOT@")
+    has_form = any(b["type"] == "form" for b in spec["blocks"])
+
+    body = (
+        '  <section style="padding-top:40px;{pb}">\n'
+        '    <div class="wrap">\n'
+        '      {crumbs}\n'
+        '      <h1 class="page-h1">{h1}</h1>\n'
+        '      <article class="article-body">\n'
+        '      {content}\n'
+        '      </article>\n'
+        '    </div>\n'
+        '  </section>\n'
+        '{form}'
+    ).format(
+        pb=" padding-bottom:64px;" if has_form else "",
+        crumbs=render_breadcrumbs("@ROOT@", [("Главная", "index.html"), (spec["breadcrumb"], None)]),
+        h1=e(spec["h1"]),
+        content=content,
+        form="\n" + render_lead_form() if has_form else "",
+    )
+
+    return {
+        "slug": spec["slug"],
+        "title": spec["title"],
+        "description": spec["description"],
+        "schema_type": "WebPage",
+        "noindex": spec.get("noindex", False),
+        "trail": [("Главная", "index.html"), (spec["breadcrumb"], None)],
+        "blocks": spec["blocks"],
+        "body": body,
+    }
+
+
+def page_city(city):
+    spec = cities_data.page(city)
+
+    cat_links = "".join(
+        '<li><a href="@ROOT@catalog/{slug}/">{name} с доставкой в {city_in}</a></li>'.format(
+            slug=e(c["slug"]), name=e(c["name"]), city_in=e(spec["city_in"])
+        )
+        for c in CATEGORIES
+    )
+
+    unique = '<p>{}</p>'.format(e(spec["unique"])) if spec["unique"] else ""
+
+    faq_html = ""
+    if spec["faq"]:
+        items = "".join(
+            '<div class="faq-item{cls}"><button class="faq-q"><span>{q}</span>'
+            '<span class="plus">+</span></button><div class="faq-a"><p>{a}</p></div></div>'.format(
+                cls=" open" if i == 0 else "", q=e(q), a=e(a))
+            for i, (q, a) in enumerate(spec["faq"])
+        )
+        faq_html = ('      <h2>Частые вопросы</h2>\n'
+                    '      <div class="faq-list">{}</div>\n'.format(items))
+
+    body = (
+        '  <section style="padding-top:40px; padding-bottom:0;">\n'
+        '    <div class="wrap">\n'
+        '      {crumbs}\n'
+        '      <h1 class="page-h1">{h1}</h1>\n'
+        '      <article class="article-body">\n'
+        '      {unique}\n'
+        '      <h2>Каталог</h2>\n'
+        '      <ul class="geo-list">{cats}</ul>\n'
+        '{faq}'
+        '      </article>\n'
+        '    </div>\n'
+        '  </section>\n\n'
+        '{form}'
+    ).format(
+        crumbs=render_breadcrumbs("@ROOT@", [
+            ("Главная", "index.html"),
+            ("Города обслуживания", "index.html#geo"),
+            (spec["breadcrumb"], None),
+        ]),
+        h1=e(spec["h1"]),
+        unique=unique,
+        cats=cat_links,
+        faq=faq_html,
+        form=render_lead_form(),
+    )
+
+    return {
+        "slug": spec["slug"],
+        "title": spec["title"],
+        "description": spec["description"],
+        "schema_type": "WebPage",
+        "service": "Подбор вилочных погрузчиков в {}".format(spec["city_in"]),
+        # Без своего текста страница — дубль соседней. Собираем, но закрываем
+        # от индексации, пока `unique` не заполнен.
+        "noindex": not spec["unique"],
+        "faq": spec["faq"],
+        "trail": [
+            ("Главная", "index.html"),
+            ("Города обслуживания", "index.html#geo"),
+            (spec["breadcrumb"], None),
+        ],
+        "body": body,
+    }
+
+
+def page_articles():
+    body = (
+        '  <section style="padding-top:40px;">\n'
+        '    <div class="wrap">\n'
+        '      {crumbs}\n'
+        '      <h1 class="page-h1">Статьи о вилочных погрузчиках</h1>\n'
+        '      <p class="page-intro">Разборы по выбору и эксплуатации техники. Раздел наполняется.</p>\n'
+        '      <div class="articles-grid"></div>\n'
+        '    </div>\n'
+        '  </section>'
+    ).format(crumbs=render_breadcrumbs("@ROOT@", [("Главная", "index.html"), ("Статьи", None)]))
+
+    return {
+        "slug": "articles",
+        "title": "Статьи о вилочных погрузчиках — выбор и эксплуатация",
+        "description": "Материалы о выборе и эксплуатации вилочных погрузчиков: типы двигателей, грузоподъёмность, высота подъёма, обслуживание и типичные ошибки покупателей.",
+        "schema_type": "CollectionPage",
+        "trail": [("Главная", "index.html"), ("Статьи", None)],
+        "body": body,
+    }
+
+
+# --------------------------------------------------------------------------
+# Точка входа
+# --------------------------------------------------------------------------
+
+def main():
+    force_all = "--all" in sys.argv
+
+    pages = [page_home()]
+    pages += [page_category(c) for c in CATEGORIES]
+    pages += [page_text(p) for p in TRUST_PAGES]
+    pages += [page_text(p) for p in LEGAL_PAGES]
+    pages += [page_city(c) for c in cities_data.CITIES]
+    pages.append(page_articles())
+
+    if force_all:
+        for p in pages:
+            p["noindex"] = False
+
+    written = [render_page(p) for p in pages]
+
+    # sitemap — только индексируемые страницы
+    urls = []
+    for p in pages:
+        if p.get("noindex"):
+            continue
+        slug = p["slug"]
+        urls.append("  <url><loc>{}/{}</loc><changefreq>weekly</changefreq></url>".format(
+            SITE["domain"], slug + "/" if slug else ""))
+    (ROOT / "sitemap.xml").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + "\n".join(urls) + "\n</urlset>\n",
+        encoding="utf-8",
+    )
+
+    (ROOT / "robots.txt").write_text(
+        "User-agent: *\nAllow: /\n\nSitemap: {}/sitemap.xml\n".format(SITE["domain"]),
+        encoding="utf-8",
+    )
+
+    print("Собрано страниц: {}".format(len(written)))
+    print("В sitemap: {}".format(len(urls)))
+
+    # Мы оказываем услугу подбора, а не торгуем. Формулировки продавца на
+    # сайте — это и введение покупателя в заблуждение, и готовое основание
+    # считать деятельность торговой. Ловим их на выходе, а не на проде.
+    slips = []
+    for path in written:
+        text = path.read_text(encoding="utf-8").lower()
+        for phrase in FORBIDDEN_WORDING:
+            if phrase.lower() in text:
+                slips.append((path.relative_to(ROOT), phrase))
+    if slips:
+        print("\nФОРМУЛИРОВКИ ПРОДАВЦА — так писать нельзя:")
+        for rel, phrase in slips:
+            print("  • {}: «{}»".format(rel, phrase))
+        return 1
+
+    hidden = [p["slug"] for p in pages if p.get("noindex")]
+    if hidden:
+        print("\nЗакрыты от индексации (нет своего текста): {}".format(len(hidden)))
+        for slug in hidden:
+            print("  •", slug)
+        print("Заполните `unique` и `faq` в _build/data/cities.py — noindex снимется сам.")
+
+    missing = []
+    if not SITE["metrika_id"]:
+        missing.append("счётчик Яндекс.Метрики")
+    if not SITE["yandex_verification"]:
+        missing.append("код подтверждения Яндекс.Вебмастера")
+    if missing:
+        print("\nНе хватает для полноценного запуска:")
+        for m in missing:
+            print("  •", m)
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

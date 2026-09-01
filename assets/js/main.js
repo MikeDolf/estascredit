@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         leadForm.insertBefore(box, leadForm.querySelector('.form-note'));
       }
       box.textContent = text;
-      box.style.color = isError ? '#ff7a45' : '#4fd8c4';
+      box.style.color = isError ? '#c94409' : '#0d8073';
       if (withLink) {
         box.appendChild(document.createTextNode(' '));
         const link = document.createElement('a');
@@ -165,12 +165,151 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // ---- Catalog filters -----------------------------------------------
+  // Filters read data-* attributes off each .product-card and toggle
+  // .is-hidden — no re-render, so it works the same with 4 sample cards
+  // now and 400 real ones later.
+  const productGrid = document.querySelector('.product-grid');
+  const filtersPanel = document.querySelector('.filters');
+
+  if (productGrid && filtersPanel) {
+    const cards = [...productGrid.querySelectorAll('.product-card')];
+    const catBoxes = [...filtersPanel.querySelectorAll('[data-filter-group="cat"]')];
+    const capBoxes = [...filtersPanel.querySelectorAll('[data-filter-group="capacity"]')];
+    const stockBox = filtersPanel.querySelector('[data-filter-group="instock"]');
+    const priceMin = filtersPanel.querySelector('[data-filter-group="price-min"]');
+    const priceMax = filtersPanel.querySelector('[data-filter-group="price-max"]');
+    const resetBtn = filtersPanel.querySelector('.filters-reset');
+    const countEl = document.querySelector('.sort-bar .count');
+    const catIconBtns = [...document.querySelectorAll('.cat-icon-btn')];
+
+    const capMatches = (cardCap, ranges) => {
+      // ranges like "0-1500" or "3000-" (open-ended)
+      return ranges.some(r => {
+        const [lo, hi] = r.split('-');
+        const loN = Number(lo) || 0;
+        const hiN = hi ? Number(hi) : Infinity;
+        return cardCap >= loN && cardCap <= hiN;
+      });
+    };
+
+    const applyFilters = () => {
+      const activeCats = catBoxes.filter(b => b.checked).map(b => b.value);
+      const activeCaps = capBoxes.filter(b => b.checked).map(b => b.value);
+      const stockOnly = stockBox ? stockBox.checked : false;
+      const min = priceMin && priceMin.value ? Number(priceMin.value) : 0;
+      const max = priceMax && priceMax.value ? Number(priceMax.value) : Infinity;
+
+      let visible = 0;
+      cards.forEach(card => {
+        const cat = card.dataset.cat || '';
+        const cap = Number(card.dataset.capacity || 0);
+        const price = Number(card.dataset.price || 0);
+        const inStock = card.dataset.instock === '1';
+
+        let ok = true;
+        if (activeCats.length && !activeCats.includes(cat)) ok = false;
+        if (activeCaps.length && !capMatches(cap, activeCaps)) ok = false;
+        if (stockOnly && !inStock) ok = false;
+        if (price < min || price > max) ok = false;
+
+        card.classList.toggle('is-hidden', !ok);
+        if (ok) visible++;
+      });
+
+      if (countEl) countEl.textContent = `Показано ${visible} из ${cards.length}`;
+
+      catIconBtns.forEach(btn => btn.classList.toggle('active', activeCats.includes(btn.dataset.cat)));
+    };
+
+    [...catBoxes, ...capBoxes, stockBox].filter(Boolean).forEach(el => {
+      el.addEventListener('change', applyFilters);
+    });
+    [priceMin, priceMax].filter(Boolean).forEach(el => {
+      el.addEventListener('change', applyFilters);
+    });
+
+    // Icon strip is a shortcut into the matching sidebar checkbox, not a
+    // second source of truth — one filter state, two entry points.
+    catIconBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const box = catBoxes.find(b => b.value === btn.dataset.cat);
+        if (box) {
+          box.checked = !box.checked;
+          applyFilters();
+        }
+        productGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        [...catBoxes, ...capBoxes].forEach(b => { b.checked = false; });
+        if (stockBox) stockBox.checked = false;
+        if (priceMin) priceMin.value = '';
+        if (priceMax) priceMax.value = '';
+        applyFilters();
+      });
+    }
+
+    // Mobile: filters live behind a toggle button instead of a sticky sidebar.
+    const filtersToggle = document.querySelector('.filters-toggle');
+    if (filtersToggle) {
+      filtersToggle.addEventListener('click', () => {
+        const open = filtersPanel.classList.toggle('open');
+        filtersToggle.setAttribute('aria-expanded', String(open));
+      });
+    }
+
+    applyFilters();
+  }
+
+  // ---- Catalog sort --------------------------------------------------
+  const sortSelect = document.querySelector('.sort-bar select[data-sort]');
+  if (sortSelect && productGrid) {
+    sortSelect.addEventListener('change', () => {
+      const cards = [...productGrid.querySelectorAll('.product-card')];
+      const key = sortSelect.value;
+      const sorted = cards.sort((a, b) => {
+        if (key === 'price-asc') return Number(a.dataset.price) - Number(b.dataset.price);
+        if (key === 'price-desc') return Number(b.dataset.price) - Number(a.dataset.price);
+        if (key === 'capacity') return Number(b.dataset.capacity) - Number(a.dataset.capacity);
+        return Number(a.dataset.order) - Number(b.dataset.order); // "по умолчанию"
+      });
+      sorted.forEach(card => productGrid.appendChild(card));
+    });
+  }
+
+  // ---- Кнопка «Подобрать» --------------------------------------------
+  // Корзины и оформления заказа здесь нет и быть не может: технику мы не
+  // продаём. Кнопка подставляет позицию в форму заявки и ведёт к ней.
+  document.querySelectorAll('.product-actions [data-buy]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const card = btn.closest('.product-card');
+      const leadForm = document.getElementById('leadForm');
+      if (card && leadForm) {
+        const typeField = leadForm.querySelector('[data-field="type"]');
+        const brandField = leadForm.querySelector('[data-field="brand"]');
+        const commentField = leadForm.querySelector('[data-field="comment"]');
+        const name = card.querySelector('h3')?.textContent.trim() || '';
+        const typeByCat = { elektro: 'Электропогрузчик', dizel: 'Дизельный погрузчик', gaz: 'Газобаллонный погрузчик' };
+        if (typeField && typeByCat[card.dataset.cat]) typeField.value = typeByCat[card.dataset.cat];
+        if (brandField) brandField.value = name;
+        if (commentField && !commentField.value) {
+          commentField.value = `Интересует: ${name}`;
+        }
+      }
+      document.getElementById('lead')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
   // ---- Sticky header shadow ---------------------------------------------
   const header = document.querySelector('header');
   if (header) {
     let ticking = false;
     const applyShadow = () => {
-      header.style.boxShadow = window.scrollY > 40 ? '0 8px 24px rgba(0,0,0,0.3)' : 'none';
+      header.style.boxShadow = window.scrollY > 40 ? '0 6px 20px rgba(0,0,0,0.08)' : 'none';
       ticking = false;
     };
     window.addEventListener('scroll', () => {

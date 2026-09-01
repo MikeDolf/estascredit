@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://estascredit.ru/</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://estascredit.ru/catalog/elektricheskie/</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://estascredit.ru/catalog/dizelnye/</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://estascredit.ru/catalog/gazoballonnye/</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://estascredit.ru/o-servise/</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://estascredit.ru/kak-rabotaem/</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://estascredit.ru/garantiya-i-servis/</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://estascredit.ru/kontakty/</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://estascredit.ru/usloviya/</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://estascredit.ru/politika-konfidencialnosti/</loc><changefreq>weekly</changefreq></url>
   <url><loc>https://estascredit.ru/articles/</loc><changefreq>weekly</changefreq></url>
 </urlset>

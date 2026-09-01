@@ -63,6 +63,9 @@ class Page(HTMLParser):
         self.jsonld: list[str] = []
         self.ids: list[str] = []
         self.h1 = 0
+        self.headings: list[int] = []
+        self.meta: dict[str, str] = {}
+        self.rels: set[str] = set()
         self._in_title = False
         self._in_a = False
         self._in_ld = False
@@ -82,8 +85,15 @@ class Page(HTMLParser):
             self._in_title = True
         elif tag == "h1":
             self.h1 += 1
+            self.headings.append(1)
+        elif tag in ("h2", "h3", "h4", "h5", "h6"):
+            self.headings.append(int(tag[1]))
+        elif tag == "link" and a.get("rel"):
+            self.rels.add(a["rel"])
         elif tag == "meta" and a.get("name") == "description":
             self.description = a.get("content", "")
+        elif tag == "meta" and (a.get("property") or a.get("name")):
+            self.meta[a.get("property") or a.get("name")] = a.get("content", "")
         elif tag == "img" and not a.get("alt"):
             self.imgs_no_alt += 1
         elif tag == "script":
@@ -137,7 +147,17 @@ class Page(HTMLParser):
 def main() -> int:
     # _build содержит шаблоны с плейсхолдерами {{ }} — это не страницы.
     skip = {"_checks", "_build", "node_modules", ".git"}
-    files = sorted(p for p in ROOT.rglob("*.html") if not skip & set(p.parts))
+    # Файлы подтверждения прав в Яндекс.Вебмастере и Search Console — это
+    # технические заглушки для робота, а не страницы: ни <h1>, ни описания
+    # у них быть не должно.
+    def is_verification(path):
+        name = path.name
+        return name.startswith(("yandex_", "google")) and path.parent == ROOT
+
+    files = sorted(
+        p for p in ROOT.rglob("*.html")
+        if not skip & set(p.parts) and not is_verification(p)
+    )
     if not files:
         print("Не найдено ни одной HTML-страницы")
         return 1
@@ -160,6 +180,28 @@ def main() -> int:
 
         if page.h1 != 1:
             problems.append(f"{rel}: <h1> на странице {page.h1}, должен быть ровно 1")
+
+        # --- требования on-page-seo.md ---
+        tl = len(page.title.strip())
+        if not 50 <= tl <= 60:
+            problems.append(f"{rel}: длина <title> {tl}, нужно 50–60")
+        dl = len(page.description.strip())
+        if not 150 <= dl <= 160:
+            problems.append(f"{rel}: длина description {dl}, нужно 150–160")
+
+        for key in ("og:image", "og:title", "og:description", "og:url",
+                    "twitter:card", "twitter:image"):
+            if not page.meta.get(key):
+                problems.append(f"{rel}: нет {key}")
+        if "apple-touch-icon" not in page.rels:
+            problems.append(f"{rel}: нет apple-touch-icon")
+
+        # Пропуск уровня (H1 → H3) ломает структуру документа для читалок
+        # и для поисковика.
+        for prev, cur in zip(page.headings, page.headings[1:]):
+            if cur - prev > 1:
+                problems.append(f"{rel}: пропущен уровень заголовка — h{prev} → h{cur}")
+                break
         if page.imgs_no_alt:
             problems.append(f"{rel}: <img> без alt — {page.imgs_no_alt}")
         titles[page.title.strip()].append(str(rel))

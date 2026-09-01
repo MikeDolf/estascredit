@@ -1,24 +1,47 @@
 /* ==========================================================================
-   SINOTECH / estascredit.ru — shared stylesheet
-   Used by index.html and every page under /articles/
+   УралФорклифт / estascredit.ru — общая таблица стилей
+   Используется всеми страницами. Генерируется не она — её правят руками,
+   страницы собирает _build/build.py.
+
+   Светлая тема: белый фон, тёмный текст, один акцент (оранжевый). Так же
+   устроены сайты конкурентов в нише — закупщик сравнивает нас с ними в
+   соседних вкладках, и тёмный фон здесь читается как чужеродный.
    ========================================================================== */
 
 :root{
-  --bg:#0e1113;
-  --panel:#171b1d;
-  --panel-alt:#1e2326;
-  --panel-line:#2a3134;
-  --orange:#ff5a1f;
-  --orange-soft:#ff7a45;
-  --teal:#4fd8c4;
+  --bg:#ffffff;
+  --panel:#f6f7f8;
+  --panel-alt:#eef0f2;
+  --panel-line:#dde2e6;
+  --orange:#e8500f;
+  --orange-soft:#c94409;
+  /* Бирюзовый на белом должен быть заметно темнее исходного #4fd8c4,
+     иначе не проходит по контрасту для мелкого текста. */
+  --teal:#0d8073;
   --yellow:#ffc13b;
-  --text:#f3f1ea;
-  --text-dim:#9aa2a6;
-  --text-faint:#5f686c;
+  --text:#14181a;
+  --text-dim:#59636a;
+  /* AA требует 4.5:1 для основного текста: #828d94 давал 3.3:1 */
+  --text-faint:#6b757c;
   --radius:2px;
   --maxw:1240px;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
+
+/* Ссылка для клавиатуры: уводит за пределы экрана, но всплывает при фокусе. */
+.skip-link{
+  position:absolute; left:-9999px; top:0; z-index:200;
+  background:var(--orange); color:#fff; padding:12px 20px;
+  font-family:'Oswald',sans-serif; font-size:14px; letter-spacing:0.04em;
+}
+.skip-link:focus{left:0;}
+
+/* Видимый фокус на всём интерактивном. Браузерный контур на оранжевом фоне
+   почти не читается, поэтому задаём свой с отступом. */
+:where(a, button, input, select, textarea):focus-visible{
+  outline:2px solid var(--orange);
+  outline-offset:2px;
+}
 /* The `hidden` attribute is weaker than any class-based display rule, so a
    class like .lead__done{display:flex} would silently override it and leave
    "hidden" blocks visible. Neutralised once, globally. */
@@ -59,8 +82,8 @@ button{font-family:inherit; cursor:pointer;}
 .bg-grid{
   position:absolute; inset:0;
   background-image:
-    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+    linear-gradient(rgba(0,0,0,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.045) 1px, transparent 1px);
   background-size:44px 44px;
   pointer-events:none;
 }
@@ -72,7 +95,7 @@ button{font-family:inherit; cursor:pointer;}
 /* ===== HEADER ===== */
 header{
   position:sticky; top:0; z-index:100;
-  background:rgba(14,17,19,0.92);
+  background:rgba(255,255,255,0.94);
   backdrop-filter:blur(10px);
   border-bottom:1px solid var(--panel-line);
 }
@@ -105,12 +128,10 @@ header{
   letter-spacing:0.02em;
 }
 .logo .mark{
-  width:34px; height:34px; border:2px solid var(--orange);
-  display:flex; align-items:center; justify-content:center;
-  color:var(--orange); font-size:14px; font-weight:700; transform:rotate(45deg);
-  flex-shrink:0;
+  width:40px; height:40px; display:flex; align-items:center; justify-content:center;
+  color:var(--orange); flex-shrink:0;
 }
-.logo .mark span{transform:rotate(-45deg); display:block;}
+.logo .mark svg{width:100%; height:100%;}
 .logo small{color:var(--text-faint); font-family:'Manrope',sans-serif; font-weight:600; font-size:10.5px; letter-spacing:0.14em; display:block; text-transform:uppercase;}
 nav.mainnav{display:flex; gap:26px;}
 nav.mainnav a{
@@ -123,9 +144,10 @@ nav.mainnav a.active{color:var(--orange);}
 /* CTA duplicated inside the mobile dropdown — hidden while the desktop nav is shown */
 nav.mainnav .nav-cta{display:none;}
 .nav-right{display:flex; align-items:center; gap:22px;}
-.phone-block{text-align:right; display:none;}
-.phone-block .num{font-family:'Oswald',sans-serif; font-weight:600; font-size:16px;}
-.phone-block .hrs{font-size:11px; color:var(--text-faint);}
+.phone-block{text-align:right; display:block; line-height:1.25;}
+.phone-block .num{font-family:'Oswald',sans-serif; font-weight:600; font-size:16px; display:block;}
+.phone-block:hover .num{color:var(--orange);}
+.phone-block .hrs{font-size:11px; color:var(--text-faint); display:block;}
 .btn{
   display:inline-flex; align-items:center; justify-content:center; gap:8px;
   font-family:'Oswald',sans-serif; font-weight:600; font-size:13.5px;
@@ -133,7 +155,7 @@ nav.mainnav .nav-cta{display:none;}
   padding:14px 26px; border-radius:var(--radius); border:1px solid transparent;
   transition:all .15s ease; white-space:nowrap;
 }
-.btn-primary{background:var(--orange); color:#0e1113;}
+.btn-primary{background:var(--orange); color:#fff;}
 .btn-primary:hover{background:var(--orange-soft); transform:translateY(-1px);}
 .btn-ghost{border-color:var(--panel-line); color:var(--text);}
 .btn-ghost:hover{border-color:var(--orange); color:var(--orange);}
@@ -246,8 +268,10 @@ section{padding:96px 0; position:relative;}
   border-bottom:1px solid var(--panel-line);
 }
 .listing-img svg{width:56%; color:var(--text-faint);}
+.listing-img{background:#fff;}
+.listing-img img{width:100%; height:100%; object-fit:contain; padding:10px;}
 .listing-tag{
-  position:absolute; top:12px; left:12px; background:var(--orange); color:#0e1113;
+  position:absolute; top:12px; left:12px; background:var(--orange); color:#fff;
   font-family:'Oswald',sans-serif; font-size:10.5px; font-weight:700; letter-spacing:0.08em;
   padding:5px 10px;
 }
@@ -259,6 +283,188 @@ section{padding:96px 0; position:relative;}
 .listing-foot{display:flex; align-items:center; justify-content:space-between; padding-top:16px; border-top:1px solid var(--panel-line);}
 .listing-foot .price{font-family:'Oswald',sans-serif; font-weight:600; font-size:16px; color:var(--orange-soft);}
 .listing-foot .price small{display:block; font-family:'Manrope'; font-weight:500; font-size:10.5px; color:var(--text-faint);}
+
+/* ===== CATALOG: PAGE H1 ===== */
+.page-h1{font-size:clamp(26px,3.4vw,38px); margin-bottom:28px;}
+.page-intro{color:var(--text-dim); max-width:660px; font-size:15.5px; margin-bottom:8px;}
+.cross-links{margin-top:32px; font-size:13.5px; color:var(--text-faint);}
+.cross-links a{color:var(--text-dim); text-decoration:underline; text-underline-offset:2px;}
+.cross-links a:hover{color:var(--orange);}
+
+/* ===== СЕРВИСНЫЕ СТРАНИЦЫ ===== */
+/* Предупреждение о недостающей фактуре. Видно и посетителю, и редактору —
+   исчезает само, как только поля заполнены в _build/data/site.py. */
+.notice{
+  border-left:3px solid var(--orange); background:var(--panel);
+  padding:14px 18px; margin:0 0 20px; font-size:14.5px; color:var(--text-dim);
+}
+.req-table{width:100%; border-collapse:collapse; font-size:14.5px;}
+.req-table th{
+  text-align:left; width:210px; padding:10px 14px; border:1px solid var(--panel-line);
+  background:var(--panel); font-family:'Oswald',sans-serif; font-weight:600;
+  font-size:12.5px; letter-spacing:0.04em; text-transform:uppercase; color:var(--text);
+  vertical-align:top;
+}
+.req-table td{padding:10px 14px; border:1px solid var(--panel-line); color:var(--text-dim);}
+.contact-channel{margin-top:20px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+
+/* Списки-ссылки: города, категории внутри гео-страниц */
+.geo-list{display:grid; grid-template-columns:repeat(2,1fr); gap:10px 24px; margin:0;}
+.geo-list li{border-bottom:1px solid var(--panel-line); padding:10px 0;}
+.geo-list a{color:var(--text-dim); font-size:14.5px;}
+.geo-list a:hover{color:var(--orange);}
+
+.inline-link{color:var(--orange); text-decoration:underline; text-underline-offset:2px;}
+
+/* Строка городов в подвале */
+.foot-geo{padding:24px 0; border-top:1px solid var(--panel-line);}
+.foot-geo p{font-size:13.5px; color:var(--text-dim); line-height:1.9;}
+.foot-geo a{color:var(--text-dim);}
+.foot-geo a:hover{color:var(--orange);}
+
+/* ===== CATALOG: PROMO BANNER ===== */
+.promo-banner{
+  background:linear-gradient(135deg, var(--orange) 0%, var(--orange-soft) 100%);
+  color:#fff; padding:34px 40px; margin-bottom:40px;
+  display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap;
+}
+.promo-banner .eyebrow{color:#fff;}
+.promo-banner .eyebrow::before{background:#fff;}
+.promo-banner h2{font-size:clamp(20px,2.6vw,30px); margin:10px 0 0;}
+.promo-banner .btn-ghost{border-color:#fff; color:#fff;}
+.promo-banner .btn-ghost:hover{background:#fff; color:var(--orange);}
+
+/* ===== CATALOG: CATEGORY ICON STRIP ===== */
+.cat-icons{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
+  background:var(--panel-line); border:1px solid var(--panel-line); margin-bottom:48px;
+}
+.cat-icon-btn{
+  background:var(--panel); color:var(--text-dim); padding:22px 16px; text-align:center;
+  border:none; display:flex; flex-direction:column; align-items:center; gap:10px;
+  font-family:'Oswald',sans-serif; font-size:13px; font-weight:600; letter-spacing:0.02em;
+  transition:background .15s, color .15s;
+}
+.cat-icon-btn svg{width:34px; height:34px; color:var(--teal);}
+.cat-icon-btn:hover, .cat-icon-btn.active{background:var(--panel-alt); color:var(--text);}
+.cat-icon-btn.active svg{color:var(--orange);}
+
+/* ===== CATALOG: LAYOUT ===== */
+.catalog-layout{display:grid; grid-template-columns:260px minmax(0,1fr); gap:40px; align-items:start;}
+.filters-toggle{display:none;}
+
+/* ===== CATALOG: FILTERS SIDEBAR ===== */
+.filters{
+  background:var(--panel); border:1px solid var(--panel-line); padding:26px;
+  position:sticky; top:110px;
+}
+.filters h2{
+  font-family:'Oswald',sans-serif; font-size:13px; letter-spacing:0.06em; text-transform:uppercase;
+  color:var(--text); margin-bottom:14px; padding-top:22px; border-top:1px solid var(--panel-line);
+}
+.filters h2:first-child{padding-top:0; border-top:none;}
+.filter-opt{
+  display:flex; align-items:center; gap:10px; padding:7px 0; font-size:13.5px; color:var(--text-dim);
+  cursor:pointer;
+}
+.filter-opt:hover{color:var(--text);}
+.filter-opt input{accent-color:var(--orange); width:16px; height:16px; flex-shrink:0;}
+.filter-opt .count{margin-left:auto; color:var(--text-faint); font-size:12px;}
+.filter-price{display:flex; align-items:center; gap:8px;}
+.filter-price input{
+  background:var(--bg); border:1px solid var(--panel-line); color:var(--text);
+  padding:9px 10px; font-size:13px; width:100%; min-width:0; border-radius:var(--radius);
+}
+.filter-price span{color:var(--text-faint); font-size:12px; flex-shrink:0;}
+.filters .btn{width:100%; margin-top:16px;}
+.filters-reset{
+  display:block; width:100%; text-align:center; margin-top:10px;
+  font-size:12.5px; color:var(--text-faint); background:none; border:none; padding:6px;
+}
+.filters-reset:hover{color:var(--orange);}
+
+/* Заголовок над сеткой: нужен и визуально, и чтобы не прыгать с H1 на H3 */
+.catalog-h2{font-size:19px; margin-bottom:18px;}
+
+/* Ссылка на карту вместо встроенного iframe */
+.map-link{margin:18px 0;}
+.map-link a{color:var(--orange-soft); text-decoration:underline; text-underline-offset:2px;}
+
+/* Ссылки на нормативные документы */
+.source-list{margin:0 0 18px; padding-left:20px; list-style:disc;}
+.source-list li{margin-bottom:8px;}
+.source-list a{color:var(--orange-soft); text-decoration:underline; text-underline-offset:2px;}
+
+/* ===== CATALOG: SORT BAR ===== */
+.sort-bar{
+  display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid var(--panel-line);
+}
+.sort-bar .count{font-size:13.5px; color:var(--text-dim);}
+.sort-bar .sort-field{display:flex; align-items:center; gap:10px;}
+.sort-bar label{font-size:12.5px; color:var(--text-faint); letter-spacing:0.02em;}
+.sort-bar select{
+  background:var(--panel); border:1px solid var(--panel-line); color:var(--text);
+  padding:9px 12px; font-size:13px; border-radius:var(--radius); outline:none;
+}
+
+/* ===== CATALOG: PRODUCT GRID ===== */
+.product-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
+.product-card{
+  border:1px solid var(--panel-line); background:var(--panel); display:flex; flex-direction:column;
+  transition:border-color .18s;
+}
+.product-card:hover{border-color:var(--orange);}
+.product-card.is-hidden{display:none;}
+.product-img{
+  height:200px; background:#fff; position:relative; overflow:hidden;
+  display:flex; align-items:center; justify-content:center; color:var(--panel-line);
+  border-bottom:1px solid var(--panel-line);
+}
+.product-img svg{width:52%; color:var(--text-faint);}
+/* contain, а не cover: снимки сняты на белом фоне и обрезать их нельзя —
+   у половины кадров срежет мачту или вилы. */
+.product-img img{width:100%; height:100%; object-fit:contain; padding:10px;}
+.product-badge{
+  position:absolute; top:10px; left:10px; background:var(--teal); color:#fff;
+  font-family:'Oswald',sans-serif; font-size:10px; font-weight:700; letter-spacing:0.06em;
+  padding:4px 9px;
+}
+.product-badge.sample{background:var(--panel-line); color:var(--text-dim);}
+.product-badge.stock-out{background:var(--panel-alt); color:var(--text-dim);}
+.product-body{padding:18px 18px 20px; display:flex; flex-direction:column; gap:8px; flex-grow:1;}
+.product-body h3{font-size:15.5px; text-transform:none; letter-spacing:0;}
+.product-desc{font-size:12.5px; color:var(--text-faint);}
+.product-rating{display:flex; gap:2px; color:var(--panel-line); font-size:13px;}
+.product-rating .on{color:var(--orange-soft);}
+.product-specs{display:flex; gap:10px; flex-wrap:wrap; margin:2px 0 4px;}
+.product-specs span{font-size:11.5px; color:var(--text-dim); border:1px solid var(--panel-line); padding:3px 8px;}
+.product-price{font-family:'Oswald',sans-serif; font-weight:600; font-size:17px; color:var(--orange-soft); margin-top:auto; padding-top:8px;}
+.product-actions{display:flex; flex-direction:column; gap:8px; margin-top:10px;}
+.product-actions .btn{padding:10px 14px; font-size:12px;}
+
+/* ===== CATALOG: PAGINATION ===== */
+.catalog-pagination{display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-top:36px;}
+.catalog-pagination .count{font-size:13px; color:var(--text-faint);}
+
+/* ===== CATALOG: CONTENT BLOCKS (construction / advantages / types) ===== */
+.info-block{max-width:760px; margin-bottom:40px;}
+.info-block h3{font-size:20px; margin-bottom:14px;}
+.info-block ol, .info-block ul{margin-left:20px; color:var(--text-dim); font-size:14.5px; line-height:1.7;}
+.info-block ol{list-style:decimal;}
+.info-block ul{list-style:disc;}
+.info-block li{margin-bottom:8px;}
+.info-block p{color:var(--text-dim); font-size:14.5px; line-height:1.7;}
+
+/* ===== CATALOG: VIDEO ===== */
+.video-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
+.video-card{border:1px solid var(--panel-line); background:var(--panel-alt); aspect-ratio:16/9; position:relative; display:flex; align-items:center; justify-content:center;}
+.video-card .play{width:52px; height:52px; border:2px solid var(--text-faint); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text-faint);}
+.video-card:hover .play{border-color:var(--orange); color:var(--orange);}
+.video-card span{position:absolute; bottom:10px; left:10px; font-size:12px; color:var(--text-dim);}
+
+/* ===== CATALOG: MAP ===== */
+.map-block{border:1px solid var(--panel-line); background:var(--panel-alt); height:320px; display:flex; align-items:center; justify-content:center; color:var(--text-faint); font-size:13.5px;}
 
 /* ===== CALC / LEAD FORM ===== */
 .calc-sec{background:var(--panel-alt); border-top:1px solid var(--panel-line); border-bottom:1px solid var(--panel-line);}
@@ -317,17 +523,17 @@ form.lead .btn{width:100%; margin-top:6px; padding:16px;}
 
 /* ===== CTA BAND ===== */
 .cta-band{
-  background:var(--orange); color:#0e1113; padding:64px 0;
+  background:var(--orange); color:#fff; padding:64px 0;
 }
 .cta-band .wrap{display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap;}
-.cta-band h2{color:#0e1113; font-size:clamp(24px,3vw,34px); max-width:560px;}
-.cta-band .btn-ghost{border-color:#0e1113; color:#0e1113;}
-.cta-band .btn-ghost:hover{background:#0e1113; color:var(--orange);}
+.cta-band h2{color:#fff; font-size:clamp(24px,3vw,34px); max-width:560px;}
+.cta-band .btn-ghost{border-color:#fff; color:#fff;}
+.cta-band .btn-ghost:hover{background:#fff; color:var(--orange);}
 
 /* ===== FOOTER ===== */
 footer{padding:72px 0 28px;}
 .foot-grid{display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:40px; margin-bottom:56px;}
-.foot-col h4{font-size:12px; letter-spacing:0.1em; color:var(--text-faint); margin-bottom:18px; text-transform:uppercase; font-family:'Oswald',sans-serif;}
+.foot-col h2, .foot-geo h2{font-size:12px; letter-spacing:0.1em; color:var(--text-faint); margin-bottom:18px; text-transform:uppercase; font-family:'Oswald',sans-serif;}
 .foot-col ul li{margin-bottom:10px;}
 .foot-col ul li a{font-size:14px; color:var(--text-dim);}
 .foot-col ul li a:hover{color:var(--orange);}
@@ -351,7 +557,7 @@ footer{padding:72px 0 28px;}
 }
 .article-card .thumb svg{width:44%; color:var(--text-faint);}
 .article-card .cat{
-  position:absolute; top:12px; left:12px; background:var(--teal); color:#0e1113;
+  position:absolute; top:12px; left:12px; background:var(--teal); color:#fff;
   font-family:'Oswald',sans-serif; font-size:10.5px; font-weight:700; letter-spacing:0.08em; padding:5px 10px;
 }
 .article-card .body{padding:22px 22px 24px; display:flex; flex-direction:column; gap:12px; flex-grow:1;}
@@ -368,7 +574,7 @@ footer{padding:72px 0 28px;}
 .article-header{max-width:760px; margin-bottom:40px;}
 .article-header .cat-tag{
   display:inline-block; font-family:'Oswald',sans-serif; font-size:11px; font-weight:700; letter-spacing:0.1em;
-  color:#0e1113; background:var(--teal); padding:5px 10px; margin-bottom:18px;
+  color:#fff; background:var(--teal); padding:5px 10px; margin-bottom:18px;
 }
 .article-header h1{font-size:clamp(28px,4vw,44px); margin-bottom:16px;}
 .article-header .meta{font-size:13px; color:var(--text-faint); display:flex; gap:16px; flex-wrap:wrap;}
@@ -404,7 +610,7 @@ footer{padding:72px 0 28px;}
    The nav collapses at 1120px, not 980px: with six links plus the CTA the
    desktop row runs out of breathing room well before the old breakpoint. */
 @media (max-width: 1120px){
-  .phone-block, .topbar{display:none;}
+  .phone-block, .topbar{display:none !important;}
   .burger{display:flex;}
   section[id], main[id]{scroll-margin-top:96px;}
 
@@ -430,19 +636,32 @@ footer{padding:72px 0 28px;}
   .hero-art{height:280px; order:-1;}
   .stats-strip .wrap{grid-template-columns:repeat(2,1fr);}
   .stat:nth-child(3){border-left:none;}
-  .cat-grid, .adv-grid, .listing-grid, .test-grid, .articles-grid{grid-template-columns:repeat(2,1fr);}
+  .cat-grid, .adv-grid, .listing-grid, .test-grid, .articles-grid, .product-grid, .video-grid{grid-template-columns:repeat(2,1fr);}
   .calc-grid{grid-template-columns:minmax(0,1fr); gap:40px;}
   .foot-grid{grid-template-columns:1fr 1fr;}
   .proc-item{grid-template-columns:60px 1fr;}
   /* the description is a <p>, not a <div> — it must span the content column */
   .proc-item > p{grid-column:2;}
+
+  /* Filters collapse behind a toggle button — a 260px sticky sidebar has no
+     room next to a 2-column card grid at tablet widths. */
+  .catalog-layout{grid-template-columns:1fr;}
+  .filters-toggle{
+    display:flex; align-items:center; justify-content:center; gap:10px; width:100%;
+    background:var(--panel); border:1px solid var(--panel-line); color:var(--text);
+    padding:13px; font-family:'Oswald',sans-serif; font-size:13px; font-weight:600;
+    letter-spacing:0.04em; text-transform:uppercase; margin-bottom:20px;
+  }
+  .filters{display:none; position:static; margin-bottom:8px;}
+  .filters.open{display:block;}
+  .cat-icons{grid-template-columns:repeat(2,1fr);}
 }
 
 @media (max-width: 620px){
   .wrap{padding:0 20px;}
   section{padding:64px 0;}
   nav.mainnav{padding:6px 20px 22px;}
-  .cat-grid, .adv-grid, .listing-grid, .test-grid, .foot-grid, .articles-grid{grid-template-columns:1fr;}
+  .cat-grid, .adv-grid, .listing-grid, .test-grid, .foot-grid, .articles-grid, .product-grid, .video-grid, .cat-icons{grid-template-columns:1fr;}
   .stats-strip .wrap{grid-template-columns:repeat(2,1fr);}
   .stat{padding:22px 20px;}
   .form-row{grid-template-columns:minmax(0,1fr);}
@@ -451,6 +670,10 @@ footer{padding:72px 0 28px;}
   form.lead{padding:24px 20px;}
   /* 16px keeps iOS Safari from zooming the page when a field gets focus */
   .field input, .field select, .field textarea{font-size:16px;}
+  /* Минимальный тач-таргет: на мобильном мелкие кнопки не нажимаются */
+  .btn{min-height:48px;}
+  .btn-sm{min-height:44px; padding:12px 18px;}
+  .filter-opt{padding:11px 0;}
   /* comfortable tap targets */
   .social-row a{width:42px; height:42px;}
   .foot-col ul li{margin-bottom:14px;}
