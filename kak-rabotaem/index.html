@@ -29,7 +29,7 @@
 <link rel="stylesheet" href="../assets/css/style.css?v=11">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://estascredit.ru/kak-rabotaem/","url":"https://estascredit.ru/kak-rabotaem/","name":"Как работает подбор вилочного погрузчика — четыре шага","description":"Как устроен подбор вилочного погрузчика: от заявки до сделки. Кто с кем заключает договор, откуда берётся вознаграждение и что мы не делаем. Четыре шага.","isPartOf":{"@id":"https://estascredit.ru/#website"},"inLanguage":"ru-RU","breadcrumb":{"@id":"https://estascredit.ru/kak-rabotaem/#breadcrumb"}},{"@type":"WebSite","@id":"https://estascredit.ru/#website","url":"https://estascredit.ru/","name":"УралФорклифт","publisher":{"@id":"https://estascredit.ru/#organization"},"inLanguage":"ru-RU"},{"@type":"ProfessionalService","@id":"https://estascredit.ru/#organization","name":"УралФорклифт","url":"https://estascredit.ru/","serviceType":"Подбор вилочных погрузчиков","areaServed":{"@type":"AdministrativeArea","name":"Свердловская область"},"founder":{"@type":"Person","name":"Копырин Михаил Евгеньевич"},"openingHours":"Mo-Su 09:00-20:00","geo":{"@type":"GeoCoordinates","latitude":"56.880553","longitude":"60.631404"},"telephone":"+7 950 646-09-53","email":"mezdudelom73@gmail.com","address":{"@type":"PostalAddress","streetAddress":"ул. Фронтовых Бригад, д. 18","addressLocality":"Екатеринбург","postalCode":"620017","addressRegion":"Свердловская область","addressCountry":"RU"}},{"@type":"BreadcrumbList","@id":"https://estascredit.ru/kak-rabotaem/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Главная","item":"https://estascredit.ru/"},{"@type":"ListItem","position":2,"name":"Как это работает"}]},{"@type":"FAQPage","@id":"https://estascredit.ru/kak-rabotaem/#faq","mainEntity":[{"@type":"Question","name":"Сколько стоит подбор?","acceptedAnswer":{"@type":"Answer","text":"Для покупателя ничего. Вознаграждение нам платит поставщик после сделки."}},{"@type":"Question","name":"Цена будет выше, чем если я обращусь к поставщику сам?","acceptedAnswer":{"@type":"Answer","text":"Нет. Поставщик работает по своему прайсу, наше вознаграждение заложено в его расходы на привлечение клиентов, а не добавляется к вашей цене."}},{"@type":"Question","name":"С кем я заключаю договор?","acceptedAnswer":{"@type":"Answer","text":"Напрямую с поставщиком. Мы в сделке не сторона: не подписываем договор и не участвуем в расчётах."}},{"@type":"Question","name":"Что будет с моими данными из заявки?","acceptedAnswer":{"@type":"Answer","text":"Мы передаём их поставщику, чтобы он подготовил предложение. Кому именно — сообщаем до передачи. Подробности в политике конфиденциальности."}}]}]}</script>
 </head>
-<body>
+<body data-lead-endpoint="">
 
 <!-- Страница собрана из _build/. Не правьте этот файл руками: следующая
      сборка затрёт правку. Текст живёт в _build/data/, разметка — в
@@ -86,47 +86,46 @@
     <div class="wrap">
       <div class="calc-grid">
         <div>
-          <span class="eyebrow">Заявка</span>
-          <h2 style="font-size:clamp(26px,3vw,36px); margin:16px 0 24px;">Опишите задачу — подберём технику</h2>
-          <p style="color:var(--text-dim); max-width:420px;">Опишите, что и на какую высоту нужно поднимать, и в каких условиях работает техника. Ответим с подбором и ценой.</p>
+          <h2 class="lead-title">Опишите задачу — подберём технику</h2>
+          <p class="lead-sub">Что и на какую высоту поднимаете, в помещении или на улице, сколько смен в сутки. Пришлём два-три подходящих варианта с характеристиками.</p>
         </div>
         <div>
-          <form class="lead" id="leadForm">
+            <div class="lead-offline">
+              <p><b>Отправка формы пока не подключена.</b> Заявку принимаем в мессенджере и по телефону — ответим в тот же день.</p>
+              <div class="lead-offline__actions"><a class="btn btn-primary" href="https://max.ru/u/f9LHodD0cOKyteShoHfqvWGvhHp9vSpUfIj5eQ3q74zQVsWDDMYXDy23WNQ" target="_blank" rel="noopener">Написать в MAX</a><a class="btn btn-ghost" href="tel:+79506460953">Позвонить +7 950 646-09-53</a></div>
+            </div>
+          <form class="lead" id="leadForm" novalidate>
             <div class="form-row">
               <div class="field">
                 <label for="f-type">Тип техники</label>
-                <select id="f-type" data-field="type"><option>Электропогрузчик</option><option>Дизельный погрузчик</option><option>Газобаллонный погрузчик</option><option>Пока не определился</option></select>
+                <select id="f-type" data-field="type"><option>Пока не определился</option><option>Электропогрузчик</option><option>Дизельный погрузчик</option><option>Газобаллонный погрузчик</option></select>
               </div>
               <div class="field">
-                <label for="f-brand">Модель</label>
-                <input id="f-brand" data-field="brand" type="text">
+                <label for="f-task">Что поднимаете и на какую высоту</label>
+                <input id="f-task" data-field="brand" type="text" placeholder="паллеты до 3 м">
               </div>
             </div>
             <div class="form-row">
               <div class="field">
                 <label for="f-name">Ваше имя</label>
-                <input id="f-name" data-field="name" type="text" required>
+                <input id="f-name" data-field="name" type="text" autocomplete="name" required>
               </div>
               <div class="field">
                 <label for="f-phone">Телефон</label>
-                <input id="f-phone" data-field="phone" type="tel" placeholder="+7 900 000-00-00" required>
+                <input id="f-phone" data-field="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 900 000-00-00" pattern="[+0-9 ()\-]{10,20}" required>
               </div>
             </div>
             <div class="field full" style="margin-bottom:16px;">
-              <label for="f-comment">Комментарий</label>
-              <textarea id="f-comment" data-field="comment"></textarea>
+              <label for="f-comment">Условия работы</label>
+              <textarea id="f-comment" data-field="comment" placeholder="склад с низким потолком, две смены"></textarea>
             </div>
             <div class="field full" aria-hidden="true" style="position:absolute; left:-9999px;">
               <label for="f-company">Не заполняйте это поле</label>
               <input id="f-company" data-field="company" type="text" tabindex="-1" autocomplete="off">
             </div>
-            <button type="submit" class="btn btn-primary">Отправить заявку</button>
+            <p class="form-msg" id="formMsg" role="alert" hidden></p>
+            <button type="submit" class="btn btn-ghost">Отправить заявку почтой</button>
             <p class="form-note">Нажимая кнопку, вы соглашаетесь с <a href="../politika-konfidencialnosti/">политикой обработки персональных данных</a></p>
-            <div class="form-success" id="formSuccess">
-              <svg class="ico" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="50" cy="50" r="42"/><path d="M32 52 L44 64 L70 36"/></svg>
-              <h3>Заявка отправлена</h3>
-              <p>Менеджер свяжется с вами в течение рабочего дня.</p>
-            </div>
           </form>
         </div>
       </div>

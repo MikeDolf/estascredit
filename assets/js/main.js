@@ -1,6 +1,6 @@
-// SINOTECH / estascredit.ru — shared page behaviour.
-// Every helper below checks for its element first, so this one file can be
-// safely included on every page (landing, articles listing, single article).
+// УралФорклифт / estascredit.ru — общее поведение страниц.
+// Каждый обработчик сначала проверяет, есть ли его элемент, поэтому файл
+// безопасно подключать на любую страницу.
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -25,6 +25,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // the panel covering the section the user just jumped to).
     mainnav.querySelectorAll('a').forEach(link => {
       link.addEventListener('click', () => setNav(false));
+    });
+
+    // Esc закрывает меню и возвращает фокус на бургер: без этого человек
+    // с клавиатуры остаётся заперт в открытой панели.
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && mainnav.classList.contains('open')) {
+        setNav(false);
+        burger.focus();
+      }
     });
 
     // Leaving the mobile breakpoint resets the menu to its default state.
@@ -79,12 +88,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 150);
   });
 
-  // ---- Lead form ---------------------------------------------------------
-  // Адрес прослойки, которая складывает заявку в MAX. Пока он пустой, форма
-  // НЕ показывает «заявка принята»: показать успех и никуда не отправить —
-  // значит потерять обращение и оставить человека ждать ответа, которого
-  // не будет. Разворачивается из _relay/worker.js.
-  const LEAD_ENDPOINT = '';
+  // ---- Форма заявки ------------------------------------------------------
+  // Адрес прослойки приходит из data-атрибута, который проставляет сборка,
+  // а значение живёт в _build/data/site.py. Раньше оно было записано здесь
+  // второй копией и могло разойтись с тем, что показывает страница.
+  const LEAD_ENDPOINT = document.body.dataset.leadEndpoint || '';
 
   // Форм на коммерческой странице две — короткая в середине и полная внизу.
   // Обработчик ищет поля внутри своей формы, а не по глобальному id, иначе
@@ -103,18 +111,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (success) success.style.display = 'block';
     };
 
-    // Ссылка на профиль, а не номер: телефона на сайте нет нигде.
     const MAX_PROFILE = 'https://max.ru/u/f9LHodD0cOKyteShoHfqvWGvhHp9vSpUfIj5eQ3q74zQVsWDDMYXDy23WNQ';
 
+    // Контейнер размечен в HTML с role="alert" и лежит НАД кнопкой: раньше
+    // сообщение вставлялось под ней мелким серым текстом, и на телефоне
+    // с открытой клавиатурой оказывалось за краем экрана.
     const showMessage = (text, isError, withLink) => {
-      let box = leadForm.querySelector('.form-msg');
-      if (!box) {
-        box = document.createElement('p');
-        box.className = 'form-msg form-note';
-        leadForm.insertBefore(box, leadForm.querySelector('.form-note'));
-      }
+      const box = leadForm.querySelector('#formMsg');
+      if (!box) return;
       box.textContent = text;
-      box.style.color = isError ? '#c94409' : '#0d8073';
+      box.hidden = false;
+      box.classList.toggle('is-error', !!isError);
       if (withLink) {
         box.appendChild(document.createTextNode(' '));
         const link = document.createElement('a');
@@ -122,22 +129,24 @@ document.addEventListener('DOMContentLoaded', () => {
         link.target = '_blank';
         link.rel = 'noopener';
         link.textContent = 'Написать в MAX';
-        link.style.color = 'inherit';
-        link.style.textDecoration = 'underline';
         box.appendChild(link);
       }
+      box.scrollIntoView({ block: 'nearest' });
     };
 
     leadForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      if (!val('name').trim() || !val('phone').trim()) {
+      // Нативная валидация первой: браузер подсветит конкретное поле и
+      // покажет подсказку рядом с ним. Общий текст под формой этого не даёт.
+      if (!leadForm.checkValidity()) {
+        leadForm.reportValidity();
         showMessage('Заполните имя и телефон — без них мы не сможем ответить.', true);
         return;
       }
 
       if (!LEAD_ENDPOINT) {
-        showMessage('Форма пока не подключена.', true, true);
+        showMessage('Отправка формы пока не подключена. Напишите нам:', true, true);
         return;
       }
 

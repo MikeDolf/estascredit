@@ -112,6 +112,10 @@ def render_logo(root, href=None):
 def render_header(root, slug, has_form):
     links = []
     for label, href in NAV:
+        # На самой главной ссылка вида index.html#catalog перезагружает
+        # страницу вместо прокрутки — оставляем чистый якорь.
+        if not slug and href.startswith("index.html#"):
+            href = href[len("index.html"):]
         target = href.split("#")[0].rstrip("/")
         active = " class=\"active\"" if target and slug.startswith(target) else ""
         links.append('<a href="{}"{}>{}</a>'.format(e(root + href), active, e(label)))
@@ -258,67 +262,111 @@ def render_breadcrumbs(root, trail):
 
 
 def render_lead_form(selected_type=None):
+    """Блок заявки.
+
+    Пока адрес приёма пуст, форма не притворяется рабочей: сверху стоит блок
+    с живыми каналами, и он же несёт основную кнопку. Раньше человек узнавал
+    о том, что отправлять некуда, только после того как заполнил пять полей —
+    это было последнее, что он видел на сайте.
+    """
     options = []
     for t in LEAD_TYPES:
         sel = " selected" if t == selected_type else ""
         options.append("<option{}>{}</option>".format(sel, e(t)))
+
+    live = bool(SITE.get("lead_endpoint"))
+
+    offline = ""
+    if not live:
+        phone = ""
+        if SITE["phone"]:
+            phone = '<a class="btn btn-ghost" href="tel:{}">Позвонить {}</a>'.format(
+                e(SITE["phone_href"]), e(SITE["phone"]))
+        offline = (
+            '            <div class="lead-offline">\n'
+            '              <p><b>Отправка формы пока не подключена.</b> Заявку принимаем '
+            'в мессенджере и по телефону — ответим в тот же день.</p>\n'
+            '              <div class="lead-offline__actions">{max}{phone}</div>\n'
+            '            </div>\n'
+        ).format(max='<a class="btn btn-primary" href="{}" target="_blank" rel="noopener">'
+                     'Написать в MAX</a>'.format(e(SITE["max_url"])),
+                 phone=phone)
+
+    # Разметку успеха выводим только когда есть куда отправлять: иначе на
+    # каждой странице лежит обещание «менеджер свяжется», которое некому
+    # выполнить.
+    success = ""
+    if live:
+        success = (
+            '            <div class="form-success" id="formSuccess">\n'
+            '              <svg class="ico" viewBox="0 0 100 100" fill="none" stroke="currentColor" '
+            'stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            '<circle cx="50" cy="50" r="42"/><path d="M32 52 L44 64 L70 36"/></svg>\n'
+            '              <h3>Заявка отправлена</h3>\n'
+            '              <p>Ответим в течение рабочего дня.</p>\n'
+            '            </div>\n'
+        )
+
+    submit = "Отправить заявку" if live else "Отправить заявку почтой"
 
     return (
         '  <section id="lead" class="calc-sec">\n'
         '    <div class="wrap">\n'
         '      <div class="calc-grid">\n'
         '        <div>\n'
-        '          <span class="eyebrow">Заявка</span>\n'
-        '          <h2 style="font-size:clamp(26px,3vw,36px); margin:16px 0 24px;">Опишите задачу — подберём технику</h2>\n'
-        '          <p style="color:var(--text-dim); max-width:420px;">Опишите, что и на какую высоту нужно поднимать, '
-        'и в каких условиях работает техника. Ответим с подбором и ценой.</p>\n'
+        '          <h2 class="lead-title">Опишите задачу — подберём технику</h2>\n'
+        '          <p class="lead-sub">Что и на какую высоту поднимаете, в помещении или на '
+        'улице, сколько смен в сутки. Пришлём два-три подходящих варианта с характеристиками.</p>\n'
         '        </div>\n'
         '        <div>\n'
-        '          <form class="lead" id="leadForm">\n'
+        '{offline}'
+        '          <form class="lead" id="leadForm" novalidate>\n'
         '            <div class="form-row">\n'
         '              <div class="field">\n'
         '                <label for="f-type">Тип техники</label>\n'
         '                <select id="f-type" data-field="type">{options}</select>\n'
         '              </div>\n'
         '              <div class="field">\n'
-        '                <label for="f-brand">Модель</label>\n'
-        '                <input id="f-brand" data-field="brand" type="text">\n'
+        '                <label for="f-task">Что поднимаете и на какую высоту</label>\n'
+        '                <input id="f-task" data-field="brand" type="text" '
+        'placeholder="паллеты до 3 м">\n'
         '              </div>\n'
         '            </div>\n'
         '            <div class="form-row">\n'
         '              <div class="field">\n'
         '                <label for="f-name">Ваше имя</label>\n'
-        '                <input id="f-name" data-field="name" type="text" required>\n'
+        '                <input id="f-name" data-field="name" type="text" '
+        'autocomplete="name" required>\n'
         '              </div>\n'
         '              <div class="field">\n'
         '                <label for="f-phone">Телефон</label>\n'
-        '                <input id="f-phone" data-field="phone" type="tel" placeholder="+7 900 000-00-00" required>\n'
+        '                <input id="f-phone" data-field="phone" type="tel" inputmode="tel" '
+        'autocomplete="tel" placeholder="+7 900 000-00-00" '
+        'pattern="[+0-9 ()\\-]{{10,20}}" required>\n'
         '              </div>\n'
         '            </div>\n'
         '            <div class="field full" style="margin-bottom:16px;">\n'
-        '              <label for="f-comment">Комментарий</label>\n'
-        '              <textarea id="f-comment" data-field="comment"></textarea>\n'
+        '              <label for="f-comment">Условия работы</label>\n'
+        '              <textarea id="f-comment" data-field="comment" '
+        'placeholder="склад с низким потолком, две смены"></textarea>\n'
         '            </div>\n'
         '            <div class="field full" aria-hidden="true" style="position:absolute; left:-9999px;">\n'
         '              <label for="f-company">Не заполняйте это поле</label>\n'
-        '              <input id="f-company" data-field="company" type="text" tabindex="-1" autocomplete="off">\n'
+        '              <input id="f-company" data-field="company" type="text" tabindex="-1" '
+        'autocomplete="off">\n'
         '            </div>\n'
-        '            <button type="submit" class="btn btn-primary">Отправить заявку</button>\n'
+        '            <p class="form-msg" id="formMsg" role="alert" hidden></p>\n'
+        '            <button type="submit" class="btn {btn}">{submit}</button>\n'
         '            <p class="form-note">Нажимая кнопку, вы соглашаетесь с '
-        '<a href="{root_placeholder}politika-konfidencialnosti/">политикой обработки персональных данных</a></p>\n'
-        '            <div class="form-success" id="formSuccess">\n'
-        '              <svg class="ico" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="4" '
-        'stroke-linecap="round" stroke-linejoin="round"><circle cx="50" cy="50" r="42"/>'
-        '<path d="M32 52 L44 64 L70 36"/></svg>\n'
-        '              <h3>Заявка отправлена</h3>\n'
-        '              <p>Менеджер свяжется с вами в течение рабочего дня.</p>\n'
-        '            </div>\n'
+        '<a href="@ROOT@politika-konfidencialnosti/">политикой обработки персональных данных</a></p>\n'
+        '{success}'
         '          </form>\n'
         '        </div>\n'
         '      </div>\n'
         '    </div>\n'
         '  </section>'
-    ).format(options="".join(options), root_placeholder="@ROOT@")
+    ).format(options="".join(options), offline=offline, success=success,
+             submit=submit, btn="btn-primary" if live else "btn-ghost")
 
 
 def render_photo(product, eager=False):
@@ -353,11 +401,6 @@ def render_product(product):
     badge = '<span class="product-badge sample">Образец</span>' if product.get("sample") else ""
     eager = product["_order"] == 1
 
-    stars = "".join(
-        '<span class="on">★</span>' if i < product.get("rating", 0) else "<span>★</span>"
-        for i in range(5)
-    )
-
     specs = ['<span>{} кг</span>'.format(product["capacity"])]
     if product.get("lift"):
         specs.append("<span>{}</span>".format(e(product["lift"])))
@@ -371,7 +414,6 @@ def render_product(product):
         '              <div class="product-body">\n'
         '                <h3>{name}</h3>\n'
         '                {desc}\n'
-        '                <div class="product-rating">{stars}</div>\n'
         '                <div class="product-specs">{specs}</div>\n'
         '                <div class="product-price">Цена по запросу</div>\n'
         '                <div class="product-actions">\n'
@@ -387,7 +429,6 @@ def render_product(product):
         img=render_photo(product, eager),
         name=e(product["name"]),
         desc=desc,
-        stars=stars,
         specs="".join(specs),
     )
 
@@ -704,6 +745,7 @@ def render_page(page):
         "og_type": page.get("og_type", "website"),
         "site_name": e(SITE["name"]),
         "domain": e(SITE["domain"]),
+        "lead_endpoint": e(SITE.get("lead_endpoint", "")),
         "robots": robots,
         "verification": verification,
         "jsonld": build_jsonld(page, canonical, trail),
@@ -727,33 +769,29 @@ def render_page(page):
 # --------------------------------------------------------------------------
 
 def page_home():
-    """Главная. Продаёт услугу подбора, а не технику: у нас нет ни склада,
-    ни права называть цену, и текст это прямо проговаривает."""
+    """Главная. Каталог остаётся структурой страницы, но над ним стоит то,
+    ради чего человек вообще пишет нам, а не дилеру: сравнение вариантов,
+    бесплатность и договор напрямую. Раньше этих доводов на странице решения
+    не было ни одного — они лежали только на «Как это работает».
+
+    Полосы иконок категорий здесь больше нет: она вела в те же три места,
+    что и карточки под ней, и съедала первый экран одинаковым SVG трижды.
+    """
     cards = []
     for c in CATEGORIES:
         cards.append(
             '        <a class="listing-card" href="@ROOT@catalog/{slug}/">\n'
             '          <div class="listing-img">{img}</div>\n'
             '          <div class="listing-body">\n'
-            '            <div class="brand">Тип двигателя</div>\n'
             '            <h3>{name}</h3>\n'
-            '            <div class="listing-specs"><span>{total} модели в справочнике</span></div>\n'
+            '            <p class="listing-note">{note}</p>\n'
             '            <div class="listing-foot">\n'
-            '              <div class="price">Подбор под задачу</div>\n'
             '              <span class="btn btn-ghost btn-sm">Смотреть →</span>\n'
             '            </div>\n'
             '          </div>\n'
             '        </a>'.format(
                 slug=e(c["slug"]), img=render_photo(c, eager=True),
-                name=e(c["name"]), total=len(c["products"]),
-            )
-        )
-
-    icons = []
-    for c in CATEGORIES:
-        icons.append(
-            '        <a class="cat-icon-btn" href="@ROOT@catalog/{slug}/">{svg}{name}</a>'.format(
-                slug=e(c["slug"]), svg=FORKLIFT_SVG.format(w="4"), name=e(c["name"])
+                name=e(c["name"]), note=e(c.get("card_note", "")),
             )
         )
 
@@ -764,17 +802,33 @@ def page_home():
         for c in cities_data.CITIES
     )
 
+    # Доводы взяты с «Как это работает»: там они уже выверены юридически.
+    offer = [
+        ("Подбор бесплатен",
+         "Вознаграждение платит поставщик. С покупателя мы не берём ничего, "
+         "и цена техники от нашего участия не растёт."),
+        ("Сравниваем нескольких поставщиков",
+         "Дилер предложит только то, что продаёт сам. Мы приносим два-три "
+         "варианта у разных и объясняем разницу."),
+        ("Договор напрямую с поставщиком",
+         "Деньги через нас не идут. Мы не сторона сделки — наша работа "
+         "заканчивается, когда вы выбрали."),
+    ]
+    offer_html = "".join(
+        '<div class="offer-item"><b class="offer-title">{t}</b><p>{d}</p></div>'.format(t=e(t), d=e(d))
+        for t, d in offer
+    )
+
     steps = [
-        ("01", "Заявка", "Опишите задачу: что поднимаете, на какую высоту, в помещении или на улице."),
-        ("02", "Подбор", "Присылаем два-три подходящих варианта с характеристиками и ориентиром по бюджету."),
-        ("03", "Поставщик", "Сводим с поставщиком, у которого выбранная техника есть в наличии."),
-        ("04", "Сделка", "Дальше вы работаете с поставщиком напрямую."),
+        ("Заявка", "Опишите задачу: что поднимаете, на какую высоту, в помещении или на улице."),
+        ("Подбор", "Присылаем два-три подходящих варианта с характеристиками и ориентиром по бюджету."),
+        ("Поставщик", "Сводим с тем, у кого выбранная техника есть в наличии."),
+        ("Сделка", "Дальше вы работаете с поставщиком напрямую."),
     ]
     steps_html = "".join(
-        '<div class="proc-item"><div class="idx">{idx}</div>'
-        '<div><h3>{tag}</h3></div><p>{text}</p></div>'.format(
-            idx=idx, tag=e(tag), text=e(text))
-        for idx, tag, text in steps
+        '<div class="proc-item"><div class="idx">{i:02d}</div>'
+        '<div><h3>{t}</h3></div><p>{d}</p></div>'.format(i=i, t=e(t), d=e(d))
+        for i, (t, d) in enumerate(steps, start=1)
     )
 
     body = (
@@ -784,15 +838,14 @@ def page_home():
         '      <p class="page-intro">Электрические, дизельные и газобаллонные. Опишите задачу — '
         'что поднимаете, на какую высоту и в каких условиях работает техника — и получите '
         'подборку подходящих моделей с характеристиками.</p>\n\n'
-        '      <div class="cat-icons">\n{icons}\n      </div>\n\n'
+        '      <div class="offer">{offer}</div>\n\n'
         '      <h2 class="catalog-h2">Типы вилочных погрузчиков</h2>\n'
         '      <div class="listing-grid">\n{cards}\n      </div>\n'
         '    </div>\n'
         '  </section>\n\n'
         '  <section id="process" style="padding-top:0;">\n'
         '    <div class="wrap">\n'
-        '      <div class="section-head"><div><span class="eyebrow">Как это работает</span>\n'
-        '        <h2>Четыре шага до техники</h2></div>\n'
+        '      <div class="section-head"><div><h2>Четыре шага до техники</h2></div>\n'
         '        <p>Подробнее — на странице <a href="@ROOT@kak-rabotaem/" class="inline-link">'
         'как это работает</a>.</p></div>\n'
         '      <div class="process-list">{steps}</div>\n'
@@ -800,15 +853,14 @@ def page_home():
         '  </section>\n\n'
         '  <section id="geo" style="padding-top:0;">\n'
         '    <div class="wrap">\n'
-        '      <div class="section-head"><div><span class="eyebrow">География</span>\n'
-        '        <h2>Где мы работаем</h2></div></div>\n'
+        '      <div class="section-head"><div><h2>Где мы работаем</h2></div></div>\n'
         '      <ul class="geo-list">{cities}</ul>\n'
         '    </div>\n'
         '  </section>\n\n'
         '{form}'
     ).format(
         region_in=e(SITE["region_in"]),
-        icons="\n".join(icons),
+        offer=offer_html,
         cards="\n".join(cards),
         steps=steps_html,
         cities=city_links,

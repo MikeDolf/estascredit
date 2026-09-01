@@ -7,7 +7,9 @@
   * поля «в наличии» здесь нет — наличие подтверждает поставщик под конкретный
     запрос, и обещать его на сайте нельзя;
   * `budget` — ориентир для фильтра по бюджету, на странице он НЕ выводится.
-    Показана «Цена по запросу»: назвать цену вправе только поставщик.
+    Показана «Цена по запросу»: назвать цену вправе только поставщик;
+  * рейтинга у позиций нет и не будет, пока не появятся реальные оценки
+    с источником. Звёзды у карточки с пометкой «Образец» — выдуманная оценка.
 
 Фотографии лежат в `_build/photos/`, оптимизированные версии собирает
 `make_images.py`. Поле `photo` — имя файла без суффикса ширины; альт берётся
@@ -22,6 +24,7 @@
 CATEGORIES = [
     {
         "slug": "elektricheskie",
+        "card_note": "Без выхлопа, работают в помещении",
         "photo": "vilochnyy-pogruzchik-trekhopornyy",
         "photo_height": 1063,
         "photo_alt": "Электрический вилочный погрузчик с трёхопорной схемой",
@@ -40,7 +43,6 @@ CATEGORIES = [
                 "capacity": 1500,
                 "lift": "3,0 м",
                 "budget": 780000,
-                "rating": 4,
                 "desc": "",       # TODO
                 "sample": True,
             },
@@ -52,7 +54,6 @@ CATEGORIES = [
                 "capacity": 3000,
                 "lift": "3,3 м",
                 "budget": 1250000,
-                "rating": 5,
                 "desc": "",
                 "sample": True,
             },
@@ -60,6 +61,7 @@ CATEGORIES = [
     },
     {
         "slug": "dizelnye",
+        "card_note": "Для улицы и неровных площадок",
         "photo": "vilochnyy-pogruzchik-sinii",
         "photo_height": 800,
         "photo_alt": "Дизельный вилочный погрузчик с защитным навесом",
@@ -78,7 +80,6 @@ CATEGORIES = [
                 "capacity": 2500,
                 "lift": "3,3 м",
                 "budget": 1050000,
-                "rating": 3,
                 "desc": "",
                 "sample": True,
             },
@@ -90,7 +91,6 @@ CATEGORIES = [
                 "capacity": 3500,
                 "lift": "3,5 м",
                 "budget": 1400000,
-                "rating": 4,
                 "desc": "",
                 "sample": True,
             },
@@ -98,6 +98,7 @@ CATEGORIES = [
     },
     {
         "slug": "gazoballonnye",
+        "card_note": "И в помещении, и на улице",
         "photo": "vilochnyy-pogruzchik-krasnyy",
         "photo_height": 640,
         "photo_alt": "Газобаллонный вилочный погрузчик с мачтой",
@@ -116,7 +117,6 @@ CATEGORIES = [
                 "capacity": 2000,
                 "lift": "3,0 м",
                 "budget": 980000,
-                "rating": 4,
                 "desc": "",
                 "sample": True,
             },
@@ -128,7 +128,6 @@ CATEGORIES = [
                 "capacity": 1200,
                 "lift": "3,0 м",
                 "budget": 750000,
-                "rating": 3,
                 "desc": "",
                 "sample": True,
             },
@@ -143,8 +142,8 @@ CAPACITY_RANGES = [
 ]
 
 LEAD_TYPES = [
+    "Пока не определился",
     "Электропогрузчик",
     "Дизельный погрузчик",
     "Газобаллонный погрузчик",
-    "Пока не определился",
 ]
