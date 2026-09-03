@@ -71,6 +71,7 @@ FORBIDDEN_WORDING = [
 
 NAV = [
     ("Каталог", "index.html#catalog"),
+    ("Статьи", "articles/index.html"),
     ("Как это работает", "kak-rabotaem/"),
     ("Гарантия и сервис", "garantiya-i-servis/"),
     ("О сервисе", "o-servise/"),

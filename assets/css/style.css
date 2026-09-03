@@ -102,7 +102,12 @@ header{
 .topbar .contact-max{font-size:13px;}
 .foot-col .contact-max{font-size:14px; color:var(--text-dim);}
 .foot-col .contact-max:hover{color:var(--orange);}
-.topbar .tb-right{display:flex; gap:24px;}
+.topbar .tb-right{display:flex; align-items:center; gap:24px;}
+.tb-phone{font-family:'Oswald',sans-serif; font-weight:600; font-size:13px; color:var(--text); letter-spacing:0.03em; transition:color .15s;}
+.tb-phone:hover{color:var(--orange);}
+/* Телефон в navrow — дубликат tb-phone для планшета/мобильного, где topbar
+   скрыт (см. медиа-запрос ниже). На десктопе строка сверху уже его несёт. */
+.nav-right .phone-block{display:none;}
 .navrow{
   display:flex; align-items:center; justify-content:space-between;
   max-width:var(--maxw); margin:0 auto; padding:16px 32px;
@@ -118,7 +123,7 @@ header{
 }
 .logo .mark svg{width:100%; height:100%;}
 .logo small{color:var(--text-faint); font-family:'Manrope',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.12em; display:block; text-transform:uppercase;}
-nav.mainnav{display:flex; gap:26px;}
+nav.mainnav{display:flex; gap:22px;}
 nav.mainnav a{
   font-size:13.5px; font-weight:600; letter-spacing:0.03em; text-transform:uppercase;
   color:var(--text-dim); transition:color .15s;
@@ -589,12 +594,15 @@ footer{padding:72px 0 28px;}
 .table-wrap table{margin:0; min-width:440px;}
 
 /* ===== TABLET / MOBILE =====
-   The nav collapses at 1120px, not 980px: with six links plus the CTA the
-   desktop row runs out of breathing room well before the old breakpoint. */
-@media (max-width: 1120px){
+   The nav collapses at 1180px: at --maxw(1240px) the row has six links,
+   the logo and the CTA button, and that's the narrowest point where they
+   all fit on one line without the last link's text wrapping. */
+@media (max-width: 1180px){
   /* Телефон остаётся: на мобильном это самый короткий путь к сделке.
-     Уходит только режим работы, чтобы строка не ломалась. */
+     topbar (и вместе с ним tb-phone) прячется, поэтому телефон возвращается
+     в navrow, чтобы не потеряться вместе со строкой режима работы. */
   .topbar{display:none;}
+  .nav-right .phone-block{display:block;}
   .phone-block .hrs{display:none;}
   .phone-block .num{font-size:15px;}
   .burger{display:flex;}

@@ -41,7 +41,7 @@ TPL = Path(__file__).resolve().parent / "templates"
 
 # Версия статики в query-строке: меняйте, когда правите css/js, иначе у
 # посетителей останется закешированная старая версия.
-VER = "24"
+VER = "25"
 
 FORKLIFT_SVG = (
     '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="{w}" '
@@ -128,7 +128,11 @@ def render_header(root, slug, has_form):
     hours = SITE["opening_hours"]
 
     # Телефон рядом с кнопкой: часть покупателей звонит, а не заполняет форму.
+    # На десктопе он живёт в тонкой строке сверху (тут достаточно места),
+    # на планшете/мобильном — эта строка скрыта, и телефон переезжает в
+    # navrow, оставаясь дотягиваемым в один тап (см. медиа-запрос 1180px).
     phone_block = ""
+    tb_phone = ""
     if SITE["phone"]:
         phone_block = (
             '<a class="phone-block" href="tel:{href}">'
@@ -136,12 +140,15 @@ def render_header(root, slug, has_form):
             '<span class="hrs">{hrs}</span></a>'
         ).format(href=e(SITE["phone_href"]), num=e(SITE["phone"]),
                  hrs=e(SITE["opening_hours"] or "Звоните по рабочим дням"))
+        tb_phone = '<a class="tb-phone" href="tel:{href}">{num}</a>'.format(
+            href=e(SITE["phone_href"]), num=e(SITE["phone"]))
 
     return (
         '<header>\n'
         '  <div class="topbar">\n'
         '    <span>{left}</span>\n'
         '    <div class="tb-right">\n'
+        '      {tb_phone}\n'
         '      <span>{hours}</span>\n'
         '      <span>{max}</span>\n'
         '    </div>\n'
@@ -163,6 +170,7 @@ def render_header(root, slug, has_form):
         '</header>'
     ).format(
         left=e(topbar_left),
+        tb_phone=tb_phone,
         hours=e(hours),
         max=max_link(),
         logo=render_logo(root),
