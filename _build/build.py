@@ -30,7 +30,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from data.site import SITE, NAV, FOOTER_COMPANY, FOOTER_LEGAL, FORBIDDEN_WORDING
-from data.catalog import CATEGORIES, LIFT_RANGES, TONNAGE_CHIPS, LEAD_TYPES, SPECS
+from data.catalog import CATEGORIES, LIFT_RANGES, TONNAGE_CHIPS, LEAD_TYPES
 from data.pages import TRUST_PAGES, LEGAL_PAGES
 from data import cities as cities_data
 
@@ -39,7 +39,7 @@ TPL = Path(__file__).resolve().parent / "templates"
 
 # Версия статики в query-строке: меняйте, когда правите css/js, иначе у
 # посетителей останется закешированная старая версия.
-VER = "15"
+VER = "18"
 
 FORKLIFT_SVG = (
     '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="{w}" '
@@ -391,7 +391,7 @@ def render_photo(product, eager=False):
              loading="eager" if eager else "lazy")
 
 
-def render_product(product):
+def render_product(product, specs):
     """Карточка позиции в справочнике подбора.
 
     Здесь нет ни «в наличии», ни цены: наличие подтверждает поставщик под
@@ -403,14 +403,18 @@ def render_product(product):
 
     # Два ключевых параметра — чипами наверху: по ним технику ищут в первую
     # очередь. Остальное — списком ниже, чтобы карточка не превращалась
-    # в облако из десятка одинаковых плашек.
-    chips = ['<span>{} кг</span>'.format(product["capacity"])]
+    # в облако из десятка одинаковых плашек. У навесного оборудования нет
+    # высоты подъёма, а «грузоподъёмность» — это его собственная, а не
+    # машины, поэтому чип не выводится, если поля нет вовсе.
+    chips = []
+    if product.get("capacity") is not None:
+        chips.append('<span>{} кг</span>'.format(product["capacity"]))
     if product.get("lift_mm"):
         chips.append("<span>{}</span>".format(e(format_lift(product["lift_mm"]))))
 
     rows = []
     data_attrs = []
-    for spec in SPECS:
+    for spec in specs:
         value = product.get(spec["key"])
         if value is None:
             continue
@@ -440,7 +444,7 @@ def render_product(product):
         '              </div>\n'
         '            </div>'
     ).format(
-        cap=product["capacity"],
+        cap=product.get("capacity", 0),
         lift=product.get("lift_mm", 0),
         budget=product["budget"],
         order=product["_order"],
@@ -456,9 +460,11 @@ def render_product(product):
 
 
 # ---- Характеристики позиций -------------------------------------------------
-# Единственный источник правды — SPECS в data/catalog.py. Здесь только вывод.
-
-SPEC_BY_KEY = {sp["key"]: sp for sp in SPECS}
+# Единственный источник правды — `specs` категории в data/catalog.py (SPECS
+# для техники, ATTACHMENT_SPECS для навесного). Здесь только вывод, поэтому
+# все функции ниже принимают список характеристик параметром, а не читают
+# общий SPECS напрямую — иначе навесное оборудование получило бы «Мачту»
+# и «Кабину», которых у него нет.
 
 
 def spec_value_label(spec, value):
@@ -481,14 +487,14 @@ def format_lift(mm):
     return "{:.1f} м".format(mm / 1000).replace(".", ",")
 
 
-def collect_filter_options(products):
+def collect_filter_options(products, specs):
     """Значения характеристик, которые реально есть у этих позиций.
 
     Фильтр с одним значением не возвращается: выбирать не из чего, а место
     в сайдбаре он занимает.
     """
     out = []
-    for spec in SPECS:
+    for spec in specs:
         if not spec.get("filter"):
             continue
         present = [p.get(spec["key"]) for p in products if p.get(spec["key"]) is not None]
@@ -510,10 +516,14 @@ def render_type_tiles(active_slug):
         cls = "type-tile active" if c["slug"] == active_slug else "type-tile"
         img = ""
         if c.get("photo"):
+            # 56×44 — реальный размер бокса в CSS (.type-tile img), не размер
+            # исходной карточной фотографии. Указывать здесь photo_height
+            # (могло быть 1063) значит соврать браузеру про intrinsic aspect
+            # ratio и получить не тот резерв места до применения стилей.
             img = (
-                '<img src="@ROOT@assets/img/{photo}-800.webp" alt="" width="80" height="{h}" '
+                '<img src="@ROOT@assets/img/{photo}-800.webp" alt="" width="56" height="44" '
                 'loading="lazy" decoding="async">'
-            ).format(photo=e(c["photo"]), h=c.get("photo_height", 80))
+            ).format(photo=e(c["photo"]))
         tiles.append(
             '            <a class="{cls}" href="@ROOT@catalog/{slug}/">{img}<span>{name}</span></a>'.format(
                 cls=cls, slug=e(c["slug"]), img=img, name=e(c["name"]))
@@ -525,13 +535,17 @@ def render_type_tiles(active_slug):
     ).format(tiles="\n".join(tiles))
 
 
-def render_chip_filters(products):
+def render_chip_filters(products, specs, tonnage):
     """Фильтры строками чипсов над сеткой — как в прайсах поставщиков.
 
     Чипс, под который в разделе нет ни одной позиции, не убирается, а
     гасится: ряд грузоподъёмностей должен читаться как ряд, с дырками он
     выглядит сломанным. Кликнуть по такому можно — выдача будет пустой,
     а под ней форма: для сервиса подбора это заявка, а не тупик.
+
+    `tonnage=False` (навесное оборудование) убирает ряды грузоподъёмности
+    машины и высоты подъёма целиком — это не тоннажный товар, и пустой ряд
+    с одними погашенными чипсами выглядел бы хуже, чем его отсутствие.
     """
     def chip(group, attr, value, label, count):
         empty = "" if count else " is-empty"
@@ -552,22 +566,23 @@ def render_chip_filters(products):
 
     rows = []
 
-    caps = [p.get("capacity") for p in products]
-    rows.append(row("По грузоподъёмности", [
-        chip("capacity", "capacity", value, label, caps.count(value))
-        for value, label in TONNAGE_CHIPS
-    ]))
+    if tonnage:
+        caps = [p.get("capacity") for p in products]
+        rows.append(row("По грузоподъёмности", [
+            chip("capacity", "capacity", value, label, caps.count(value))
+            for value, label in TONNAGE_CHIPS
+        ]))
 
-    lifts = [p["lift_mm"] for p in products if p.get("lift_mm")]
-    lift_chips = []
-    for value, label in LIFT_RANGES:
-        lo, _, hi = value.partition("-")
-        lo_n, hi_n = int(lo or 0), (int(hi) if hi else None)
-        count = sum(1 for v in lifts if v >= lo_n and (hi_n is None or v <= hi_n))
-        lift_chips.append(chip("range", "lift", value, label, count))
-    rows.append(row("По высоте подъёма", lift_chips))
+        lifts = [p["lift_mm"] for p in products if p.get("lift_mm")]
+        lift_chips = []
+        for value, label in LIFT_RANGES:
+            lo, _, hi = value.partition("-")
+            lo_n, hi_n = int(lo or 0), (int(hi) if hi else None)
+            count = sum(1 for v in lifts if v >= lo_n and (hi_n is None or v <= hi_n))
+            lift_chips.append(chip("range", "lift", value, label, count))
+        rows.append(row("По высоте подъёма", lift_chips))
 
-    for spec, options, counts in collect_filter_options(products):
+    for spec, options, counts in collect_filter_options(products, specs):
         rows.append(row(spec["label"], [
             chip("spec", spec["key"], value, label, counts[value])
             for value, label in options
@@ -591,8 +606,8 @@ def render_chip_filters(products):
     ).format(rows="".join(rows))
 
 
-def render_catalog_body(products, heading, active_slug):
-    cards = "\n\n".join(render_product(p) for p in products)
+def render_catalog_body(products, heading, active_slug, specs, tonnage):
+    cards = "\n\n".join(render_product(p, specs) for p in products)
     count = len(products)
     return (
       '      <div class="catalog-layout">\n\n'
@@ -619,7 +634,7 @@ def render_catalog_body(products, heading, active_slug):
       '          <a href="#lead" class="btn btn-ghost btn-sm">Не нашли подходящее — опишите задачу →</a>\n'
       '        </div>\n'
       '      </div>'
-    ).format(tiles=render_type_tiles(active_slug), filters=render_chip_filters(products),
+    ).format(tiles=render_type_tiles(active_slug), filters=render_chip_filters(products, specs, tonnage),
              cards=cards, count=count, heading=e(heading))
 
 
@@ -1045,7 +1060,7 @@ def page_category(category):
         h1=e(category["h1"]),
         intro=intro,
         catalog=render_catalog_body(products, "{}: модели и характеристики".format(category["name"]),
-                                    category["slug"]),
+                                    category["slug"], category["specs"], category["tonnage"]),
         form=render_lead_form(),
     )
 

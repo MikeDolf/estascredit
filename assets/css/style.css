@@ -285,7 +285,11 @@ section{padding:96px 0; position:relative;}
   width:56px; height:44px; object-fit:contain; background:#fff; flex-shrink:0;
   border:1px solid var(--panel-line);
 }
-.type-tile span{min-width:0;}
+.type-tile span{min-width:0; overflow-wrap:break-word;}
+/* «Электропогрузчики», «Газобаллонные» — цельные слова без пробелов;
+   min-width:0 разрешает сжатие ряда, но перенести такое слово может
+   только overflow-wrap. Без него текст держал внутреннюю ширину плитки
+   и распирал сетку на мобильном. */
 
 /* ===== CATALOG: CHIP FILTERS ===== */
 .chip-filters{
