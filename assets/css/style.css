@@ -131,8 +131,9 @@ nav.mainnav a{
 }
 nav.mainnav a:hover, nav.mainnav a.active{color:var(--text);}
 nav.mainnav a.active{color:var(--orange);}
-/* CTA duplicated inside the mobile dropdown — hidden while the desktop nav is shown */
+/* CTA and phone duplicated inside the mobile dropdown — hidden while the desktop nav is shown */
 nav.mainnav .nav-cta{display:none;}
+nav.mainnav .nav-cta-phone{display:none;}
 .nav-right{display:flex; align-items:center; gap:22px;}
 .phone-block{text-align:right; display:block; line-height:1.25;}
 .phone-block .num{font-family:'Oswald',sans-serif; font-weight:600; font-size:16px; display:block;}
@@ -619,6 +620,9 @@ footer{padding:72px 0 28px;}
   }
   nav.mainnav.open{display:flex;}
   nav.mainnav a{padding:14px 0; border-bottom:1px solid var(--panel-line); font-size:14px;}
+  nav.mainnav .nav-cta-phone{
+    display:block; font-family:'Oswald',sans-serif; font-weight:700; font-size:19px; color:var(--orange);
+  }
   nav.mainnav .nav-cta{
     display:inline-flex; margin-top:18px; border-bottom:none; width:100%;
   }
@@ -657,6 +661,10 @@ footer{padding:72px 0 28px;}
 }
 
 @media (max-width: 620px){
+  /* Ниже 620px телефону, кнопке и бургеру рядом с логотипом уже тесно —
+     кнопка наезжает и переносится. Дальше её несёт дубль в выпадающем
+     меню (nav-cta ниже). */
+  .nav-right > .btn{display:none;}
   .wrap{padding:0 20px;}
   section{padding:64px 0;}
   nav.mainnav{padding:6px 20px 22px;}
@@ -675,13 +683,18 @@ footer{padding:72px 0 28px;}
   .foot-col ul li{margin-bottom:14px;}
 }
 
-/* Below ~560px the header CTA no longer fits next to the logo and the
-   burger — the duplicate inside the dropdown takes over. */
 @media (max-width: 560px){
-  .nav-right > .btn{display:none;}
   .navrow{padding:14px 20px;}
   .logo{font-size:19px;}
   .logo small{font-size:11px;}
+}
+
+/* Ниже 430px логотип (нерезиновое «УралФорклифт») и бургер съедают почти
+   всю строку — номеру уже некуда деться, и он схлопывается в столбик из
+   цифр. Прячем его здесь; в выпадающем меню есть свой полноразмерный
+   дубль (nav-cta-phone), так что звонок остаётся в один тап. */
+@media (max-width: 430px){
+  .nav-right .phone-block{display:none;}
 }
 
 @media (prefers-reduced-motion: reduce){

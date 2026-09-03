@@ -41,7 +41,7 @@ TPL = Path(__file__).resolve().parent / "templates"
 
 # Версия статики в query-строке: меняйте, когда правите css/js, иначе у
 # посетителей останется закешированная старая версия.
-VER = "25"
+VER = "26"
 
 FORKLIFT_SVG = (
     '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="{w}" '
@@ -133,6 +133,7 @@ def render_header(root, slug, has_form):
     # navrow, оставаясь дотягиваемым в один тап (см. медиа-запрос 1180px).
     phone_block = ""
     tb_phone = ""
+    nav_phone = ""
     if SITE["phone"]:
         phone_block = (
             '<a class="phone-block" href="tel:{href}">'
@@ -141,6 +142,8 @@ def render_header(root, slug, has_form):
         ).format(href=e(SITE["phone_href"]), num=e(SITE["phone"]),
                  hrs=e(SITE["opening_hours"] or "Звоните по рабочим дням"))
         tb_phone = '<a class="tb-phone" href="tel:{href}">{num}</a>'.format(
+            href=e(SITE["phone_href"]), num=e(SITE["phone"]))
+        nav_phone = '<a class="nav-cta-phone" href="tel:{href}">{num}</a>'.format(
             href=e(SITE["phone_href"]), num=e(SITE["phone"]))
 
     return (
@@ -157,6 +160,7 @@ def render_header(root, slug, has_form):
         '    {logo}\n'
         '    <nav class="mainnav" id="mainnav">\n'
         '      {links}\n'
+        '      {nav_phone}\n'
         '      <a href="{cta}" class="nav-cta btn btn-primary">Оставить заявку</a>\n'
         '    </nav>\n'
         '    <div class="nav-right">\n'
@@ -175,6 +179,7 @@ def render_header(root, slug, has_form):
         max=max_link(),
         logo=render_logo(root),
         links="\n      ".join(links),
+        nav_phone=nav_phone,
         phone=phone_block,
         # На странице без формы вести на #lead нельзя — якоря там нет.
         cta="#lead" if has_form else e(root + "kontakty/"),
