@@ -41,7 +41,7 @@ TPL = Path(__file__).resolve().parent / "templates"
 
 # Версия статики в query-строке: меняйте, когда правите css/js, иначе у
 # посетителей останется закешированная старая версия.
-VER = "22"
+VER = "23"
 
 FORKLIFT_SVG = (
     '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="{w}" '
@@ -1005,6 +1005,21 @@ def page_home():
         for i, (t, d) in enumerate(steps, start=1)
     )
 
+    # Блок статей пропускается целиком, если писать пока нечего — заголовок
+    # без карточек под ним хуже, чем отсутствие раздела (см. правило вверху
+    # файла: сборка не выводит пустые блоки).
+    articles_section = ""
+    if ARTICLES:
+        articles_section = (
+            '  <section id="articles" style="padding-top:0;">\n'
+            '    <div class="wrap">\n'
+            '      <div class="section-head"><div><h2>Полезные статьи</h2></div>\n'
+            '        <p><a href="@ROOT@articles/index.html" class="inline-link">Все статьи →</a></p></div>\n'
+            '      <div class="articles-grid">\n{grid}      </div>\n'
+            '    </div>\n'
+            '  </section>\n\n'
+        ).format(grid=render_article_cards())
+
     body = (
         '  <section id="catalog" style="padding-top:48px;">\n'
         '    <div class="wrap">\n'
@@ -1025,6 +1040,7 @@ def page_home():
         '      <div class="process-list">{steps}</div>\n'
         '    </div>\n'
         '  </section>\n\n'
+        '{articles}'
         '  <section id="geo" style="padding-top:0;">\n'
         '    <div class="wrap">\n'
         '      <div class="section-head"><div><h2>Где мы работаем</h2></div></div>\n'
@@ -1037,6 +1053,7 @@ def page_home():
         offer=offer_html,
         cards="\n".join(cards),
         steps=steps_html,
+        articles=articles_section,
         cities=city_links,
         form=render_lead_form(),
     )
