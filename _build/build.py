@@ -32,6 +32,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from data.site import SITE, NAV, FOOTER_COMPANY, FOOTER_LEGAL, FORBIDDEN_WORDING
 from data.catalog import CATEGORIES, LIFT_RANGES, TONNAGE_CHIPS, LEAD_TYPES
 from data.pages import TRUST_PAGES, LEGAL_PAGES
+from data.articles import ARTICLES
+from markdown_lite import convert as md_to_html
 from data import cities as cities_data
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -39,7 +41,7 @@ TPL = Path(__file__).resolve().parent / "templates"
 
 # Версия статики в query-строке: меняйте, когда правите css/js, иначе у
 # посетителей останется закешированная старая версия.
-VER = "18"
+VER = "22"
 
 FORKLIFT_SVG = (
     '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="{w}" '
@@ -800,6 +802,28 @@ def build_jsonld(page, canonical, trail):
 
     graph = [page_node, website, organization]
 
+    # Article: заголовок статьи (может отличаться от <title>), даты и автор.
+    # Автор — отдельный узел Person, на который page_node ссылается по @id,
+    # а не встроенный объект: так его можно переиспользовать между статьями,
+    # если у них общий автор, без дублирования полей.
+    art = page.get("article")
+    if art:
+        author_id = domain + "/#author"
+        page_node.update({
+            "headline": art["headline"],
+            "datePublished": art["published"],
+            "dateModified": art["updated"],
+            "author": {"@id": author_id},
+            "publisher": {"@id": domain + "/#organization"},
+        })
+        graph.append({
+            "@type": "Person",
+            "@id": author_id,
+            "name": art["author_name"],
+            "url": domain + "/o-servise/",
+            "jobTitle": "Подбор вилочных погрузчиков",
+        })
+
     # Service — на страницах, описывающих саму услугу. Отдельный узел, а не
     # свойство организации: так поисковик связывает услугу с областью работы.
     if page.get("service"):
@@ -1130,7 +1154,7 @@ def page_city(city):
                 cls=" open" if i == 0 else "", q=e(q), a=e(a))
             for i, (q, a) in enumerate(spec["faq"])
         )
-        faq_html = ('      <h2>Частые вопросы</h2>\n'
+        faq_html = ('      <h2 id="faq">Частые вопросы</h2>\n'
                     '      <div class="faq-list">{}</div>\n'.format(items))
 
     body = (
@@ -1179,17 +1203,149 @@ def page_city(city):
     }
 
 
+RU_MONTHS = ["", "января", "февраля", "марта", "апреля", "мая", "июня",
+             "июля", "августа", "сентября", "октября", "ноября", "декабря"]
+
+
+def format_date_ru(iso_date):
+    """"2026-09-03" -> "3 сентября 2026"."""
+    y, m, d = iso_date.split("-")
+    return "{} {} {}".format(int(d), RU_MONTHS[int(m)], y)
+
+
+LIVE_ARTICLE_SLUGS = {a["slug"] for a in ARTICLES}
+
+
+def render_article_faq(faq):
+    if not faq:
+        return ""
+    items = []
+    for i, (q, a) in enumerate(faq):
+        open_cls = " open" if i == 0 else ""
+        items.append(
+            '<div class="faq-item{cls}"><button class="faq-q"><span>{q}</span>'
+            '<span class="plus">+</span></button>'
+            '<div class="faq-a"><p>{a}</p></div></div>'.format(cls=open_cls, q=e(q), a=e(a))
+        )
+    return (
+        '      <h2 id="faq">Частые вопросы</h2>\n'
+        '      <div class="faq-list">{}</div>'
+    ).format("".join(items))
+
+
+def render_article_sources(sources):
+    if not sources:
+        return ""
+    items = "".join(
+        '<li><a href="{url}" target="_blank" rel="noopener">{label}</a></li>'.format(
+            url=e(url), label=e(label))
+        for label, url in sources
+    )
+    return (
+        '      <h2>Источники и нормативка</h2>\n'
+        '      <ul class="source-list">{}</ul>'
+    ).format(items)
+
+
+def page_article(article):
+    body_html = md_to_html(article["body_md"], LIVE_ARTICLE_SLUGS, root="@ROOT@")
+    faq_html = render_article_faq(article["faq"])
+    sources_html = render_article_sources(article["sources"])
+
+    body = (
+        '  <section class="article-page">\n'
+        '    <div class="wrap">\n'
+        '      {crumbs}\n'
+        '      <div class="article-header">\n'
+        '        <h1>{h1}</h1>\n'
+        '        <div class="meta"><span>{author}</span><span>Опубликовано {published}</span></div>\n'
+        '      </div>\n'
+        '      <article class="article-body">\n'
+        '{body_html}\n'
+        '{faq}\n'
+        '{sources}\n'
+        '      </article>\n'
+        '      <div class="article-cta">\n'
+        '        <p>Опишите задачу — подберём модель под неё.</p>\n'
+        '        {contact}\n'
+        '      </div>\n'
+        '      <div class="article-nav"><a href="@ROOT@articles/index.html">← Все статьи</a></div>\n'
+        '    </div>\n'
+        '  </section>\n'
+        '{form}'
+    ).format(
+        crumbs=render_breadcrumbs("@ROOT@", [
+            ("Главная", "index.html"), ("Статьи", "articles/index.html"), (article["h1"], None),
+        ]),
+        h1=e(article["h1"]),
+        author=e(article["author_name"]),
+        published=format_date_ru(article["published"]),
+        body_html=body_html,
+        faq=faq_html,
+        sources=sources_html,
+        contact=max_link(),
+        form=render_lead_form(),
+    )
+
+    return {
+        "slug": "articles/" + article["slug"],
+        "title": article["title"],
+        "description": article["description"],
+        "schema_type": "Article",
+        "trail": [("Главная", "index.html"), ("Статьи", "articles/index.html"), (article["h1"], None)],
+        "article": {
+            "headline": article["h1"],
+            "published": article["published"],
+            "updated": article["updated"],
+            "author_name": article["author_name"],
+        },
+        "faq": article["faq"],
+        "body": body,
+    }
+
+
+def render_article_cards():
+    if not ARTICLES:
+        return ""
+    ordered = sorted(ARTICLES, key=lambda a: a["order"])
+    cards = []
+    for a in ordered:
+        cards.append((
+            '        <a class="article-card" href="@ROOT@articles/{slug}/">\n'
+            '          <div class="thumb"><svg viewBox="0 0 100 100" fill="none" stroke="currentColor" '
+            'stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            '<rect x="16" y="62" width="52" height="10" rx="5"/><circle cx="28" cy="78" r="8"/>'
+            '<circle cx="56" cy="78" r="8"/><path d="M24 62 L24 46 L52 46 L62 34 L76 34 L76 54 L62 62 Z"/>'
+            '<rect x="30" y="38" width="16" height="12"/></svg></div>\n'
+            '          <div class="body">\n'
+            '            <span class="date">{date}</span>\n'
+            '            <h2>{h1}</h2>\n'
+            '            <p>{desc}</p>\n'
+            '            <span class="readmore">Читать →</span>\n'
+            '          </div>\n'
+            '        </a>\n'
+        ).format(slug=e(a["slug"]), date=format_date_ru(a["published"]),
+                 h1=e(a["h1"]), desc=e(a["og_description"])))
+    return "".join(cards)
+
+
 def page_articles():
+    grid = render_article_cards()
+    intro = ("Разборы по выбору и эксплуатации техники." if ARTICLES
+             else "Разборы по выбору и эксплуатации техники. Раздел наполняется.")
     body = (
         '  <section style="padding-top:40px;">\n'
         '    <div class="wrap">\n'
         '      {crumbs}\n'
         '      <h1 class="page-h1">Статьи о вилочных погрузчиках</h1>\n'
-        '      <p class="page-intro">Разборы по выбору и эксплуатации техники. Раздел наполняется.</p>\n'
-        '      <div class="articles-grid"></div>\n'
+        '      <p class="page-intro">{intro}</p>\n'
+        '      <div class="articles-grid">\n{grid}      </div>\n'
         '    </div>\n'
         '  </section>'
-    ).format(crumbs=render_breadcrumbs("@ROOT@", [("Главная", "index.html"), ("Статьи", None)]))
+    ).format(
+        crumbs=render_breadcrumbs("@ROOT@", [("Главная", "index.html"), ("Статьи", None)]),
+        intro=intro, grid=grid,
+    )
 
     return {
         "slug": "articles",
@@ -1213,6 +1369,7 @@ def main():
     pages += [page_text(p) for p in TRUST_PAGES]
     pages += [page_text(p) for p in LEGAL_PAGES]
     pages += [page_city(c) for c in cities_data.CITIES]
+    pages += [page_article(a) for a in ARTICLES]
     pages.append(page_articles())
 
     if force_all:
