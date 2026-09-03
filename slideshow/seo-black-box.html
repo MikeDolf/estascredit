@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SEO is a black box — except this part</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #fdf6ec;
+    --card: #ffffff;
+    --ink: #0a0a0a;
+    --ink-2: #1f2937;
+    --muted: #6b7280;
+    --line: #e9e1d3;
+
+    --box:    #1f2937;   /* card 1 — black box */
+    --box-bg: #f3f4f6;
+
+    --signal: #7c3aed;   /* card 2 — signals */
+    --signal-bg: #f3e8ff;
+    --signal-soft: #ddd6fe;
+
+    --truth:  #16a34a;   /* card 3 — the rule */
+    --truth-bg: #dcfce7;
+    --truth-soft: #86efac;
+
+    --highlight: #fde68a;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .stage {
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3vh 3vw;
+  }
+
+  .frame {
+    width: 100%;
+    max-width: 1760px;
+    aspect-ratio: 16 / 9;
+    padding: 34px 48px 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ---------- Header ---------- */
+  .head { text-align: center; }
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-size: 52px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  h1 .mark {
+    background: linear-gradient(180deg, transparent 60%, var(--highlight) 60%);
+    padding: 0 6px;
+  }
+  .subhead {
+    margin-top: 12px;
+    font-size: 16px;
+    color: var(--ink-2);
+    font-weight: 500;
+    max-width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.4;
+  }
+  .subhead strong { color: var(--ink); font-weight: 700; }
+
+  /* ---------- 3-card grid ---------- */
+  .grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.1fr;
+    gap: 18px;
+    min-height: 0;
+  }
+
+  .card {
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 20px;
+    padding: 22px 22px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card.box    { border-color: var(--box); }
+  .card.signal { border-color: var(--signal); box-shadow: 0 24px 60px -30px rgba(124,58,237,0.3); }
+  .card.truth  {
+    border-color: var(--truth);
+    background: linear-gradient(180deg, #fff 0%, #f0fdf4 100%);
+    box-shadow: 0 24px 60px -30px rgba(22,163,74,0.4);
+  }
+
+  .card-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .card-num {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    color: #fff;
+    font-weight: 900;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .card.box    .card-num { background: var(--box); }
+  .card.signal .card-num { background: var(--signal); }
+  .card.truth  .card-num { background: var(--truth); }
+
+  .card-titles .eyebrow-sm {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .card.box    .card-titles .eyebrow-sm { color: var(--box); }
+  .card.signal .card-titles .eyebrow-sm { color: var(--signal); }
+  .card.truth  .card-titles .eyebrow-sm { color: var(--truth); }
+
+  .card-titles .title {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .card-desc {
+    font-size: 13.5px;
+    color: var(--ink-2);
+    line-height: 1.5;
+  }
+  .card-desc strong { color: var(--ink); font-weight: 800; }
+
+  /* ---------- Card 1 — black box visual ---------- */
+  .bb-visual {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    padding: 10px 0;
+  }
+  .bb-box {
+    width: 140px;
+    height: 100px;
+    background: var(--box);
+    border-radius: 14px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--highlight);
+    font-size: 54px;
+    font-weight: 900;
+    box-shadow: 0 20px 40px -14px rgba(0,0,0,0.4);
+  }
+  .bb-box::before, .bb-box::after {
+    content: "";
+    position: absolute;
+    background: rgba(255,255,255,0.06);
+    border: 1px dashed rgba(255,255,255,0.18);
+    border-radius: 6px;
+  }
+  .bb-box::before { width: 22px; height: 12px; top: 18px; left: 18px; }
+  .bb-box::after  { width: 30px; height: 10px; bottom: 20px; right: 16px; }
+
+  .bb-facts {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+  }
+  .bb-facts .fact {
+    font-size: 12px;
+    color: var(--ink-2);
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    line-height: 1.4;
+  }
+  .bb-facts .fact::before {
+    content: "•";
+    color: var(--box);
+    font-weight: 900;
+  }
+  .bb-facts .fact strong { color: var(--ink); font-weight: 800; }
+
+  /* ---------- Card 2 — signals chips ---------- */
+  .signals {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 12px 14px;
+    background: var(--signal-bg);
+    border: 1.5px dashed var(--signal-soft);
+    border-radius: 12px;
+    flex: 1;
+    align-content: flex-start;
+  }
+  .sig {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 7px;
+    background: #fff;
+    border: 1px solid var(--signal-soft);
+    color: var(--signal);
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+
+  .signals-note {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: #fafafa;
+    border: 1px dashed var(--line);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--ink-2);
+    line-height: 1.4;
+  }
+  .signals-note strong { color: var(--signal); font-weight: 800; }
+
+  /* ---------- Card 3 — the rule / flow ---------- */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+  }
+  .flow-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: #fafafa;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-2);
+    line-height: 1.3;
+  }
+  .flow-step > span:not(.n) { flex: 1; }
+  .flow-step strong { color: var(--ink); font-weight: 800; }
+  .flow-step .n {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--truth-bg);
+    color: var(--truth);
+    font-size: 11px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .flow-step.final {
+    background: var(--truth-bg);
+    border-color: var(--truth);
+    color: var(--truth);
+    font-weight: 800;
+  }
+  .flow-step.final .n {
+    background: var(--truth);
+    color: #fff;
+  }
+  .flow-step.final strong { color: var(--truth); }
+
+  .punchline {
+    margin-top: 4px;
+    padding: 12px 14px;
+    background: var(--truth);
+    color: #fff;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.4;
+    text-align: center;
+  }
+  .punchline .hl {
+    background: var(--highlight);
+    color: var(--ink);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 800;
+  }
+
+  /* ---------- Footer ---------- */
+  .foot {
+    background: var(--ink);
+    color: #fff;
+    border-radius: 14px;
+    padding: 16px 28px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  .foot .hl {
+    background: var(--highlight);
+    color: var(--ink);
+    padding: 1px 8px;
+    border-radius: 5px;
+    font-weight: 800;
+  }
+
+  @media (max-width: 1100px) {
+    .frame { aspect-ratio: auto; }
+    .grid { grid-template-columns: 1fr; }
+    h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="frame">
+
+      <!-- Header -->
+      <div class="head">
+        <div class="eyebrow">Reality check</div>
+        <h1>SEO is a <span class="mark">black box</span>. Except this part.</h1>
+        <div class="subhead">
+          Nobody — not SEMRush, not Ahrefs, not even Google's own employees — knows the full algorithm. But Google's <strong>business model is public</strong>, and it tells you exactly what to optimise for.
+        </div>
+      </div>
+
+      <!-- 3 cards -->
+      <div class="grid">
+
+        <!-- 1. THE BLACK BOX -->
+        <div class="card box">
+          <div class="card-head">
+            <div class="card-num">1</div>
+            <div class="card-titles">
+              <div class="eyebrow-sm">What nobody knows</div>
+              <div class="title">The algorithm</div>
+            </div>
+          </div>
+          <div class="card-desc">
+            Google has <strong>200+ rumoured ranking signals</strong> — never published, and they never will be. SEO tools reverse-engineer. Their scores are <strong>educated guesses</strong>.
+          </div>
+          <div class="bb-visual">
+            <div class="bb-box">?</div>
+          </div>
+          <div class="bb-facts">
+            <div class="fact"><strong>2024 Google leak</strong> — 14,000 attributes exposed</div>
+            <div class="fact">SEMRush, Ahrefs, Moz all <strong>estimate</strong></div>
+            <div class="fact">Public statements are often <strong>misleading</strong></div>
+          </div>
+        </div>
+
+        <!-- 2. EDUCATED GUESSES -->
+        <div class="card signal">
+          <div class="card-head">
+            <div class="card-num">2</div>
+            <div class="card-titles">
+              <div class="eyebrow-sm">What experts agree on</div>
+              <div class="title">Likely signals</div>
+            </div>
+          </div>
+          <div class="card-desc">
+            Every serious SEO tool converges on roughly the same list — most of them are <strong>proxies for the same thing</strong>: is this page actually useful?
+          </div>
+          <div class="signals">
+            <span class="sig">Content quality &amp; depth</span>
+            <span class="sig">Dwell time</span>
+            <span class="sig">Bounce rate</span>
+            <span class="sig">Scroll depth</span>
+            <span class="sig">Click-through rate</span>
+            <span class="sig">Backlink quality</span>
+            <span class="sig">Page speed</span>
+            <span class="sig">Mobile UX</span>
+            <span class="sig">E-E-A-T signals</span>
+            <span class="sig">Topical authority</span>
+          </div>
+          <div class="signals-note">
+            <strong>All proxies for:</strong> did this page answer the question, and did the user stop searching?
+          </div>
+        </div>
+
+        <!-- 3. THE ONE RULE -->
+        <div class="card truth">
+          <div class="card-head">
+            <div class="card-num">3</div>
+            <div class="card-titles">
+              <div class="eyebrow-sm">What actually drives it</div>
+              <div class="title">Help Google win</div>
+            </div>
+          </div>
+          <div class="card-desc">
+            Google's only real goal: <strong>keep users on Google</strong>. That's the only way they sell ads. Everything in the algorithm exists to serve that one goal.
+          </div>
+          <div class="flow">
+            <div class="flow-step"><span class="n">$</span><span>Google makes money from <strong>ads</strong>.</span></div>
+            <div class="flow-step"><span class="n">→</span><span>Ads need <strong>user attention</strong>.</span></div>
+            <div class="flow-step"><span class="n">→</span><span>Attention needs <strong>relevant results</strong>.</span></div>
+            <div class="flow-step final"><span class="n">★</span><span>Be the result users <strong>don't need to search past</strong>.</span></div>
+          </div>
+          <div class="punchline">
+            Help Google keep its users → <span class="hl">Google keeps sending you more</span>.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="foot">
+        Every ranking factor is Google trying to guess <strong>one thing</strong>: <span class="hl">did this page answer the question?</span>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

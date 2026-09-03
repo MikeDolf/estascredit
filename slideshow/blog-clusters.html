@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Blog posts at scale — cluster keywords, multiply pages</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #fdf6ec;
+    --card: #ffffff;
+    --ink: #0a0a0a;
+    --ink-2: #1f2937;
+    --muted: #6b7280;
+    --line: #e9e1d3;
+
+    --blog: #0ea5e9;
+    --blog-bg: #e0f2fe;
+    --blog-soft: #bae6fd;
+
+    --primary: #7c3aed;
+    --primary-bg: #f3e8ff;
+
+    --good: #16a34a;
+    --good-bg: #dcfce7;
+
+    --highlight: #fde68a;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .stage {
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3vh 3vw;
+  }
+
+  .frame {
+    width: 100%;
+    max-width: 1760px;
+    aspect-ratio: 16 / 9;
+    padding: 30px 44px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  /* ---------- Header ---------- */
+  .head { text-align: center; }
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: 46px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  h1 .mark {
+    background: linear-gradient(180deg, transparent 60%, var(--highlight) 60%);
+    padding: 0 6px;
+  }
+  .subhead {
+    margin-top: 8px;
+    font-size: 15px;
+    color: var(--muted);
+    font-weight: 500;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .subhead strong { color: var(--ink); font-weight: 700; }
+
+  /* ---------- Main grid ---------- */
+  .main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 20px;
+    min-height: 0;
+  }
+
+  /* ---------- Featured post ---------- */
+  .featured {
+    background: var(--card);
+    border: 2px solid var(--blog);
+    border-radius: 20px;
+    padding: 20px 22px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: relative;
+    box-shadow: 0 24px 60px -30px rgba(14,165,233,0.4);
+    min-height: 0;
+    overflow: hidden;
+  }
+  .featured .tag {
+    position: absolute;
+    top: 16px; right: 16px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: var(--blog-bg);
+    color: var(--blog);
+  }
+
+  .featured-url {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    color: var(--muted);
+    background: #fafafa;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    max-width: 65%;
+  }
+
+  .primary-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .primary-label {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--primary);
+    background: var(--primary-bg);
+    padding: 4px 8px;
+    border-radius: 5px;
+    white-space: nowrap;
+  }
+  .primary-kw {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: var(--ink);
+  }
+  .primary-kw .hl {
+    background: var(--highlight);
+    padding: 0 4px;
+    border-radius: 3px;
+  }
+
+  /* Cluster visual */
+  .cluster {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-height: 0;
+    padding: 0;
+    background: transparent;
+    border: 0;
+  }
+  .cluster-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--blog);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cluster-label .count {
+    background: var(--blog);
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-weight: 900;
+  }
+  .cluster-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    overflow: hidden;
+  }
+  .cluster-items .kw {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    padding: 6px 10px;
+    background: #fff;
+    border: 1px solid var(--blog-soft);
+    border-radius: 7px;
+    color: var(--blog);
+    font-weight: 700;
+  }
+  .cluster-items .kw.source-semrush::before {
+    content: "Sr";
+    font-size: 9px;
+    font-weight: 900;
+    background: #ff642d;
+    color: #fff;
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin-right: 6px;
+    letter-spacing: 0.04em;
+  }
+  .cluster-items .kw.source-claude::before {
+    content: "CC";
+    font-size: 9px;
+    font-weight: 900;
+    background: #0a0a0a;
+    color: #fff;
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin-right: 6px;
+    letter-spacing: 0.04em;
+  }
+
+  /* Featured meta row */
+  .featured-meta {
+    display: flex;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+    flex-wrap: wrap;
+  }
+  .featured-meta .stat {
+    background: var(--good-bg);
+    color: var(--good);
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 10px;
+    border-radius: 6px;
+    letter-spacing: -0.01em;
+  }
+
+  /* ---------- Right: "× many" grid ---------- */
+  .multi {
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 20px;
+    padding: 18px 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .multi-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .multi-title {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+  .multi-title .sub {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  .multi-count {
+    background: var(--ink);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    padding: 6px 11px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .multi-count .hl {
+    background: var(--highlight);
+    color: var(--ink);
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin: 0 2px;
+  }
+
+  .post-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 6px;
+    min-height: 0;
+  }
+  .post {
+    background: #fafafa;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 11px 9px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-height: 0;
+    overflow: hidden;
+    position: relative;
+    justify-content: center;
+  }
+  .post::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    height: 3px;
+    width: 100%;
+    background: var(--blog);
+    opacity: 0.6;
+  }
+  .post .line {
+    font-size: 11px;
+    line-height: 1.35;
+    color: var(--ink-2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .post .tag {
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-right: 5px;
+  }
+  .post .tag.root    { color: var(--primary); }
+  .post .tag.cluster { color: var(--blog); }
+  .post .kw {
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    font-size: 12px;
+  }
+  .post .cluster-list {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10px;
+    color: var(--blog);
+    line-height: 1.4;
+  }
+
+  /* Faded "100s more" overlay strip */
+  .more {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+    padding: 6px;
+    background: #fafafa;
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+  }
+  .more .dots { letter-spacing: 0.2em; color: var(--blog); font-weight: 900; }
+
+  /* ---------- Footer ---------- */
+  .foot {
+    background: var(--ink);
+    color: #fff;
+    border-radius: 14px;
+    padding: 14px 26px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  .foot .hl {
+    background: var(--highlight);
+    color: var(--ink);
+    padding: 1px 8px;
+    border-radius: 5px;
+    font-weight: 800;
+  }
+
+  @media (max-width: 1100px) {
+    .frame { aspect-ratio: auto; }
+    .main { grid-template-columns: 1fr; }
+    .post-grid { grid-template-columns: repeat(2, 1fr); }
+    h1 { font-size: 30px; }
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="frame">
+
+      <!-- Header -->
+      <div class="head">
+        <div class="eyebrow">Ch 3 — Blog posts at scale</div>
+        <h1>One blog post = 1 <span class="mark">root keyword</span> + keyword cluster.</h1>
+        <div class="subhead">Generate <strong>hundreds</strong> of blog posts — each targeting a whole family of related keywords. Claude Code pulls them from SEMRush or generates them itself.</div>
+      </div>
+
+      <!-- Main split: featured + grid -->
+      <div class="main">
+
+        <!-- LEFT: One blog post with cluster -->
+        <div class="featured">
+          <div class="tag">One post · zoomed in</div>
+          <div class="featured-url">plumbing.co/blog/how-to-unclog-a-drain</div>
+
+          <div class="primary-row">
+            <span class="primary-label">Root keyword</span>
+            <span class="primary-kw"><span class="hl">how to unclog a drain</span></span>
+          </div>
+
+          <div class="cluster">
+            <div class="cluster-label">
+              Cluster:
+              <span class="count">+8</span>
+            </div>
+            <div class="cluster-items">
+              <span class="kw source-semrush">unclog kitchen sink</span>
+              <span class="kw source-semrush">unclog bathroom sink</span>
+              <span class="kw source-semrush">drain won't drain</span>
+              <span class="kw source-claude">slow draining sink</span>
+              <span class="kw source-semrush">home remedy clogged drain</span>
+              <span class="kw source-claude">what dissolves hair in drain</span>
+              <span class="kw source-semrush">baking soda vinegar drain</span>
+              <span class="kw source-claude">snake vs drain cleaner</span>
+            </div>
+          </div>
+
+          <div class="featured-meta">
+            <span class="stat">✓ 2,200 words</span>
+            <span class="stat">✓ 12 H2s</span>
+            <span class="stat">✓ FAQ × 6</span>
+            <span class="stat">✓ All 8 keywords ranking</span>
+          </div>
+        </div>
+
+        <!-- RIGHT: × many posts -->
+        <div class="multi">
+          <div class="multi-head">
+            <div class="multi-title">
+              <span class="sub">× many posts</span>
+              Each one targets its own cluster
+            </div>
+            <div class="multi-count"><span class="hl">15+</span> posts</div>
+          </div>
+
+          <div class="post-grid">
+            <div class="post">
+              <div class="line"><span class="tag root">Root:</span><span class="kw">how to fix a leaky tap</span></div>
+              <div class="line"><span class="tag cluster">Cluster:</span><span class="cluster-list">dripping faucet, tap leaking at base, drip repair</span></div>
+            </div>
+            <div class="post">
+              <div class="line"><span class="tag root">Root:</span><span class="kw">water heater not working</span></div>
+              <div class="line"><span class="tag cluster">Cluster:</span><span class="cluster-list">no hot water, pilot light out, heater reset</span></div>
+            </div>
+            <div class="post">
+              <div class="line"><span class="tag root">Root:</span><span class="kw">toilet keeps running</span></div>
+              <div class="line"><span class="tag cluster">Cluster:</span><span class="cluster-list">flapper replacement, toilet won't stop, running toilet fix</span></div>
+            </div>
+            <div class="post">
+              <div class="line"><span class="tag root">Root:</span><span class="kw">low water pressure fix</span></div>
+              <div class="line"><span class="tag cluster">Cluster:</span><span class="cluster-list">whole house low PSI, kitchen tap slow, pressure regulator</span></div>
+            </div>
+            <div class="post">
+              <div class="line"><span class="tag root">Root:</span><span class="kw">burst pipe emergency</span></div>
+              <div class="line"><span class="tag cluster">Cluster:</span><span class="cluster-list">frozen pipe, shut off main, pipe leak fix</span></div>
+            </div>
+            <div class="post">
+              <div class="line"><span class="tag root">Root:</span><span class="kw">garbage disposal humming</span></div>
+              <div class="line"><span class="tag cluster">Cluster:</span><span class="cluster-list">disposal stuck, reset button, disposal not working</span></div>
+            </div>
+            <div class="post">
+              <div class="line"><span class="tag root">Root:</span><span class="kw">tankless water heater guide</span></div>
+              <div class="line"><span class="tag cluster">Cluster:</span><span class="cluster-list">tankless vs tank, tankless cost, tankless install</span></div>
+            </div>
+            <div class="post">
+              <div class="line"><span class="tag root">Root:</span><span class="kw">signs you need a new water heater</span></div>
+              <div class="line"><span class="tag cluster">Cluster:</span><span class="cluster-list">heater lifespan, old heater signs, water heater age</span></div>
+            </div>
+            <div class="post">
+              <div class="line"><span class="tag root">Root:</span><span class="kw">why is my water brown</span></div>
+              <div class="line"><span class="tag cluster">Cluster:</span><span class="cluster-list">rusty water, water discoloured, brown tap water</span></div>
+            </div>
+            <div class="post">
+              <div class="line"><span class="tag root">Root:</span><span class="kw">why is my drain smelly</span></div>
+              <div class="line"><span class="tag cluster">Cluster:</span><span class="cluster-list">smelly kitchen sink, drain gas smell, sewer smell</span></div>
+            </div>
+            <div class="post">
+              <div class="line"><span class="tag root">Root:</span><span class="kw">how to fix a clogged toilet</span></div>
+              <div class="line"><span class="tag cluster">Cluster:</span><span class="cluster-list">toilet not flushing, plunger won't work, unclog toilet</span></div>
+            </div>
+            <div class="post">
+              <div class="line"><span class="tag root">Root:</span><span class="kw">best sump pump 2026</span></div>
+              <div class="line"><span class="tag cluster">Cluster:</span><span class="cluster-list">basement flooding, sump pump reviews, sump pump install</span></div>
+            </div>
+            <div class="post">
+              <div class="line"><span class="tag root">Root:</span><span class="kw">prevent frozen pipes</span></div>
+              <div class="line"><span class="tag cluster">Cluster:</span><span class="cluster-list">winterize plumbing, pipe insulation, frozen pipe prevention</span></div>
+            </div>
+            <div class="post">
+              <div class="line"><span class="tag root">Root:</span><span class="kw">water softener vs filter</span></div>
+              <div class="line"><span class="tag cluster">Cluster:</span><span class="cluster-list">hard water signs, water softener cost, water treatment</span></div>
+            </div>
+            <div class="post">
+              <div class="line"><span class="tag root">Root:</span><span class="kw">noisy pipes banging</span></div>
+              <div class="line"><span class="tag cluster">Cluster:</span><span class="cluster-list">water hammer, pipes knocking, noisy plumbing</span></div>
+            </div>
+            <div class="post">
+              <div class="line"><span class="tag root">Root:</span><span class="kw">how to bleed a radiator</span></div>
+              <div class="line"><span class="tag cluster">Cluster:</span><span class="cluster-list">cold radiator fix, bleed valve, radiator air</span></div>
+            </div>
+          </div>
+
+          <div class="more">and <span class="dots">100s more</span> — one cluster per keyword</div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="foot">
+        One keyword per page is amateur. <span class="hl">One cluster per page</span> is how you dominate a niche.
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

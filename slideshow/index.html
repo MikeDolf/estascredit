@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SEO video slideshow</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0a0a0a;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --highlight: #fde68a;
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #fff;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- Slide frame ---------- */
+  .deck {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .slide-frame {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+    background: #fff;
+    transition: opacity 280ms ease;
+  }
+  .slide-frame.fading { opacity: 0; }
+
+  /* ---------- HUD (hides unless mouse moves) ---------- */
+  .hud {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity 400ms ease;
+    z-index: 10;
+  }
+  .hud.idle { opacity: 0; }
+  .hud > * { pointer-events: auto; }
+
+  /* Top bar: progress + title */
+  .top {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    padding: 14px 22px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.55), transparent);
+  }
+  .top .count {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    color: #fff;
+    background: rgba(255,255,255,0.12);
+    padding: 6px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
+    backdrop-filter: blur(8px);
+  }
+  .top .title {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #fff;
+    opacity: 0.9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .top .hint {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #fff;
+    opacity: 0.55;
+    white-space: nowrap;
+  }
+  .top .hint kbd {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    padding: 2px 6px;
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 4px;
+    margin: 0 2px;
+    background: rgba(255,255,255,0.05);
+  }
+
+  /* Progress bar */
+  .progress {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: rgba(255,255,255,0.1);
+  }
+  .progress .bar {
+    height: 100%;
+    background: var(--highlight);
+    transition: width 400ms ease;
+  }
+
+  /* Nav arrows */
+  .nav-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.45);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 22px;
+    font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+  .nav-arrow:hover { background: rgba(0,0,0,0.7); transform: translateY(-50%) scale(1.05); }
+  .nav-arrow.prev { left: 22px; }
+  .nav-arrow.next { right: 22px; }
+
+  /* Bottom dot-strip */
+  .dots {
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    background: rgba(0,0,0,0.5);
+    padding: 10px 14px;
+    border-radius: 999px;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.12);
+    max-width: calc(100vw - 120px);
+    overflow-x: auto;
+  }
+  .dots .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    flex-shrink: 0;
+    border: none;
+    padding: 0;
+  }
+  .dots .dot:hover { background: rgba(255,255,255,0.55); transform: scale(1.15); }
+  .dots .dot.active {
+    background: var(--highlight);
+    width: 28px;
+    border-radius: 5px;
+  }
+
+  /* Menu panel (opens with 'M' or menu button) */
+  .menu-btn {
+    position: absolute;
+    top: 14px;
+    right: 22px;
+    background: rgba(0,0,0,0.45);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+  }
+  .menu-btn:hover { background: rgba(0,0,0,0.7); }
+
+  .menu {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: 360px;
+    background: rgba(10,10,10,0.96);
+    backdrop-filter: blur(16px);
+    border-left: 1px solid rgba(255,255,255,0.1);
+    padding: 24px 20px;
+    transform: translateX(100%);
+    transition: transform 280ms ease;
+    z-index: 20;
+    overflow-y: auto;
+    pointer-events: auto;
+  }
+  .menu.open { transform: translateX(0); }
+
+  .menu h2 {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 16px;
+    padding: 0 4px;
+  }
+  .menu .row {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    color: rgba(255,255,255,0.85);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.25;
+    transition: background 0.15s ease, color 0.15s ease;
+    border: 1px solid transparent;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+  }
+  .menu .row:hover { background: rgba(255,255,255,0.06); color: #fff; }
+  .menu .row.active {
+    background: rgba(253,230,138,0.12);
+    border-color: rgba(253,230,138,0.25);
+    color: var(--highlight);
+  }
+  .menu .row .num {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.35);
+    background: rgba(255,255,255,0.06);
+    border-radius: 5px;
+    padding: 3px 6px;
+    text-align: center;
+  }
+  .menu .row.active .num {
+    color: var(--highlight);
+    background: rgba(253,230,138,0.18);
+  }
+  .menu .row .chapter {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    display: block;
+    margin-bottom: 2px;
+  }
+  .menu .row.active .chapter { color: rgba(253,230,138,0.7); }
+
+  .menu-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #fff;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .menu-close:hover { background: rgba(255,255,255,0.15); }
+
+  .menu-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease;
+    z-index: 15;
+  }
+  .menu-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+</style>
+</head>
+<body>
+
+  <!-- Slide stage -->
+  <div class="deck">
+    <iframe id="slide" class="slide-frame" title="slide"></iframe>
+  </div>
+
+  <!-- HUD overlay -->
+  <div class="hud" id="hud">
+
+    <div class="progress"><div class="bar" id="bar"></div></div>
+
+    <div class="top">
+      <div class="count" id="count">1 / 9</div>
+      <div class="title" id="title">—</div>
+      <div class="hint">
+        <kbd>←</kbd><kbd>→</kbd> navigate &nbsp;·&nbsp;
+        <kbd>F</kbd> fullscreen &nbsp;·&nbsp;
+        <kbd>M</kbd> menu
+      </div>
+    </div>
+
+    <button class="menu-btn" id="menuBtn">Menu</button>
+
+    <button class="nav-arrow prev" id="prev" aria-label="Previous slide">‹</button>
+    <button class="nav-arrow next" id="next" aria-label="Next slide">›</button>
+
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <!-- Slide menu panel -->
+  <div class="menu-backdrop" id="menuBackdrop"></div>
+  <aside class="menu" id="menu" aria-hidden="true">
+    <button class="menu-close" id="menuClose" aria-label="Close menu">✕</button>
+    <h2>Slides</h2>
+    <div id="menuList"></div>
+  </aside>
+
+<script>
+  const slides = [
+    { file: 'seo-three-buckets.html',     chapter: 'Intro',     title: 'SEO is 3 buckets — the overview' },
+    { file: 'ai-seo.html',                chapter: 'Intro',     title: 'AI SEO is (mostly) just SEO' },
+    { file: 'two-tactics.html',           chapter: 'Thesis',    title: 'Two tactics — $500K+ earned' },
+    { file: 'rendering-pizza.html',       chapter: 'Ch 1',      title: 'SSG vs SSR vs CSR — pizza analogy' },
+    { file: 'rendering-technical.html',   chapter: 'Ch 1',      title: 'SSG vs SSR vs CSR — what Google sees' },
+    { file: 'keyword-research.html',      chapter: 'Ch 2',      title: 'Keyword research — SEMRush → Claude' },
+    { file: 'service-vs-blog.html',       chapter: 'Ch 3',      title: 'Service pages vs blog posts' },
+    { file: 'blog-clusters.html',         chapter: 'Ch 3',      title: 'Blog posts at scale — cluster per page' },
+    { file: 'serp-analysis.html',         chapter: 'Ch 3',      title: 'Steal the SERP — clone the top 3' },
+    { file: 'voice-reference.html',       chapter: 'Ch 3',      title: 'Sound like you, not AI' },
+    { file: 'seo-black-box.html',         chapter: 'Ch 3',      title: 'SEO is a black box — except this part' },
+    { file: 'service-zipper.html',        chapter: 'Ch 4',      title: 'Service pages are a zipper' },
+    { file: 'onpage-seo-checklist.html',  chapter: 'Ch 5',      title: 'On-page SEO checklist (80+ items)' },
+    { file: 'technical-seo.html',         chapter: 'Ch 6',      title: 'Technical SEO — 3 things Claude handles' },
+    { file: 'claude-skills.html',         chapter: 'Ch 7',      title: 'Claude Code skills — /blog + /service' },
+    { file: 'off-page-seo.html',          chapter: 'Ch 8',      title: 'Off-page SEO — the risky bucket' },
+    { file: 'next-steps.html',            chapter: 'Outro',     title: 'Next steps — four things to do on launch day' }
+  ];
+
+  const $slide  = document.getElementById('slide');
+  const $count  = document.getElementById('count');
+  const $title  = document.getElementById('title');
+  const $bar    = document.getElementById('bar');
+  const $dots   = document.getElementById('dots');
+  const $hud    = document.getElementById('hud');
+  const $menu   = document.getElementById('menu');
+  const $menuBackdrop = document.getElementById('menuBackdrop');
+  const $menuBtn      = document.getElementById('menuBtn');
+  const $menuClose    = document.getElementById('menuClose');
+  const $menuList     = document.getElementById('menuList');
+
+  let current = 0;
+
+  // Build dots
+  slides.forEach((_, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'dot';
+    btn.setAttribute('aria-label', `Slide ${i + 1}`);
+    btn.addEventListener('click', () => go(i));
+    $dots.appendChild(btn);
+  });
+
+  // Build menu
+  slides.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'row';
+    btn.innerHTML = `
+      <span class="num">${i + 1}</span>
+      <span>
+        <span class="chapter">${s.chapter}</span>
+        ${s.title}
+      </span>
+    `;
+    btn.addEventListener('click', () => { go(i); closeMenu(); });
+    $menuList.appendChild(btn);
+  });
+
+  function go(i) {
+    current = (i + slides.length) % slides.length;
+    const s = slides[current];
+
+    // Fade transition
+    $slide.classList.add('fading');
+    setTimeout(() => {
+      $slide.src = s.file;
+      $slide.classList.remove('fading');
+    }, 160);
+
+    // Update HUD
+    $count.textContent = `${current + 1} / ${slides.length}`;
+    $title.textContent = `${s.chapter} — ${s.title}`;
+    $bar.style.width = ((current + 1) / slides.length * 100) + '%';
+
+    // Update dot + menu active state
+    $dots.querySelectorAll('.dot').forEach((d, idx) => d.classList.toggle('active', idx === current));
+    $menuList.querySelectorAll('.row').forEach((r, idx) => r.classList.toggle('active', idx === current));
+
+    // Deep-link hash
+    history.replaceState(null, '', '#' + (current + 1));
+  }
+
+  function next() { go(current + 1); }
+  function prev() { go(current - 1); }
+
+  function openMenu() {
+    $menu.classList.add('open');
+    $menuBackdrop.classList.add('open');
+    $menu.setAttribute('aria-hidden', 'false');
+  }
+  function closeMenu() {
+    $menu.classList.remove('open');
+    $menuBackdrop.classList.remove('open');
+    $menu.setAttribute('aria-hidden', 'true');
+  }
+
+  document.getElementById('prev').addEventListener('click', prev);
+  document.getElementById('next').addEventListener('click', next);
+  $menuBtn.addEventListener('click', openMenu);
+  $menuClose.addEventListener('click', closeMenu);
+  $menuBackdrop.addEventListener('click', closeMenu);
+
+  // Keyboard
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    switch (e.key) {
+      case 'ArrowRight':
+      case 'PageDown':
+      case ' ':
+        e.preventDefault(); next(); break;
+      case 'ArrowLeft':
+      case 'PageUp':
+        e.preventDefault(); prev(); break;
+      case 'Home':
+        e.preventDefault(); go(0); break;
+      case 'End':
+        e.preventDefault(); go(slides.length - 1); break;
+      case 'f':
+      case 'F':
+        e.preventDefault();
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
+        break;
+      case 'm':
+      case 'M':
+        e.preventDefault();
+        if ($menu.classList.contains('open')) closeMenu(); else openMenu();
+        break;
+      case 'Escape':
+        if ($menu.classList.contains('open')) closeMenu();
+        break;
+      default:
+        // Number keys 1–9 jump to slide
+        if (/^[1-9]$/.test(e.key)) {
+          const idx = parseInt(e.key, 10) - 1;
+          if (idx < slides.length) go(idx);
+        }
+    }
+  });
+
+  // Auto-hide HUD after idle
+  let idleTimer;
+  function resetIdle() {
+    $hud.classList.remove('idle');
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => $hud.classList.add('idle'), 2600);
+  }
+  document.addEventListener('mousemove', resetIdle);
+  document.addEventListener('keydown', resetIdle);
+  document.addEventListener('click', resetIdle);
+  resetIdle();
+
+  // Deep-link from URL hash
+  const initial = parseInt((location.hash || '#1').slice(1), 10);
+  go(Number.isFinite(initial) && initial >= 1 && initial <= slides.length ? initial - 1 : 0);
+</script>
+</body>
+</html>

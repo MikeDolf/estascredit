@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Off-page SEO — the risky bucket</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #fdf6ec;
+    --card: #ffffff;
+    --ink: #0a0a0a;
+    --ink-2: #1f2937;
+    --muted: #6b7280;
+    --line: #e9e1d3;
+
+    --amber: #f59e0b;
+    --amber-bg: #fef3c7;
+    --amber-soft: #fcd34d;
+
+    --red: #dc2626;
+    --red-bg: #fee2e2;
+    --red-soft: #fca5a5;
+
+    --good: #16a34a;
+    --good-bg: #dcfce7;
+
+    --highlight: #fde68a;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .stage {
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3vh 3vw;
+  }
+
+  .frame {
+    width: 100%;
+    max-width: 1760px;
+    aspect-ratio: 16 / 9;
+    padding: 34px 48px 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  /* ---------- Header ---------- */
+  .head { text-align: center; }
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  h1 .mark {
+    background: linear-gradient(180deg, transparent 60%, var(--highlight) 60%);
+    padding: 0 6px;
+  }
+  .subhead {
+    margin-top: 10px;
+    font-size: 16px;
+    color: var(--ink-2);
+    font-weight: 500;
+    max-width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.4;
+  }
+  .subhead strong { color: var(--ink); font-weight: 700; }
+
+  /* ---------- Main: 3 methods + 1 warning ---------- */
+  .main {
+    flex: 1;
+    display: grid;
+    grid-template-rows: 1fr auto auto;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  .methods {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    min-height: 0;
+  }
+
+  .method {
+    background: var(--card);
+    border: 2px solid var(--amber-soft);
+    border-radius: 16px;
+    padding: 16px 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  .method::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: var(--amber);
+  }
+
+  .method-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .method-num {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--amber);
+    color: #fff;
+    font-weight: 900;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .method-titles .eyebrow-sm {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 2px;
+  }
+  .method-titles .title {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+  }
+  .method-titles .grade {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 999px;
+    margin-left: auto;
+    white-space: nowrap;
+  }
+  .method-titles .grade.ok   { background: var(--good-bg); color: var(--good); }
+  .method-titles .grade.meh  { background: var(--amber-bg); color: var(--amber); }
+  .method-titles .grade.pro  { background: #e0e7ff; color: #4338ca; }
+
+  .method-desc {
+    font-size: 12px;
+    color: var(--ink-2);
+    line-height: 1.45;
+  }
+  .method-desc strong { color: var(--ink); font-weight: 800; }
+
+  .method-how {
+    background: #fafafa;
+    border: 1px dashed var(--amber-soft);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: auto;
+  }
+  .method-how .lbl {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 4px;
+  }
+  .method-how .how {
+    font-size: 11.5px;
+    color: var(--ink-2);
+    line-height: 1.45;
+  }
+  .method-how .how code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    background: #fff;
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    color: var(--ink);
+  }
+
+  /* ---------- Earned links banner ---------- */
+  .earned {
+    background: linear-gradient(180deg, #fff 0%, #f0fdf4 100%);
+    border: 2px solid var(--good);
+    border-radius: 14px;
+    padding: 12px 20px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 16px 40px -30px rgba(22,163,74,0.35);
+  }
+  .earned-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: var(--good);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 900;
+    flex-shrink: 0;
+  }
+  .earned-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .earned-body .lbl {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--good);
+  }
+  .earned-body .title {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+  .earned-body .title .hl {
+    background: var(--good-bg);
+    color: var(--good);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+  .earned-body .desc {
+    font-size: 12px;
+    color: var(--ink-2);
+    line-height: 1.4;
+  }
+  .earned-body .desc strong { color: var(--good); font-weight: 800; }
+
+  /* ---------- Warning band ---------- */
+  .warning {
+    background: linear-gradient(180deg, #fff 0%, #fef2f2 100%);
+    border: 2px solid var(--red);
+    border-radius: 16px;
+    padding: 18px 24px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 20px 50px -30px rgba(220,38,38,0.35);
+    position: relative;
+    overflow: hidden;
+  }
+  .warn-icon {
+    width: 54px; height: 54px;
+    border-radius: 14px;
+    background: var(--red);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 28px;
+    font-weight: 900;
+    box-shadow: 0 6px 20px -6px rgba(220,38,38,0.5);
+  }
+  .warn-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .warn-eyebrow {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--red);
+  }
+  .warn-title {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  .warn-title .hl {
+    background: var(--red-bg);
+    color: var(--red);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+  .warn-desc {
+    font-size: 13px;
+    color: var(--ink-2);
+    line-height: 1.4;
+    margin-top: 4px;
+  }
+  .warn-desc strong { color: var(--red); font-weight: 800; }
+
+  .warn-signs {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding-left: 18px;
+    border-left: 2px dashed var(--red-soft);
+    font-size: 11.5px;
+    color: var(--ink-2);
+    white-space: nowrap;
+  }
+  .warn-signs .sl {
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 2px;
+  }
+  .warn-signs .s {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+  }
+  .warn-signs .s::before {
+    content: "✕";
+    color: var(--red);
+    font-weight: 900;
+    font-size: 11px;
+  }
+
+  /* ---------- Footer ---------- */
+  .foot {
+    background: var(--ink);
+    color: #fff;
+    border-radius: 14px;
+    padding: 16px 28px;
+    text-align: center;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  .foot .hl {
+    background: var(--highlight);
+    color: var(--ink);
+    padding: 1px 8px;
+    border-radius: 5px;
+    font-weight: 800;
+  }
+
+  @media (max-width: 1100px) {
+    .frame { aspect-ratio: auto; }
+    .methods { grid-template-columns: 1fr; }
+    .warning { grid-template-columns: 1fr; }
+    .warn-signs { padding-left: 0; border-left: none; border-top: 2px dashed var(--red-soft); padding-top: 10px; }
+    h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="frame">
+
+      <!-- Header -->
+      <div class="head">
+        <div class="eyebrow">Bucket 3 — Off-page SEO</div>
+        <h1>Off-page SEO — <span class="mark">easier to tank</span> than to help.</h1>
+        <div class="subhead">Off-page SEO is <strong>basically backlinks</strong>. Real gains take months of careful outreach — and one bad batch can undo a year of work. Skip it unless you really have to.</div>
+      </div>
+
+      <!-- Main -->
+      <div class="main">
+
+        <!-- 3 legit methods -->
+        <div class="methods">
+
+          <div class="method">
+            <div class="method-head">
+              <div class="method-num">1</div>
+              <div class="method-titles" style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                <div>
+                  <div class="eyebrow-sm">Outreach</div>
+                  <div class="title">Broken-link swap</div>
+                </div>
+                <span class="grade ok">Legit</span>
+              </div>
+            </div>
+            <div class="method-desc">
+              Find a <strong>broken link</strong> on someone's site that used to point to a resource like yours. Email them: "your link is dead — here's mine."
+            </div>
+            <div class="method-how">
+              <div class="lbl">How</div>
+              <div class="how">SEMRush → <code>Backlink Analytics</code> → filter for <strong>broken</strong> links on sites in your niche.</div>
+            </div>
+          </div>
+
+          <div class="method">
+            <div class="method-head">
+              <div class="method-num">2</div>
+              <div class="method-titles" style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                <div>
+                  <div class="eyebrow-sm">Contribution</div>
+                  <div class="title">Guest posts</div>
+                </div>
+                <span class="grade ok">Legit</span>
+              </div>
+            </div>
+            <div class="method-desc">
+              Write a <strong>real article</strong> for a site in your niche. Your byline or bio gets to link back to you. Slow, but safe.
+            </div>
+            <div class="method-how">
+              <div class="lbl">How</div>
+              <div class="how">Google <code>"[your industry] + guest post"</code>. Pitch the ones with active blogs.</div>
+            </div>
+          </div>
+
+          <div class="method">
+            <div class="method-head">
+              <div class="method-num">3</div>
+              <div class="method-titles" style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                <div>
+                  <div class="eyebrow-sm">Earned media</div>
+                  <div class="title">HARO / Connectively</div>
+                </div>
+                <span class="grade ok">Legit · Free</span>
+              </div>
+            </div>
+            <div class="method-desc">
+              Journalists post <strong>queries</strong> looking for expert sources. Reply fast, get quoted — and get a byline link from a real publication.
+            </div>
+            <div class="method-how">
+              <div class="lbl">How</div>
+              <div class="how">Subscribe to the daily emails. Answer queries in your niche <strong>within 1–2 hours</strong>. Keep pitches tight.</div>
+            </div>
+          </div>
+
+          <div class="method">
+            <div class="method-head">
+              <div class="method-num">4</div>
+              <div class="method-titles" style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                <div>
+                  <div class="eyebrow-sm">Paid placement</div>
+                  <div class="title">Quality paid links</div>
+                </div>
+                <span class="grade pro">Expert only</span>
+              </div>
+            </div>
+            <div class="method-desc">
+              Real publishers. Real editorial. <strong>Actually works</strong> if you know who to pay. <strong>Blows up your site</strong> if you don't.
+            </div>
+            <div class="method-how">
+              <div class="lbl">How</div>
+              <div class="how">Vet the domain yourself. Check traffic, DR, and <strong>who else</strong> links from it. If it looks spammy, walk.</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Earned links — the real shortcut -->
+        <div class="earned">
+          <div class="earned-icon">★</div>
+          <div class="earned-body">
+            <div class="lbl">The real shortcut</div>
+            <div class="title">Make something good enough that it <span class="hl">earns links on its own</span>.</div>
+            <div class="desc">This video is free, long, and well-researched — <strong>people will link to it because it's useful</strong>. That's the entire game. No outreach, no PBNs, no begging journalists.</div>
+          </div>
+        </div>
+
+        <!-- Warning band: PBN / link farms -->
+        <div class="warning">
+          <div class="warn-icon">!</div>
+          <div class="warn-body">
+            <div class="warn-eyebrow">The trap · this kills sites</div>
+            <div class="warn-title">Avoid <span class="hl">PBNs &amp; link farms</span> at all costs.</div>
+            <div class="warn-desc">
+              Most cheap "SEO experts" on Upwork use <strong>Private Blog Networks</strong> — thousands of fake sites linking to each other. Google spots the pattern and <strong>tanks your rankings</strong>. Recovery takes months. Sometimes never.
+            </div>
+          </div>
+          <div class="warn-signs">
+            <div class="sl">Red flags</div>
+            <div class="s">"$50 for 100 DR-50 backlinks"</div>
+            <div class="s">"Instant links, no waiting"</div>
+            <div class="s">"Ranks in 7 days guaranteed"</div>
+            <div class="s">Bulk packages on Fiverr</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="foot">
+        <strong>My take:</strong> nail buckets 1 + 2, ignore bucket 3. On-page + technical SEO alone will rank you for <span class="hl">95% of niches</span>. Backlinks come <span class="hl">naturally</span> when your content is actually good.
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

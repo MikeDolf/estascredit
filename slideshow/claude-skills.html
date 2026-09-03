@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Claude Code skills — /blog + /service</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #fdf6ec;
+    --card: #ffffff;
+    --ink: #0a0a0a;
+    --ink-2: #1f2937;
+    --muted: #6b7280;
+    --line: #e9e1d3;
+
+    --blog: #0ea5e9;
+    --blog-bg: #e0f2fe;
+    --blog-soft: #bae6fd;
+
+    --service: #16a34a;
+    --service-bg: #dcfce7;
+    --service-soft: #86efac;
+
+    --highlight: #fde68a;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .stage {
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3vh 3vw;
+  }
+
+  .frame {
+    width: 100%;
+    max-width: 1760px;
+    aspect-ratio: 16 / 9;
+    padding: 34px 48px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ---------- Header ---------- */
+  .head { text-align: center; }
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: 52px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  h1 .mark {
+    background: linear-gradient(180deg, transparent 60%, var(--highlight) 60%);
+    padding: 0 8px;
+  }
+  .subhead {
+    margin-top: 10px;
+    font-size: 17px;
+    color: var(--ink-2);
+    font-weight: 500;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .subhead strong { color: var(--ink); font-weight: 700; }
+
+  /* ---------- Two skill panels ---------- */
+  .skills {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+    min-height: 0;
+  }
+
+  .skill {
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 20px;
+    padding: 22px 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .skill.blog    { border-color: var(--blog);    box-shadow: 0 30px 70px -32px rgba(14,165,233,0.4); }
+  .skill.service { border-color: var(--service); box-shadow: 0 30px 70px -32px rgba(22,163,74,0.4); }
+
+  /* Terminal prompt at top of each card */
+  .term {
+    background: #0a0a0a;
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 15px;
+    color: #e5e7eb;
+    position: relative;
+  }
+  .term .dots {
+    display: flex;
+    gap: 5px;
+    margin-right: 6px;
+  }
+  .term .dots i {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .term .dots i:nth-child(1) { background: #ff5f57; }
+  .term .dots i:nth-child(2) { background: #febc2e; }
+  .term .dots i:nth-child(3) { background: #28c840; }
+  .term .prompt { color: #6b7280; }
+  .term .cmd { color: #fff; font-weight: 700; }
+  .skill.blog    .term .cmd { color: #7dd3fc; }
+  .skill.service .term .cmd { color: #86efac; }
+  .term .arg { color: var(--highlight); }
+  .term .cursor {
+    display: inline-block;
+    width: 8px;
+    height: 16px;
+    background: #fff;
+    animation: blink 1s step-end infinite;
+    vertical-align: text-bottom;
+    margin-left: 4px;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* Skill title row */
+  .skill-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .skill-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    color: #fff;
+    font-weight: 900;
+    font-size: 13px;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .skill.blog    .skill-icon { background: var(--blog); }
+  .skill.service .skill-icon { background: var(--service); }
+
+  .skill-titles .lbl {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  .skill.blog    .skill-titles .lbl { color: var(--blog); }
+  .skill.service .skill-titles .lbl { color: var(--service); }
+
+  .skill-titles .name {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  /* Sections inside skill panel */
+  .section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .section .s-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .file-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .file-chip {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 5px;
+    background: #fafafa;
+    border: 1px solid var(--line);
+    color: var(--ink-2);
+  }
+  .skill.blog .file-chip    { background: #f0f9ff; border-color: var(--blog-soft); color: var(--blog); }
+  .skill.service .file-chip { background: #f0fdf4; border-color: var(--service-soft); color: var(--service); }
+
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .step-item {
+    display: grid;
+    grid-template-columns: 18px 1fr;
+    gap: 8px;
+    align-items: baseline;
+    font-size: 12px;
+    color: var(--ink-2);
+    line-height: 1.35;
+  }
+  .step-item .n {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10px;
+    font-weight: 900;
+    color: var(--muted);
+    text-align: right;
+  }
+  .step-item strong { color: var(--ink); font-weight: 800; }
+
+  /* Output row */
+  .output {
+    margin-top: auto;
+    background: var(--ink);
+    color: #fff;
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12.5px;
+    font-weight: 700;
+  }
+  .output .out-tag {
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--highlight);
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .output code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--highlight);
+    font-weight: 800;
+  }
+
+  /* ---------- Footer ---------- */
+  .foot {
+    background: var(--ink);
+    color: #fff;
+    border-radius: 14px;
+    padding: 16px 28px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  .foot .hl {
+    background: var(--highlight);
+    color: var(--ink);
+    padding: 1px 8px;
+    border-radius: 5px;
+    font-weight: 800;
+  }
+
+  @media (max-width: 1100px) {
+    .frame { aspect-ratio: auto; }
+    .skills { grid-template-columns: 1fr; }
+    h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="frame">
+
+      <!-- Header -->
+      <div class="head">
+        <div class="eyebrow">The wrap-up — automate the whole thing</div>
+        <h1>Wrap it all in a <span class="mark">Claude Code skill</span>.</h1>
+        <div class="subhead">Two skills. Two slash commands. <strong>One prompt = one fully optimized page</strong> that passes every item on the SEO checklist.</div>
+      </div>
+
+      <!-- Two skill panels -->
+      <div class="skills">
+
+        <!-- /blog skill -->
+        <div class="skill blog">
+          <div class="term">
+            <span class="dots"><i></i><i></i><i></i></span>
+            <span class="prompt">$</span>
+            <span class="cmd">/blog</span>
+            <span class="arg">"how to unclog a drain"</span>
+            <span class="cursor"></span>
+          </div>
+
+          <div class="skill-head">
+            <div class="skill-icon">MD</div>
+            <div class="skill-titles">
+              <div class="lbl">Skill · content engine</div>
+              <div class="name">write-blog-post.md</div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="s-label">Reads</div>
+            <div class="file-row">
+              <span class="file-chip">on-page-seo.md</span>
+              <span class="file-chip">voice.md</span>
+              <span class="file-chip">stats.md</span>
+              <span class="file-chip">stories.md</span>
+              <span class="file-chip">opinions.md</span>
+              <span class="file-chip">humour.md</span>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="s-label">Runs</div>
+            <div class="steps">
+              <div class="step-item"><span class="n">1.</span><span>Pull <strong>keyword cluster</strong> from SEMRush export</span></div>
+              <div class="step-item"><span class="n">2.</span><span><strong>SERP analysis</strong> — average the top 3</span></div>
+              <div class="step-item"><span class="n">3.</span><span>Inject <strong>voice + stats + stories</strong></span></div>
+              <div class="step-item"><span class="n">4.</span><span>Build <strong>FAQ</strong> from People Also Ask</span></div>
+              <div class="step-item"><span class="n">5.</span><span>Verify every <strong>on-page-seo.md</strong> item</span></div>
+            </div>
+          </div>
+
+          <div class="output">
+            <span class="out-tag">Out</span>
+            <span><code>/content/blog/[slug].mdx</code> — frontmatter, FAQ, Article + FAQ schema</span>
+          </div>
+        </div>
+
+        <!-- /service skill -->
+        <div class="skill service">
+          <div class="term">
+            <span class="dots"><i></i><i></i><i></i></span>
+            <span class="prompt">$</span>
+            <span class="cmd">/service</span>
+            <span class="arg">emergency-plumber toronto</span>
+            <span class="cursor"></span>
+          </div>
+
+          <div class="skill-head">
+            <div class="skill-icon">MD</div>
+            <div class="skill-titles">
+              <div class="lbl">Skill · lead engine</div>
+              <div class="name">write-service-page.md</div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="s-label">Reads</div>
+            <div class="file-row">
+              <span class="file-chip">on-page-seo.md</span>
+              <span class="file-chip">voice.md</span>
+              <span class="file-chip">business.ts</span>
+              <span class="file-chip">conversion-template.md</span>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="s-label">Runs</div>
+            <div class="steps">
+              <div class="step-item"><span class="n">1.</span><span>Look up <strong>service × city</strong> pair from the zipper</span></div>
+              <div class="step-item"><span class="n">2.</span><span>Pull <strong>local business data</strong> (phone, address, hours)</span></div>
+              <div class="step-item"><span class="n">3.</span><span>Fill <strong>conversion template</strong> — CTA, trust, testimonials</span></div>
+              <div class="step-item"><span class="n">4.</span><span>Generate <strong>LocalBusiness + Service schema</strong></span></div>
+              <div class="step-item"><span class="n">5.</span><span>Verify every <strong>on-page-seo.md</strong> item</span></div>
+            </div>
+          </div>
+
+          <div class="output">
+            <span class="out-tag">Out</span>
+            <span><code>/content/services/[slug].mdx</code> — CTA, form, LocalBusiness schema</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="foot">
+        Run <span class="hl">/blog</span> or <span class="hl">/service</span>. Claude reads the refs, runs the workflow, ships a fully-optimized page. <strong>Every time.</strong>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

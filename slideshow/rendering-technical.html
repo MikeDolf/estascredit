@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>What Google actually sees — SSG vs SSR vs CSR</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f5f2;
+    --card: #ffffff;
+    --ink: #0a0a0a;
+    --ink-2: #1f2937;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+
+    --good: #16a34a;
+    --good-bg: #dcfce7;
+    --warn: #d97706;
+    --warn-bg: #fef3c7;
+    --bad:  #dc2626;
+    --bad-bg:  #fee2e2;
+
+    --highlight: #fde68a;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  .stage {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3vh 3vw;
+  }
+
+  .frame {
+    width: 100%;
+    max-width: 1760px;
+    aspect-ratio: 16 / 9;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    text-align: left;
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+  .eyebrow {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  h1 {
+    font-size: 54px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  h1 .mark {
+    background: linear-gradient(180deg, transparent 60%, var(--highlight) 60%);
+    padding: 0 8px;
+  }
+  .legend {
+    display: flex;
+    gap: 18px;
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .legend .d-good { background: var(--good); }
+  .legend .d-warn { background: var(--warn); }
+  .legend .d-bad  { background: var(--bad); }
+
+  .grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    min-height: 0;
+    margin-bottom: 28px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 22px;
+    padding: 26px 26px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: relative;
+  }
+  .card.good { border-color: var(--good); box-shadow: 0 24px 60px -30px rgba(22,163,74,0.35); }
+  .card.warn { border-color: var(--warn); box-shadow: 0 24px 60px -30px rgba(217,119,6,0.30); }
+  .card.bad  { border-color: var(--bad);  box-shadow: 0 24px 60px -30px rgba(220,38,38,0.30); }
+
+  .tag {
+    position: absolute;
+    top: 18px; right: 18px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 7px 11px;
+    border-radius: 999px;
+  }
+  .card.good .tag { background: var(--good-bg); color: var(--good); }
+  .card.warn .tag { background: var(--warn-bg); color: var(--warn); }
+  .card.bad  .tag { background: var(--bad-bg);  color: var(--bad);  }
+
+  .card-eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .card-title {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+  .card-sub {
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--ink-2);
+    max-width: 38ch;
+  }
+
+  .tech-scene {
+    flex: 1;
+    background: #fafafa;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  .bot {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Product Sans", Arial, sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    flex-shrink: 0;
+  }
+  .bot .g-b { color: #4285F4; }
+  .bot .g-r { color: #EA4335; }
+  .bot .g-y { color: #FBBC05; }
+
+  .pipe {
+    position: relative;
+    height: 3px;
+    background: var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .pipe .packet {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 26px;
+    height: 8px;
+    margin-top: -4px;
+    border-radius: 6px;
+  }
+  .card.good .packet { background: var(--good); animation: flow-fast 1.6s ease-in-out infinite; }
+  .card.warn .packet { background: var(--warn); animation: flow-slow 3.2s ease-in-out infinite; }
+  .card.bad  .packet { background: var(--bad);  animation: flow-stall 2.4s ease-in-out infinite; }
+
+  @keyframes flow-fast {
+    0%{left:-10%;opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{left:100%;opacity:0}
+  }
+  @keyframes flow-slow {
+    0%{left:-10%;opacity:0} 20%{opacity:1} 60%{left:55%;opacity:1} 90%{left:95%;opacity:1} 100%{left:100%;opacity:0}
+  }
+  @keyframes flow-stall {
+    0%{left:-10%;opacity:0} 15%{opacity:1} 40%{left:40%;opacity:1} 60%{left:40%;opacity:0.4} 100%{left:40%;opacity:0}
+  }
+
+  .page {
+    width: 150px;
+    height: 104px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 11px;
+    display: flex; flex-direction: column; gap: 5px;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .page .dot-row { display: flex; gap: 4px; margin-bottom: 4px; }
+  .page .dot     { width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
+  .page .ln      { height: 5px; border-radius: 3px; background: #111; }
+  .page .ln.md   { width: 85%; background: #1f2937; }
+  .page .ln.sm   { width: 60%; background: #374151; }
+  .page .ln.xs   { width: 40%; background: #9ca3af; }
+
+  .page.slow .ln {
+    transform-origin: left center;
+    animation: fillup 3.2s ease-in-out infinite;
+  }
+  .page.slow .ln.md { animation-delay: 0.2s; }
+  .page.slow .ln.sm { animation-delay: 0.6s; }
+  .page.slow .ln.xs { animation-delay: 1.0s; }
+  @keyframes fillup {
+    0%,20% { transform: scaleX(0); opacity: 0.4; }
+    60%,100% { transform: scaleX(1); opacity: 1; }
+  }
+
+  .page.empty {
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+  }
+  .page.empty code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    color: #9ca3af;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .status .icon {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    font-weight: 900;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .card.good .status .icon { background: var(--good); }
+  .card.warn .status .icon { background: var(--warn); }
+  .card.bad  .status .icon { background: var(--bad);  }
+  .card.good .status .text { color: var(--good); }
+  .card.warn .status .text { color: var(--warn); }
+  .card.bad  .status .text { color: var(--bad);  }
+
+  .status .time {
+    margin-left: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    background: #f3f4f6;
+    padding: 4px 9px;
+    border-radius: 6px;
+  }
+
+  .foot {
+    background: var(--ink);
+    color: #fff;
+    border-radius: 18px;
+    padding: 22px 30px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .foot .hl {
+    background: var(--highlight);
+    color: var(--ink);
+    padding: 2px 10px;
+    border-radius: 6px;
+  }
+
+  @media (max-width: 1100px) {
+    .frame { aspect-ratio: auto; }
+    .grid { grid-template-columns: 1fr; }
+    h1 { font-size: 36px; }
+    .head { flex-direction: column; align-items: flex-start; }
+    .foot { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="frame">
+
+      <div class="head">
+        <div>
+          <div class="eyebrow">Here's what Google actually sees</div>
+          <h1>SSG, SSR, CSR — only <span class="mark">one</span> ranks on Google.</h1>
+        </div>
+        <div class="legend">
+          <span><i class="d-good"></i> Ranks</span>
+          <span><i class="d-warn"></i> Ranks poorly</span>
+          <span><i class="d-bad"></i> Doesn't rank</span>
+        </div>
+      </div>
+
+      <div class="grid">
+        <!-- SSG -->
+        <div class="card good">
+          <div class="tag">Ranks</div>
+          <div>
+            <div class="card-eyebrow">SSG — Static site generation</div>
+            <div class="card-title">Pre-built pages</div>
+          </div>
+          <div class="card-sub">Every page is built <strong>once, ahead of time</strong>. Google arrives and gets a finished HTML page — instantly.</div>
+          <div class="tech-scene">
+            <div class="bot"><span class="g-b">G</span></div>
+            <div class="pipe"><span class="packet"></span></div>
+            <div class="page">
+              <div class="dot-row"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+              <div class="ln md"></div>
+              <div class="ln sm"></div>
+              <div class="ln xs"></div>
+              <div class="ln sm"></div>
+            </div>
+          </div>
+          <div class="status">
+            <span class="icon">&#10003;</span>
+            <span class="text">Indexed instantly</span>
+            <span class="time">~0.1s</span>
+          </div>
+        </div>
+
+        <!-- SSR -->
+        <div class="card warn">
+          <div class="tag">Ranks poorly</div>
+          <div>
+            <div class="card-eyebrow">SSR — Server-side rendering</div>
+            <div class="card-title">Built on demand</div>
+          </div>
+          <div class="card-sub">Every visit triggers a <strong>fresh build on the server</strong>. Google has to wait — slow pages get crawled less.</div>
+          <div class="tech-scene">
+            <div class="bot"><span class="g-y">G</span></div>
+            <div class="pipe"><span class="packet"></span></div>
+            <div class="page slow">
+              <div class="dot-row"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+              <div class="ln md"></div>
+              <div class="ln sm"></div>
+              <div class="ln xs"></div>
+              <div class="ln sm"></div>
+            </div>
+          </div>
+          <div class="status">
+            <span class="icon">!</span>
+            <span class="text">Slow = penalised</span>
+            <span class="time">1–3s+</span>
+          </div>
+        </div>
+
+        <!-- CSR -->
+        <div class="card bad">
+          <div class="tag">Doesn't rank</div>
+          <div>
+            <div class="card-eyebrow">CSR — Client-side rendering</div>
+            <div class="card-title">Built in the browser</div>
+          </div>
+          <div class="card-sub">The page is assembled by <strong>JavaScript inside the visitor's browser</strong>. Google gets an empty shell.</div>
+          <div class="tech-scene">
+            <div class="bot"><span class="g-r">G</span></div>
+            <div class="pipe"><span class="packet"></span></div>
+            <div class="page empty">
+              <code>&lt;div id="root"&gt;&lt;/div&gt;</code>
+            </div>
+          </div>
+          <div class="status">
+            <span class="icon">&#10005;</span>
+            <span class="text">Nothing to index</span>
+            <span class="time">empty</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="foot">
+        That's why most <strong>AI-built websites never rank</strong> —
+        they default to <span class="hl">CSR</span>. Build with <span class="hl">SSG</span>.
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

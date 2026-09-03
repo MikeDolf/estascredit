@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Service pages vs blog posts — two page types, two jobs</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #fdf6ec;
+    --card: #ffffff;
+    --ink: #0a0a0a;
+    --ink-2: #1f2937;
+    --muted: #6b7280;
+    --line: #e9e1d3;
+
+    --service: #16a34a;       /* green — leads / money */
+    --service-bg: #dcfce7;
+    --service-soft: #bbf7d0;
+
+    --blog: #0ea5e9;          /* sky — tide / authority */
+    --blog-bg: #e0f2fe;
+    --blog-soft: #bae6fd;
+
+    --highlight: #fde68a;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .stage {
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3vh 3vw;
+  }
+
+  .frame {
+    width: 100%;
+    max-width: 1760px;
+    aspect-ratio: 16 / 9;
+    padding: 34px 48px 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  /* ---------- Header ---------- */
+  .head { text-align: center; }
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: 46px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  h1 .mark-service {
+    background: linear-gradient(180deg, transparent 60%, var(--service-soft) 60%);
+    padding: 0 6px;
+  }
+  h1 .mark-blog {
+    background: linear-gradient(180deg, transparent 60%, var(--blog-soft) 60%);
+    padding: 0 6px;
+  }
+
+  /* ---------- Main compare ---------- */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  .panel {
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 20px;
+    padding: 20px 22px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .panel.service { border-color: var(--service); box-shadow: 0 24px 60px -30px rgba(22,163,74,0.35); }
+  .panel.blog    { border-color: var(--blog);    box-shadow: 0 24px 60px -30px rgba(14,165,233,0.35); }
+
+  .panel-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .icon-wrap {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+  .panel.service .icon-wrap { background: var(--service-bg); }
+  .panel.blog    .icon-wrap { background: var(--blog-bg); }
+
+  .panel-head .label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .panel.service .panel-head .label { color: var(--service); }
+  .panel.blog    .panel-head .label { color: var(--blog); }
+
+  .panel-head .headline {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+
+  .panel-head .tagline {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 6px 11px;
+    border-radius: 999px;
+  }
+  .panel.service .tagline { background: var(--service-bg); color: var(--service); }
+  .panel.blog    .tagline { background: var(--blog-bg);    color: var(--blog); }
+
+  /* Mini page mock */
+  .mock {
+    background: #fafafa;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+  }
+  .mock .mock-url {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  .mock .mock-h1 {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    color: var(--ink);
+  }
+  .mock .mock-body {
+    font-size: 11px;
+    color: var(--ink-2);
+    line-height: 1.4;
+  }
+  .mock .mock-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    padding: 7px 12px;
+    border-radius: 8px;
+    color: #fff;
+    font-weight: 800;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    margin-top: 2px;
+  }
+  .panel.service .mock-cta { background: var(--service); }
+
+  .mock .mock-meta {
+    display: flex;
+    gap: 10px;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .mock .mock-meta span::before { content: "· "; margin-right: 2px; color: var(--line); }
+  .mock .mock-meta span:first-child::before { content: none; margin-right: 0; }
+
+  /* Query/intent row */
+  .intent {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #fafafa;
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    font-size: 12px;
+  }
+  .intent .g-icon {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Product Sans", Arial, sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .panel.service .intent .g-icon { color: var(--service); }
+  .panel.blog    .intent .g-icon { color: var(--blog); }
+
+  .intent .query {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    color: var(--ink-2);
+    font-weight: 700;
+  }
+  .intent .arrow {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .intent .outcome {
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .panel.service .intent .outcome { color: var(--service); }
+  .panel.blog    .intent .outcome { color: var(--blog); }
+
+  /* Goals + metrics */
+  .goals {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .goal {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .goal::before {
+    content: "✓";
+    font-weight: 900;
+    font-size: 12px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .panel.service .goal::before { background: var(--service); }
+  .panel.blog    .goal::before { background: var(--blog); }
+
+  .metrics-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--line);
+  }
+  .metrics-row .m-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    width: 100%;
+    margin-bottom: 2px;
+  }
+  .metrics-row .chip {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 9px;
+    border-radius: 6px;
+  }
+  .panel.service .metrics-row .chip {
+    background: var(--service-bg);
+    color: var(--service);
+    border: 1px solid var(--service-soft);
+  }
+  .panel.blog .metrics-row .chip {
+    background: var(--blog-bg);
+    color: var(--blog);
+    border: 1px solid var(--blog-soft);
+  }
+
+  /* Simple one-liner in simplified panels */
+  .panel.simple { padding: 20px 24px; gap: 10px; }
+  .simple-line {
+    font-size: 16px;
+    line-height: 1.4;
+    color: var(--ink-2);
+    font-weight: 500;
+  }
+  .simple-line strong { color: var(--ink); font-weight: 800; }
+
+  /* 4-things numbered list (blog panel only) */
+  .blog-jobs {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 2px;
+  }
+  .blog-jobs li {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 10px;
+    align-items: baseline;
+    font-size: 13.5px;
+    line-height: 1.4;
+    color: var(--ink-2);
+  }
+  .blog-jobs .n {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--blog);
+    color: #fff;
+    font-weight: 900;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translateY(3px);
+    flex-shrink: 0;
+  }
+  .blog-jobs strong { color: var(--ink); font-weight: 800; }
+
+  /* ---------- Rising tide strip ---------- */
+  .tide {
+    flex: 1;
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 18px;
+    padding: 22px 28px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 28px;
+    position: relative;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .tide-left .title, .tide-right .title { font-size: 16px !important; }
+  .tide-left .sub, .tide-right .sub { font-size: 12px !important; }
+
+  .tide-left, .tide-right {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .tide-left .title, .tide-right .title {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .tide-left .sub, .tide-right .sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .tide-left  .title { color: var(--blog); }
+  .tide-right .title { color: var(--service); }
+
+  .tide-viz {
+    position: relative;
+    height: 100%;
+    min-height: 140px;
+    background: linear-gradient(180deg, transparent 0%, transparent 40%, var(--blog-bg) 40%, var(--blog-bg) 100%);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--blog-soft);
+  }
+
+  /* Water waves */
+  .tide-viz::before, .tide-viz::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0;
+    height: 6px;
+    background: var(--blog);
+    opacity: 0.2;
+  }
+  .tide-viz::before {
+    top: 35%;
+    border-radius: 50%;
+    animation: wave 3s ease-in-out infinite;
+  }
+
+  @keyframes wave {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-3px); }
+  }
+
+  /* Rank labels */
+  .ranks {
+    position: absolute;
+    right: 10px;
+    top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    z-index: 2;
+  }
+  .ranks .r { opacity: 0.6; }
+  .ranks .r.active { color: var(--service); opacity: 1; font-weight: 900; }
+
+  /* Boats (service pages) — rising up */
+  .boat {
+    position: absolute;
+    bottom: 38%;
+    width: 64px;
+    height: 40px;
+    animation: rise 4s ease-in-out infinite;
+  }
+  .boat svg { width: 100%; height: 100%; }
+  .boat.b1 { left: 22%; animation-delay: 0s; }
+  .boat.b2 { left: 46%; animation-delay: 0.8s; }
+  .boat.b3 { left: 72%; animation-delay: 1.6s; }
+
+  @keyframes rise {
+    0%   { bottom: 8%; transform: translateY(0); opacity: 0.6; }
+    30%  { bottom: 38%; opacity: 1; }
+    50%  { bottom: 38%; transform: translateY(-2px); }
+    70%  { bottom: 38%; transform: translateY(0); opacity: 1; }
+    100% { bottom: 38%; opacity: 1; }
+  }
+
+  .boat-label {
+    position: absolute;
+    bottom: 40%;
+    transform: translateX(-50%);
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--service);
+    white-space: nowrap;
+    background: rgba(255,255,255,0.8);
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
+
+  /* Blog drops pouring in from left */
+  .drops {
+    position: absolute;
+    left: 8px;
+    top: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .drops .drop {
+    width: 14px;
+    height: 4px;
+    background: var(--blog);
+    border-radius: 4px;
+    opacity: 0.7;
+    animation: pour 1.5s ease-in-out infinite;
+  }
+  .drops .drop:nth-child(2) { animation-delay: 0.3s; }
+  .drops .drop:nth-child(3) { animation-delay: 0.6s; }
+  @keyframes pour {
+    0%, 100% { opacity: 0.4; transform: translateY(0); }
+    50%      { opacity: 1;   transform: translateY(2px); }
+  }
+
+  /* Arrow chevrons for the upward lift */
+  .lift-arrows {
+    position: absolute;
+    left: 50%;
+    bottom: 6px;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    color: var(--service);
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1;
+    z-index: 2;
+  }
+  .lift-arrows span {
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .lift-arrows span:nth-child(2) { animation-delay: 0.3s; opacity: 0.7; }
+  .lift-arrows span:nth-child(3) { animation-delay: 0.6s; opacity: 0.5; }
+  @keyframes pulse {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-2px); }
+  }
+
+  /* ---------- Footer ---------- */
+  .foot {
+    background: var(--ink);
+    color: #fff;
+    border-radius: 14px;
+    padding: 14px 26px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  .foot .hl {
+    background: var(--highlight);
+    color: var(--ink);
+    padding: 1px 8px;
+    border-radius: 5px;
+    font-weight: 800;
+  }
+
+  @media (max-width: 1100px) {
+    .frame { aspect-ratio: auto; }
+    .compare { grid-template-columns: 1fr; }
+    .tide { grid-template-columns: 1fr; }
+    h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="frame">
+
+      <!-- Header -->
+      <div class="head">
+        <div class="eyebrow">Two page types, two jobs</div>
+        <h1><span class="mark-service">Service pages</span> catch. <span class="mark-blog">Blog posts</span> raise the tide.</h1>
+      </div>
+
+      <!-- Comparison panels (simple) -->
+      <div class="compare">
+
+        <!-- SERVICE PAGE -->
+        <div class="panel service simple">
+          <div class="panel-head">
+            <div class="icon-wrap">🎣</div>
+            <div>
+              <div class="label">Service page</div>
+              <div class="headline">Capture the lead</div>
+            </div>
+            <div class="tagline">Convert</div>
+          </div>
+          <div class="simple-line">
+            Ranks for buyers ready to call. One job: <strong>get the form filled.</strong>
+          </div>
+        </div>
+
+        <!-- BLOG POST -->
+        <div class="panel blog simple">
+          <div class="panel-head">
+            <div class="icon-wrap">🌊</div>
+            <div>
+              <div class="label">Blog post</div>
+              <div class="headline">Build the authority</div>
+            </div>
+            <div class="tagline">Trust</div>
+          </div>
+          <div class="simple-line"><strong>Blog posts do 4 things for SEO:</strong></div>
+          <ol class="blog-jobs">
+            <li><span class="n">1</span><span>Build <strong>topical authority</strong> in your niche.</span></li>
+            <li><span class="n">2</span><span>Pass <strong>link equity</strong> to service pages via internal links.</span></li>
+            <li><span class="n">3</span><span>Capture <strong>long-tail traffic</strong> that funnels to leads.</span></li>
+            <li><span class="n">4</span><span>Signal to Google your site is <strong>active &amp; trusted</strong>.</span></li>
+          </ol>
+        </div>
+
+      </div>
+
+      <!-- Rising tide visualization -->
+      <div class="tide">
+        <div class="tide-left">
+          <div class="title">Blog posts ↓</div>
+          <div class="sub">Fill the domain<br>with trust signals</div>
+        </div>
+
+        <div class="tide-viz">
+          <div class="drops">
+            <div class="drop"></div>
+            <div class="drop"></div>
+            <div class="drop"></div>
+          </div>
+          <div class="ranks">
+            <span class="r active">#1</span>
+            <span class="r">#3</span>
+            <span class="r">#5</span>
+            <span class="r">#10</span>
+          </div>
+          <div class="boat b1">
+            <svg viewBox="0 0 42 26">
+              <path d="M 4 14 L 38 14 L 34 22 L 8 22 Z" fill="#16a34a"/>
+              <rect x="18" y="4" width="3" height="12" fill="#16a34a"/>
+              <path d="M 21 4 L 31 13 L 21 13 Z" fill="#22c55e"/>
+            </svg>
+          </div>
+          <div class="boat b2">
+            <svg viewBox="0 0 42 26">
+              <path d="M 4 14 L 38 14 L 34 22 L 8 22 Z" fill="#16a34a"/>
+              <rect x="18" y="4" width="3" height="12" fill="#16a34a"/>
+              <path d="M 21 4 L 31 13 L 21 13 Z" fill="#22c55e"/>
+            </svg>
+          </div>
+          <div class="boat b3">
+            <svg viewBox="0 0 42 26">
+              <path d="M 4 14 L 38 14 L 34 22 L 8 22 Z" fill="#16a34a"/>
+              <rect x="18" y="4" width="3" height="12" fill="#16a34a"/>
+              <path d="M 21 4 L 31 13 L 21 13 Z" fill="#22c55e"/>
+            </svg>
+          </div>
+          <div class="lift-arrows">
+            <span>▲</span><span>▲</span><span>▲</span>
+          </div>
+        </div>
+
+        <div class="tide-right">
+          <div class="title">Service pages ↑</div>
+          <div class="sub">Rise together in<br>Google rankings</div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="foot">
+        Every blog post <span class="hl">raises domain authority</span> — and that rising tide lifts every service page on Google.
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

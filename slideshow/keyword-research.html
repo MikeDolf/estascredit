@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Keyword research workflow — SEMRush → Claude Code</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #fdf6ec;
+    --card: #ffffff;
+    --ink: #0a0a0a;
+    --ink-2: #1f2937;
+    --muted: #6b7280;
+    --line: #e9e1d3;
+
+    --sem: #ff642d;        /* SEMRush orange */
+    --sem-bg: #fff1eb;
+    --sem-soft: #ffe1d3;
+
+    --claude: #d97757;     /* Claude warm tone */
+    --claude-bg: #fdf3ed;
+
+    --highlight: #fde68a;
+    --good: #16a34a;
+    --good-bg: #dcfce7;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .stage {
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3vh 3vw;
+  }
+
+  .frame {
+    width: 100%;
+    max-width: 1760px;
+    aspect-ratio: 16 / 9;
+    padding: 40px 48px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* ---------- Header ---------- */
+  .head { text-align: center; }
+  .eyebrow {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  h1 .mark {
+    background: linear-gradient(180deg, transparent 60%, var(--highlight) 60%);
+    padding: 0 6px;
+  }
+
+  /* ---------- Main pipeline ---------- */
+  .pipeline {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 20px;
+    align-items: stretch;
+    min-height: 0;
+  }
+
+  .panel {
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 22px;
+    padding: 24px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .panel.sem {
+    border-color: var(--sem);
+    box-shadow: 0 24px 60px -30px rgba(255,100,45,0.35);
+  }
+  .panel.claude {
+    border-color: var(--ink);
+    background: #0a0a0a;
+    color: #fff;
+    box-shadow: 0 24px 60px -30px rgba(10,10,10,0.45);
+  }
+
+  /* Panel header */
+  .panel-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .panel.claude .panel-head { border-bottom-color: #1f2937; }
+
+  .logo {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900;
+    font-size: 20px;
+    letter-spacing: -0.02em;
+    flex-shrink: 0;
+  }
+  .panel.sem .logo { background: var(--sem); color: #fff; }
+  .panel.claude .logo { background: var(--claude); color: #fff; }
+
+  .panel-meta .label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .panel.claude .panel-meta .label { color: #9ca3af; }
+
+  .panel-meta .name {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .panel-tagline {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--sem);
+    margin-left: auto;
+    background: var(--sem-bg);
+    padding: 6px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .panel.claude .panel-tagline {
+    color: var(--claude);
+    background: rgba(217,119,87,0.15);
+  }
+
+  /* Steps inside panel */
+  .steps {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: 14px;
+    align-items: center;
+    padding: 12px 14px;
+    background: var(--sem-bg);
+    border-radius: 12px;
+    border: 1px solid var(--sem-soft);
+  }
+  .panel.claude .step {
+    background: #111827;
+    border-color: #1f2937;
+  }
+
+  .step-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--sem);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .panel.claude .step-num {
+    background: var(--claude);
+  }
+
+  .step-body { min-width: 0; }
+  .step-title {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    margin-bottom: 2px;
+  }
+  .step-desc {
+    font-size: 12.5px;
+    line-height: 1.35;
+    color: var(--ink-2);
+  }
+  .panel.claude .step-desc { color: #d1d5db; }
+
+  .step .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .step .chip {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: #fff;
+    border: 1px solid var(--sem-soft);
+    color: var(--sem);
+    white-space: nowrap;
+  }
+  .panel.claude .step .chip {
+    background: #0a0a0a;
+    border-color: var(--claude);
+    color: var(--claude);
+  }
+
+  /* ---------- Middle export/arrow ---------- */
+  .bridge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 0 8px;
+    width: 180px;
+  }
+
+  .csv {
+    background: #fff;
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 12px 30px -12px rgba(0,0,0,0.2);
+  }
+  .csv .icon {
+    width: 28px; height: 28px;
+    background: var(--highlight);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900;
+    font-size: 11px;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    flex-shrink: 0;
+  }
+  .csv .name {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .arrow-flow {
+    width: 100%;
+    height: 60px;
+    position: relative;
+  }
+  .arrow-flow svg {
+    width: 100%;
+    height: 100%;
+  }
+  .arrow-flow .shaft {
+    stroke: var(--ink);
+    stroke-width: 3;
+    fill: none;
+    stroke-dasharray: 6 6;
+    animation: march 0.8s linear infinite;
+  }
+  @keyframes march { to { stroke-dashoffset: -12; } }
+
+  .bridge-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  /* ---------- Output visual in Claude panel ---------- */
+  .output {
+    margin-top: 4px;
+    background: #111827;
+    border: 1px solid #1f2937;
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .output-col {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .output-col .col-head {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #9ca3af;
+    margin-bottom: 3px;
+  }
+  .output-col .row {
+    font-size: 11px;
+    padding: 4px 7px;
+    border-radius: 5px;
+    background: #0a0a0a;
+    border: 1px solid #1f2937;
+    color: #e5e7eb;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .output-col.blog .col-head { color: #60a5fa; }
+  .output-col.svc  .col-head { color: #34d399; }
+  .output-col.blog .row { border-color: #1e3a5f; }
+  .output-col.svc  .row { border-color: #1d4d3a; }
+
+  /* ---------- Footer ---------- */
+  .foot {
+    background: var(--ink);
+    color: #fff;
+    border-radius: 16px;
+    padding: 18px 26px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  .foot .hl {
+    background: var(--highlight);
+    color: var(--ink);
+    padding: 1px 8px;
+    border-radius: 5px;
+    font-weight: 800;
+  }
+
+  @media (max-width: 1100px) {
+    .frame { aspect-ratio: auto; }
+    .pipeline { grid-template-columns: 1fr; }
+    .bridge { width: auto; height: 100px; }
+    .arrow-flow { height: 80px; }
+    h1 { font-size: 32px; }
+    .foot { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="frame">
+
+      <!-- Header -->
+      <div class="head">
+        <div class="eyebrow">The keyword research workflow</div>
+        <h1>Find keywords Google <span class="mark">rewards</span> — then build for them.</h1>
+      </div>
+
+      <!-- Pipeline: SEMRush → CSV → Claude Code -->
+      <div class="pipeline">
+
+        <!-- SEMRush panel -->
+        <div class="panel sem">
+          <div class="panel-head">
+            <div class="logo">Sr</div>
+            <div class="panel-meta">
+              <div class="label">Step 1 — Hunt</div>
+              <div class="name">SEMRush · Keyword Magic</div>
+            </div>
+            <div class="panel-tagline">Find</div>
+          </div>
+
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-body">
+                <div class="step-title">Find keywords</div>
+                <div class="step-desc">Enter root keyword, then apply:</div>
+                <div class="filters">
+                  <span class="chip">Low KD</span>
+                  <span class="chip">High Volume</span>
+                  <span class="chip">Informational</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-body">
+                <div class="step-title">Adjacent topics</div>
+                <div class="step-desc">Same audience, different life stage. Rank for what they <strong>read</strong>, not just what they <strong>buy</strong>.</div>
+                <div class="filters">
+                  <span class="chip">"best water softener 2026"</span>
+                  <span class="chip">"tankless vs tank water heater"</span>
+                  <span class="chip">"signs you need a new water heater"</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-body">
+                <div class="step-title">Questions tab</div>
+                <div class="step-desc">Grab every question tied to a root keyword — cluster them onto the <strong>same page</strong> as FAQ content.</div>
+                <div class="filters">
+                  <span class="chip">root: "plumbing services"</span>
+                  <span class="chip">+ 12 FAQ questions</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step-num">4</div>
+              <div class="step-body">
+                <div class="step-title">Competitor gap</div>
+                <div class="step-desc">Plug in a rival, steal every keyword they rank for.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bridge: CSV export -->
+        <div class="bridge">
+          <div class="bridge-label">Export</div>
+          <div class="csv">
+            <span class="icon">CSV</span>
+            <span class="name">keywords.csv</span>
+          </div>
+          <div class="arrow-flow">
+            <svg viewBox="0 0 180 60" preserveAspectRatio="none">
+              <path class="shaft" d="M 10 30 L 160 30"/>
+              <path d="M 150 18 L 170 30 L 150 42 Z" fill="#0a0a0a"/>
+            </svg>
+          </div>
+          <div class="bridge-label">Hand-off</div>
+        </div>
+
+        <!-- Claude Code panel -->
+        <div class="panel claude">
+          <div class="panel-head">
+            <div class="logo">CC</div>
+            <div class="panel-meta">
+              <div class="label">Step 2 — Build</div>
+              <div class="name">Claude Code · Cluster &amp; Route</div>
+            </div>
+            <div class="panel-tagline">Group</div>
+          </div>
+
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">5</div>
+              <div class="step-body">
+                <div class="step-title">Cluster by intent</div>
+                <div class="step-desc">Same-intent keywords = ONE page. No cannibalisation.</div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step-num">6</div>
+              <div class="step-body">
+                <div class="step-title">Route to page type</div>
+                <div class="step-desc">Informational → blog. Commercial → service page.</div>
+              </div>
+            </div>
+
+            <!-- Output preview -->
+            <div class="output">
+              <div class="output-col blog">
+                <div class="col-head">→ Blog posts</div>
+                <div class="row">how to unclog a drain</div>
+                <div class="row">why is my tap leaking</div>
+                <div class="row">cost to fix a hot water…</div>
+              </div>
+              <div class="output-col svc">
+                <div class="col-head">→ Service pages</div>
+                <div class="row">emergency plumber [city]</div>
+                <div class="row">hot water repair [city]</div>
+                <div class="row">blocked drain service</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer takeaway -->
+      <div class="foot">
+        <span class="hl">Low competition × high volume × buyer intent</span> — the cheapest traffic on the internet.
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

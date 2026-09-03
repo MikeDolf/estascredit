@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Two tactics. $500K+ earned.</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #fdf6ec;
+    --card: #ffffff;
+    --ink: #0a0a0a;
+    --ink-2: #1f2937;
+    --muted: #6b7280;
+    --line: #e9e1d3;
+
+    --blog: #0ea5e9;
+    --blog-bg: #e0f2fe;
+    --blog-soft: #bae6fd;
+
+    --service: #16a34a;
+    --service-bg: #dcfce7;
+    --service-soft: #86efac;
+
+    --highlight: #fde68a;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .stage {
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3vh 3vw;
+  }
+
+  .frame {
+    width: 100%;
+    max-width: 1760px;
+    aspect-ratio: 16 / 9;
+    padding: 40px 52px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* ---------- Header ---------- */
+  .head { text-align: center; }
+  .eyebrow {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-size: 60px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  h1 .money {
+    background: linear-gradient(180deg, transparent 55%, var(--highlight) 55%);
+    padding: 0 10px;
+    color: var(--ink);
+  }
+  .subhead {
+    margin-top: 14px;
+    font-size: 18px;
+    color: var(--ink-2);
+    font-weight: 500;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .subhead strong { color: var(--ink); font-weight: 800; }
+
+  /* ---------- Two tactic panels ---------- */
+  .tactics {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    min-height: 0;
+  }
+
+  .panel {
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 22px;
+    padding: 26px 30px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .panel.blog    { border-color: var(--blog);    box-shadow: 0 30px 70px -32px rgba(14,165,233,0.4); }
+  .panel.service { border-color: var(--service); box-shadow: 0 30px 70px -32px rgba(22,163,74,0.4); }
+
+  .panel-head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .panel-num {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    color: #fff;
+    font-weight: 900;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 8px 20px -6px rgba(0,0,0,0.15);
+  }
+  .panel.blog    .panel-num { background: var(--blog); }
+  .panel.service .panel-num { background: var(--service); }
+
+  .panel-titles .lbl {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 3px;
+  }
+  .panel.blog    .panel-titles .lbl { color: var(--blog); }
+  .panel.service .panel-titles .lbl { color: var(--service); }
+
+  .panel-titles .name {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+
+  .panel-what {
+    font-size: 16px;
+    line-height: 1.45;
+    color: var(--ink-2);
+  }
+  .panel-what strong { color: var(--ink); font-weight: 800; }
+
+  /* Specs grid */
+  .specs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .spec {
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #fafafa;
+    border: 1px solid var(--line);
+  }
+  .panel.blog .spec    { background: #f0f9ff; border-color: var(--blog-soft); }
+  .panel.service .spec { background: #f0fdf4; border-color: var(--service-soft); }
+
+  .spec .k {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 3px;
+  }
+  .spec .v {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+  .panel.blog .spec .k    { color: var(--blog); }
+  .panel.service .spec .k { color: var(--service); }
+
+  /* Coverage footer inside panel */
+  .covered {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--ink);
+    color: #fff;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .covered .tag {
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--highlight);
+    color: var(--ink);
+  }
+
+  /* ---------- Footer ---------- */
+  .foot {
+    background: var(--ink);
+    color: #fff;
+    border-radius: 16px;
+    padding: 20px 30px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  .foot .hl {
+    background: var(--highlight);
+    color: var(--ink);
+    padding: 1px 8px;
+    border-radius: 5px;
+    font-weight: 800;
+  }
+
+  @media (max-width: 1100px) {
+    .frame { aspect-ratio: auto; }
+    .tactics { grid-template-columns: 1fr; }
+    h1 { font-size: 40px; }
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="frame">
+
+      <!-- Header -->
+      <div class="head">
+        <div class="eyebrow">The thesis</div>
+        <h1>Two tactics. <span class="money">$500K+</span> earned.</h1>
+        <div class="subhead">The rest of this video is exactly how — <strong>both covered, both scaled with Claude Code</strong>.</div>
+      </div>
+
+      <!-- Two tactic panels -->
+      <div class="tactics">
+
+        <!-- TACTIC 1: Blog posts -->
+        <div class="panel blog">
+          <div class="panel-head">
+            <div class="panel-num">1</div>
+            <div class="panel-titles">
+              <div class="lbl">Tactic 1 · Content engine</div>
+              <div class="name">Blog posts at scale</div>
+            </div>
+          </div>
+          <div class="panel-what">
+            Target <strong>long-tail informational keywords</strong>. Every post builds domain authority — <strong>lifting every other page on the site</strong> in the rankings.
+          </div>
+          <div class="specs">
+            <div class="spec"><div class="k">Target</div><div class="v">"how to…" queries</div></div>
+            <div class="spec"><div class="k">Job</div><div class="v">Authority + top-of-funnel</div></div>
+            <div class="spec"><div class="k">Volume</div><div class="v">15–100+ posts</div></div>
+            <div class="spec"><div class="k">Pattern</div><div class="v">1 root + cluster / post</div></div>
+          </div>
+          <div class="covered">
+            <span class="tag">Covered</span>
+            <span>Chapter 3 · clusters, SERP analysis, voice refs</span>
+          </div>
+        </div>
+
+        <!-- TACTIC 2: Service pages -->
+        <div class="panel service">
+          <div class="panel-head">
+            <div class="panel-num">2</div>
+            <div class="panel-titles">
+              <div class="lbl">Tactic 2 · Lead engine</div>
+              <div class="name">Service pages at scale</div>
+            </div>
+          </div>
+          <div class="panel-what">
+            Target <strong>high-intent local buyers</strong>. Every page captures leads from "<strong>[service] [city]</strong>" queries — the most valuable traffic on the internet.
+          </div>
+          <div class="specs">
+            <div class="spec"><div class="k">Target</div><div class="v">"plumber Toronto" queries</div></div>
+            <div class="spec"><div class="k">Job</div><div class="v">Capture the lead</div></div>
+            <div class="spec"><div class="k">Volume</div><div class="v">Service × city matrix</div></div>
+            <div class="spec"><div class="k">Pattern</div><div class="v">Programmatic zipper</div></div>
+          </div>
+          <div class="covered">
+            <span class="tag">Covered</span>
+            <span>Chapter 4 · the zipper, templates at scale</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="foot">
+        One site. <span class="hl">Two revenue engines.</span> Both run the same AI-powered workflow.
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

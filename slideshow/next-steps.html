@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Next steps — what to do after you ship</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #fdf6ec;
+    --card: #ffffff;
+    --ink: #0a0a0a;
+    --ink-2: #1f2937;
+    --muted: #6b7280;
+    --line: #e9e1d3;
+
+    /* Google brand-ish colors for action cards */
+    --c1: #EA4335; --c1-bg: #fee2e2;   /* Business Profile — red */
+    --c2: #4285F4; --c2-bg: #dbeafe;   /* Search Console — blue */
+    --c3: #FBBC05; --c3-bg: #fef3c7;   /* Analytics — yellow */
+    --c4: #34A853; --c4-bg: #dcfce7;   /* Split test — green */
+
+    --warn: #d97706;
+    --warn-bg: #fef3c7;
+    --warn-soft: #fcd34d;
+
+    --highlight: #fde68a;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .stage {
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3vh 3vw;
+  }
+
+  .frame {
+    width: 100%;
+    max-width: 1760px;
+    aspect-ratio: 16 / 9;
+    padding: 36px 48px 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ---------- Header ---------- */
+  .head { text-align: center; }
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: 50px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  h1 .mark {
+    background: linear-gradient(180deg, transparent 60%, var(--highlight) 60%);
+    padding: 0 6px;
+  }
+  .subhead {
+    margin-top: 10px;
+    font-size: 16px;
+    color: var(--ink-2);
+    font-weight: 500;
+  }
+  .subhead strong { color: var(--ink); font-weight: 700; }
+
+  /* ---------- Main ---------- */
+  .main {
+    flex: 1;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    gap: 14px;
+    min-height: 0;
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    min-height: 0;
+  }
+
+  .action {
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 18px;
+    padding: 18px 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .action::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: var(--c, var(--muted));
+  }
+  .action.c1 { --c: var(--c1); border-color: var(--c1); box-shadow: 0 20px 50px -30px rgba(234,67,53,0.35); }
+  .action.c2 { --c: var(--c2); border-color: var(--c2); box-shadow: 0 20px 50px -30px rgba(66,133,244,0.35); }
+  .action.c3 { --c: var(--c3); border-color: var(--c3); box-shadow: 0 20px 50px -30px rgba(251,188,5,0.35); }
+  .action.c4 { --c: var(--c4); border-color: var(--c4); box-shadow: 0 20px 50px -30px rgba(52,168,83,0.35); }
+
+  .action .top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .action-num {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--c);
+    color: #fff;
+    font-weight: 900;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .action-grade {
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .action.c1 .action-grade { background: var(--c1-bg); color: var(--c1); }
+  .action.c2 .action-grade { background: var(--c2-bg); color: var(--c2); }
+  .action.c3 .action-grade { background: var(--c3-bg); color: var(--c3); }
+  .action.c4 .action-grade { background: var(--c4-bg); color: var(--c4); }
+
+  .action-titles .eyebrow-sm {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c);
+    margin-bottom: 3px;
+  }
+  .action-titles .title {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+  }
+
+  .action-desc {
+    font-size: 13px;
+    color: var(--ink-2);
+    line-height: 1.45;
+  }
+  .action-desc strong { color: var(--ink); font-weight: 800; }
+
+  .action-do {
+    background: #fafafa;
+    border: 1px dashed var(--line);
+    border-radius: 8px;
+    padding: 9px 11px;
+    margin-top: auto;
+    font-size: 12px;
+    color: var(--ink-2);
+    line-height: 1.4;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .action-do .lbl {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c);
+  }
+  .action-do strong { color: var(--ink); font-weight: 800; }
+
+  /* ---------- Warning strip ---------- */
+  .warn {
+    background: linear-gradient(180deg, #fff 0%, #fffbeb 100%);
+    border: 2px solid var(--warn);
+    border-radius: 14px;
+    padding: 14px 24px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 18px;
+    box-shadow: 0 16px 40px -24px rgba(217,119,6,0.35);
+  }
+  .warn-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: var(--warn);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 900;
+    flex-shrink: 0;
+  }
+  .warn-body .lbl {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--warn);
+    margin-bottom: 2px;
+  }
+  .warn-body .title {
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  .warn-body .title .hl {
+    background: var(--warn-bg);
+    color: var(--warn);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+  .warn-body .desc {
+    font-size: 12px;
+    color: var(--ink-2);
+    line-height: 1.4;
+    margin-top: 3px;
+  }
+  .warn-body .desc strong { color: var(--warn); font-weight: 800; }
+
+  .warn-cadence {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .warn-cadence .pill {
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1.5px solid var(--warn-soft);
+    color: var(--warn);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .warn-cadence .pill.ok { border-color: #86efac; color: #16a34a; }
+  .warn-cadence .pill.bad { border-color: #fca5a5; color: #dc2626; background: #fef2f2; }
+  .warn-cadence .arrow {
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  /* ---------- Footer ---------- */
+  .foot {
+    background: var(--ink);
+    color: #fff;
+    border-radius: 14px;
+    padding: 16px 28px;
+    text-align: center;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  .foot .hl {
+    background: var(--highlight);
+    color: var(--ink);
+    padding: 1px 8px;
+    border-radius: 5px;
+    font-weight: 800;
+  }
+
+  @media (max-width: 1100px) {
+    .frame { aspect-ratio: auto; }
+    .actions { grid-template-columns: 1fr 1fr; }
+    .warn { grid-template-columns: 1fr; }
+    h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="frame">
+
+      <!-- Header -->
+      <div class="head">
+        <div class="eyebrow">After you ship — your punch list</div>
+        <h1>Four things to do <span class="mark">on launch day</span>.</h1>
+        <div class="subhead">You've got a site. Now set up the compounding wins — the stuff that multiplies your traffic for <strong>zero extra content</strong>.</div>
+      </div>
+
+      <!-- Main -->
+      <div class="main">
+
+        <!-- 4 action cards -->
+        <div class="actions">
+
+          <!-- 1. Google Business Profile -->
+          <div class="action c1">
+            <div class="top-row">
+              <div class="action-num">1</div>
+              <div class="action-grade">Mandatory · local</div>
+            </div>
+            <div class="action-titles">
+              <div class="eyebrow-sm">Google Business Profile</div>
+              <div class="title">Claim your local listing</div>
+            </div>
+            <div class="action-desc">
+              If you're a <strong>local service business</strong>, this is non-negotiable. Shows up in Google Maps + the local 3-pack — massive free traffic.
+            </div>
+            <div class="action-do">
+              <span class="lbl">Do this</span>
+              <span>Claim. Verify address. Fill every field. Ask customers for <strong>reviews</strong>.</span>
+            </div>
+          </div>
+
+          <!-- 2. Search Console -->
+          <div class="action c2">
+            <div class="top-row">
+              <div class="action-num">2</div>
+              <div class="action-grade">Free</div>
+            </div>
+            <div class="action-titles">
+              <div class="eyebrow-sm">Google Search Console</div>
+              <div class="title">Track impressions &amp; rankings</div>
+            </div>
+            <div class="action-desc">
+              Google tells you exactly <strong>which keywords</strong> you rank for, how often you're shown, and what gets clicked.
+            </div>
+            <div class="action-do">
+              <span class="lbl">Do this</span>
+              <span>Verify domain. Submit <strong>sitemap.xml</strong>. Request indexing on key pages.</span>
+            </div>
+          </div>
+
+          <!-- 3. Analytics -->
+          <div class="action c3">
+            <div class="top-row">
+              <div class="action-num">3</div>
+              <div class="action-grade">Free</div>
+            </div>
+            <div class="action-titles">
+              <div class="eyebrow-sm">Google Analytics (GA4)</div>
+              <div class="title">Track visitors &amp; behaviour</div>
+            </div>
+            <div class="action-desc">
+              See which pages get traffic, where visitors come from, how long they stay, and <strong>what they do next</strong>.
+            </div>
+            <div class="action-do">
+              <span class="lbl">Do this</span>
+              <span>Install the GA4 snippet. Set <strong>conversion events</strong> (form submit, phone tap).</span>
+            </div>
+          </div>
+
+          <!-- 4. Split test -->
+          <div class="action c4">
+            <div class="top-row">
+              <div class="action-num">4</div>
+              <div class="action-grade">Ongoing</div>
+            </div>
+            <div class="action-titles">
+              <div class="eyebrow-sm">CRO — split testing</div>
+              <div class="title">Test your landing pages</div>
+            </div>
+            <div class="action-desc">
+              Same traffic, higher conversion = more leads. Test <strong>one thing at a time</strong> — headline, CTA, hero image — find the winner, run with it.
+            </div>
+            <div class="action-do">
+              <span class="lbl">Do this</span>
+              <span>Start with the <strong>hero headline</strong>. Swap quarterly. Keep the winner.</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Cadence warning -->
+        <div class="warn">
+          <div class="warn-icon">!</div>
+          <div class="warn-body">
+            <div class="lbl">Don't do this</div>
+            <div class="title">Don't dump <span class="hl">1,000 blog posts</span> on day one.</div>
+            <div class="desc">Google sees the spam pattern and <strong>deprioritises your whole site</strong>. Drip them out. Slow and steady wins this game.</div>
+          </div>
+          <div class="warn-cadence">
+            <span class="pill bad">100/day</span>
+            <span class="arrow">→</span>
+            <span class="pill ok">2–5/week</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="foot">
+        Ship it → set up these four → <span class="hl">drip content weekly</span>. In 3 months you'll have real data. In 12, real traffic.
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>On-page SEO checklist — comprehensive reference</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #fdf6ec;
+    --card: #ffffff;
+    --ink: #0a0a0a;
+    --ink-2: #1f2937;
+    --muted: #6b7280;
+    --line: #e9e1d3;
+
+    --check: #16a34a;
+    --check-bg: #dcfce7;
+
+    /* 6-color rotation used across categories */
+    --c1: #0ea5e9;  /* sky */
+    --c2: #7c3aed;  /* violet */
+    --c3: #ec4899;  /* pink */
+    --c4: #f59e0b;  /* amber */
+    --c5: #2563eb;  /* blue */
+    --c6: #14b8a6;  /* teal */
+
+    --highlight: #fde68a;
+  }
+
+  html, body {
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .stage {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 48px 4vw 60px;
+  }
+
+  .frame {
+    width: 100%;
+    max-width: 1760px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* ---------- Header ---------- */
+  .head { text-align: center; max-width: 1100px; margin: 0 auto; }
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-size: 54px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  h1 .mark {
+    background: linear-gradient(180deg, transparent 60%, var(--highlight) 60%);
+    padding: 0 8px;
+  }
+  .subhead {
+    margin-top: 12px;
+    font-size: 16px;
+    color: var(--ink-2);
+    font-weight: 500;
+    line-height: 1.4;
+  }
+  .subhead strong { color: var(--ink); font-weight: 700; }
+
+  /* "Point Claude Code at this" callout */
+  .callout {
+    background: var(--ink);
+    color: #fff;
+    border-radius: 14px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    font-size: 15px;
+    font-weight: 500;
+    max-width: 1100px;
+    margin: 4px auto 12px;
+    text-align: center;
+  }
+  .callout .file {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-weight: 800;
+    background: var(--highlight);
+    color: var(--ink);
+    padding: 2px 10px;
+    border-radius: 5px;
+    white-space: nowrap;
+  }
+
+  /* ---------- Grid ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 1200px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 720px)  { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 16px;
+    padding: 16px 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+    break-inside: avoid;
+  }
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: var(--c, var(--muted));
+  }
+  /* Service-only card tinted for visual distinction */
+  .card.service-only { background: linear-gradient(180deg, #fff, #fef9f7); }
+  .card.service-only::after {
+    content: "SERVICE PAGES ONLY";
+    position: absolute;
+    top: 14px; right: 14px;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    color: #dc2626;
+    background: #fee2e2;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+  .card.long-only { background: linear-gradient(180deg, #fff, #f7fbff); }
+  .card.long-only::after {
+    content: "1500+ WORDS";
+    position: absolute;
+    top: 14px; right: 14px;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    color: #0284c7;
+    background: #e0f2fe;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+
+  /* Color cycle */
+  .card.c1 { --c: var(--c1); }
+  .card.c2 { --c: var(--c2); }
+  .card.c3 { --c: var(--c3); }
+  .card.c4 { --c: var(--c4); }
+  .card.c5 { --c: var(--c5); }
+  .card.c6 { --c: var(--c6); }
+
+  /* Card head */
+  .card-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .card-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: #fff;
+    font-weight: 900;
+    font-size: 13px;
+    background: var(--c);
+  }
+  .card-titles .num {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--c);
+  }
+  .card-titles .title {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  /* Checklist */
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .item {
+    display: grid;
+    grid-template-columns: 16px 1fr;
+    gap: 8px;
+    align-items: flex-start;
+    font-size: 12px;
+    line-height: 1.42;
+    color: var(--ink-2);
+  }
+  .item .chk {
+    width: 16px; height: 16px;
+    background: var(--check-bg);
+    border: 1.5px solid var(--check);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--check);
+    font-weight: 900;
+    font-size: 10px;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .item strong { font-weight: 800; color: var(--ink); }
+  .item code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10.5px;
+    padding: 1px 5px;
+    background: #f3f4f6;
+    border-radius: 4px;
+    color: var(--ink);
+  }
+
+  /* ---------- Footer ---------- */
+  .foot {
+    background: var(--ink);
+    color: #fff;
+    border-radius: 16px;
+    padding: 22px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .foot .msg {
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 1.4;
+    max-width: 1200px;
+  }
+  .foot .msg strong { font-weight: 800; }
+  .foot .hl {
+    background: var(--highlight);
+    color: var(--ink);
+    padding: 1px 8px;
+    border-radius: 5px;
+    font-weight: 800;
+  }
+  .foot .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    white-space: nowrap;
+  }
+  .foot .stat .num {
+    font-size: 40px;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--highlight);
+  }
+  .foot .stat .lbl {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="frame">
+
+      <!-- Header -->
+      <div class="head">
+        <div class="eyebrow">The comprehensive on-page SEO checklist</div>
+        <h1>On-page SEO — do these on <span class="mark">every page</span>.</h1>
+        <div class="subhead">15 categories · 80+ items · <strong>the complete on-page SEO spec for blog posts and service pages</strong>. Technical SEO (sitemaps, robots.txt, Core Web Vitals) is covered separately.</div>
+      </div>
+
+      <div class="callout">
+        <span>Save this as</span>
+        <span class="file">on-page-seo.md</span>
+        <span>— every page-generation skill reads it before generating any page.</span>
+      </div>
+
+      <!-- Grid of category cards -->
+      <div class="grid">
+
+        <!-- 1. HEAD / METADATA -->
+        <div class="card c1">
+          <div class="card-head">
+            <div class="card-icon">1</div>
+            <div class="card-titles">
+              <div class="num">Head &amp; Metadata</div>
+              <div class="title">What Google indexes first</div>
+            </div>
+          </div>
+          <div class="list">
+            <div class="item"><span class="chk">✓</span><span><strong>Title tag</strong> — 50–60 chars, primary keyword near the start.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Meta description</strong> — 150–160 chars, keyword + benefit + soft CTA.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Canonical URL</strong> set to prevent duplicates.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Open Graph</strong> — <code>og:title</code>, <code>og:description</code>, <code>og:image</code> (1200×630), <code>og:url</code>, <code>og:type</code>.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Twitter Card</strong> — <code>summary_large_image</code>, title, description, image.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Language</strong> attribute on <code>&lt;html&gt;</code> (e.g. <code>lang="en"</code>).</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Viewport meta</strong> tag for responsive rendering.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Favicon</strong> + <code>apple-touch-icon</code>.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Charset meta</strong> — <code>&lt;meta charset="utf-8"&gt;</code>.</span></div>
+          </div>
+        </div>
+
+        <!-- 2. URL STRUCTURE -->
+        <div class="card c2">
+          <div class="card-head">
+            <div class="card-icon">2</div>
+            <div class="card-titles">
+              <div class="num">URL Structure</div>
+              <div class="title">Clean, readable, keyword-forward</div>
+            </div>
+          </div>
+          <div class="list">
+            <div class="item"><span class="chk">✓</span><span><strong>Short slug</strong> — under 60 chars.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Primary keyword</strong> in the slug.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Hyphens</strong> only — never underscores.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Lowercase</strong> only.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>No stop words</strong> ("the", "a", "of") unless necessary.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Logical hierarchy</strong> — <code>/services/[slug]</code>, <code>/blog/[slug]</code>.</span></div>
+          </div>
+        </div>
+
+        <!-- 3. HEADINGS -->
+        <div class="card c3">
+          <div class="card-head">
+            <div class="card-icon">3</div>
+            <div class="card-titles">
+              <div class="num">Headings</div>
+              <div class="title">Structure for skimmers &amp; bots</div>
+            </div>
+          </div>
+          <div class="list">
+            <div class="item"><span class="chk">✓</span><span><strong>Exactly one H1</strong> per page, contains primary keyword.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Logical H2 → H3</strong> hierarchy — never skip levels.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>H2s</strong> use supporting keywords + questions from the cluster.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>No keyword stuffing</strong> — write naturally.</span></div>
+          </div>
+        </div>
+
+        <!-- 4. COPY / BODY -->
+        <div class="card c4">
+          <div class="card-head">
+            <div class="card-icon">4</div>
+            <div class="card-titles">
+              <div class="num">Copy &amp; Body</div>
+              <div class="title">Answer the query, fast</div>
+            </div>
+          </div>
+          <div class="list">
+            <div class="item"><span class="chk">✓</span><span><strong>Primary keyword</strong> in the first 100 words.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Direct answer</strong> to the query in the first paragraph.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Length</strong> matches SERP average (within 20% of top-3).</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Short paragraphs</strong> (1–4 sentences).</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Readability</strong> — 8th–10th grade level.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Active voice</strong> preferred.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Bold key phrases</strong> — sparingly.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Bullets &amp; numbered lists</strong> where appropriate.</span></div>
+          </div>
+        </div>
+
+        <!-- 5. FAQ SECTION -->
+        <div class="card c5">
+          <div class="card-head">
+            <div class="card-icon">5</div>
+            <div class="card-titles">
+              <div class="num">FAQ Section</div>
+              <div class="title">Every blog post</div>
+            </div>
+          </div>
+          <div class="list">
+            <div class="item"><span class="chk">✓</span><span><strong>4–8 questions</strong> from SEMRush Questions tab + "People Also Ask".</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Direct answers</strong> — 2–4 sentences each.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>FAQ schema</strong> (JSON-LD) applied.</span></div>
+          </div>
+        </div>
+
+        <!-- 6. IMAGES -->
+        <div class="card c6">
+          <div class="card-head">
+            <div class="card-icon">6</div>
+            <div class="card-titles">
+              <div class="num">Images</div>
+              <div class="title">Every image is a ranking signal</div>
+            </div>
+          </div>
+          <div class="list">
+            <div class="item"><span class="chk">✓</span><span><strong>Alt text</strong> describes image + keyword where natural.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Filenames</strong> — descriptive, hyphens, e.g. <code>emergency-plumber-toronto.webp</code>.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>WebP</strong>, compressed under 200 KB.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Width/height</strong> attributes specified — prevents CLS.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Lazy loading</strong> (<code>loading="lazy"</code>) for below-fold.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Responsive srcset</strong> where needed.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Featured/hero image</strong> for social sharing.</span></div>
+          </div>
+        </div>
+
+        <!-- 7. INTERNAL LINKS -->
+        <div class="card c1">
+          <div class="card-head">
+            <div class="card-icon">7</div>
+            <div class="card-titles">
+              <div class="num">Internal Links</div>
+              <div class="title">Pass authority across the site</div>
+            </div>
+          </div>
+          <div class="list">
+            <div class="item"><span class="chk">✓</span><span><strong>3–5 internal links</strong> per post.</span></div>
+            <div class="item"><span class="chk">✓</span><span>Link to <strong>related blog posts</strong> &amp; <strong>relevant service pages</strong>.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Descriptive anchor text</strong> — never "click here" or "read more".</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Contextually placed</strong> in body copy.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Breadcrumbs</strong> on every page.</span></div>
+          </div>
+        </div>
+
+        <!-- 8. EXTERNAL LINKS -->
+        <div class="card c2">
+          <div class="card-head">
+            <div class="card-icon">8</div>
+            <div class="card-titles">
+              <div class="num">External Links</div>
+              <div class="title">Cite authority, don't hoard it</div>
+            </div>
+          </div>
+          <div class="list">
+            <div class="item"><span class="chk">✓</span><span><strong>2–3 external links</strong> to authoritative sources (.gov, .edu, major industry).</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Relevant</strong> to the topic.</span></div>
+            <div class="item"><span class="chk">✓</span><span>Open in <strong>new tab</strong> with <code>rel="noopener"</code>.</span></div>
+            <div class="item"><span class="chk">✓</span><span><code>rel="nofollow"</code> for sponsored links.</span></div>
+          </div>
+        </div>
+
+        <!-- 9. SCHEMA -->
+        <div class="card c3">
+          <div class="card-head">
+            <div class="card-icon">9</div>
+            <div class="card-titles">
+              <div class="num">Schema Markup</div>
+              <div class="title">JSON-LD in <code>&lt;head&gt;</code></div>
+            </div>
+          </div>
+          <div class="list">
+            <div class="item"><span class="chk">✓</span><span><strong>Article</strong> schema on blog posts.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>LocalBusiness</strong> schema — most specific subtype (Plumber, Dentist…).</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Service</strong> schema on service pages.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>FAQ</strong> schema wherever FAQ section exists.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>BreadcrumbList</strong> schema on every page.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Organization</strong> schema site-wide.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Author/Person</strong> schema for bylines.</span></div>
+          </div>
+        </div>
+
+        <!-- 10. E-E-A-T -->
+        <div class="card c4">
+          <div class="card-head">
+            <div class="card-icon">10</div>
+            <div class="card-titles">
+              <div class="num">E-E-A-T Signals</div>
+              <div class="title">Experience · Expertise · Authority · Trust</div>
+            </div>
+          </div>
+          <div class="list">
+            <div class="item"><span class="chk">✓</span><span><strong>Author byline</strong> with name on every blog post.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Author bio</strong> with credentials (years, qualifications).</span></div>
+            <div class="item"><span class="chk">✓</span><span>Link to <strong>author's dedicated page</strong>.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Published date</strong> displayed.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>"Last updated" date</strong> when refreshed.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Real stories, numbers, opinions</strong> from the business voice file.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Cite authoritative sources.</strong></span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>About page</strong> with full company credentials.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Contact page</strong> — real address, phone, hours.</span></div>
+          </div>
+        </div>
+
+        <!-- 11. ACCESSIBILITY -->
+        <div class="card c5">
+          <div class="card-head">
+            <div class="card-icon">11</div>
+            <div class="card-titles">
+              <div class="num">Accessibility</div>
+              <div class="title">A11y signals = SEO signals</div>
+            </div>
+          </div>
+          <div class="list">
+            <div class="item"><span class="chk">✓</span><span><strong>Semantic HTML5</strong> — <code>&lt;header&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>, <code>&lt;article&gt;</code>, <code>&lt;footer&gt;</code>.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>ARIA labels</strong> on interactive elements where needed.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Color contrast</strong> meets WCAG AA (4.5:1 body text).</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Focus indicators</strong> visible on interactive elements.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Alt text</strong> on all images (empty <code>alt=""</code> for decorative).</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Descriptive link text</strong>.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Skip-to-content</strong> link for keyboard users.</span></div>
+          </div>
+        </div>
+
+        <!-- 12. MOBILE -->
+        <div class="card c6">
+          <div class="card-head">
+            <div class="card-icon">12</div>
+            <div class="card-titles">
+              <div class="num">Mobile &amp; Responsive</div>
+              <div class="title">Mobile-first indexing</div>
+            </div>
+          </div>
+          <div class="list">
+            <div class="item"><span class="chk">✓</span><span><strong>Responsive layout</strong> (Tailwind handles this).</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Touch targets</strong> minimum 48×48 px.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Body font</strong> minimum 16 px.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>No horizontal scroll</strong> at any viewport.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>No intrusive interstitials.</strong></span></div>
+          </div>
+        </div>
+
+        <!-- 13. SOCIAL -->
+        <div class="card c1">
+          <div class="card-head">
+            <div class="card-icon">13</div>
+            <div class="card-titles">
+              <div class="num">Social Preview</div>
+              <div class="title">Shareable card</div>
+            </div>
+          </div>
+          <div class="list">
+            <div class="item"><span class="chk">✓</span><span><strong>OG image</strong> optimized — 1200×630, under 1 MB.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Twitter Card image</strong> — 1200×600.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Compelling <code>og:description</code></strong> — different from meta if valuable.</span></div>
+          </div>
+        </div>
+
+        <!-- 14. CONVERSION (service only) -->
+        <div class="card c2 service-only">
+          <div class="card-head">
+            <div class="card-icon">14</div>
+            <div class="card-titles">
+              <div class="num">Conversion Elements</div>
+              <div class="title">Capture the lead</div>
+            </div>
+          </div>
+          <div class="list">
+            <div class="item"><span class="chk">✓</span><span><strong>Primary CTA</strong> above the fold.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Phone number</strong> with click-to-call (<code>tel:</code>).</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Multiple CTA placements</strong> throughout the page.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Trust signals</strong> — reviews, ratings, licenses, years.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Testimonials</strong> with names (photos where possible).</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Service-area coverage</strong> listed.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Business hours</strong> displayed.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Physical address</strong> with embedded map.</span></div>
+          </div>
+        </div>
+
+        <!-- 15. LONG-FORM -->
+        <div class="card c3 long-only">
+          <div class="card-head">
+            <div class="card-icon">15</div>
+            <div class="card-titles">
+              <div class="num">Long-Form Content</div>
+              <div class="title">1500+ word posts</div>
+            </div>
+          </div>
+          <div class="list">
+            <div class="item"><span class="chk">✓</span><span><strong>Table of contents</strong> with anchor links at the top.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Jump links</strong> for each H2.</span></div>
+            <div class="item"><span class="chk">✓</span><span><strong>Back-to-top</strong> button.</span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="foot">
+        <div class="msg">
+          Point Claude Code at <span class="hl">on-page-seo.md</span>, then say <strong>"generate a blog post about X"</strong> — it will satisfy every item on this list automatically. That's the whole point.
+        </div>
+        <div class="stat">
+          <span class="num">80+</span>
+          <span class="lbl">Items · 15 categories</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

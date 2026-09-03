@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI SEO is (mostly) just SEO</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #fdf6ec;
+    --card: #ffffff;
+    --ink: #0a0a0a;
+    --ink-2: #1f2937;
+    --muted: #6b7280;
+    --line: #e9e1d3;
+
+    --sources: #0ea5e9;
+    --sources-bg: #e0f2fe;
+    --sources-soft: #bae6fd;
+
+    --same: #16a34a;
+    --same-bg: #dcfce7;
+    --same-soft: #86efac;
+
+    --diff: #f59e0b;
+    --diff-bg: #fef3c7;
+    --diff-soft: #fcd34d;
+
+    --highlight: #fde68a;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .stage {
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3vh 3vw;
+  }
+
+  .frame {
+    width: 100%;
+    max-width: 1760px;
+    aspect-ratio: 16 / 9;
+    padding: 34px 48px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  /* ---------- Header ---------- */
+  .head { text-align: center; }
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: 54px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  h1 .mark {
+    background: linear-gradient(180deg, transparent 60%, var(--highlight) 60%);
+    padding: 0 8px;
+  }
+  .subhead {
+    margin-top: 10px;
+    font-size: 17px;
+    color: var(--ink-2);
+    font-weight: 500;
+    font-style: italic;
+  }
+
+  /* ---------- Grid ---------- */
+  .grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    min-height: 0;
+  }
+
+  .card {
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 18px;
+    padding: 20px 22px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card.sources { border-color: var(--sources); box-shadow: 0 24px 60px -30px rgba(14,165,233,0.35); }
+  .card.same    { border-color: var(--same);    box-shadow: 0 24px 60px -30px rgba(22,163,74,0.35); }
+  .card.diff    { border-color: var(--diff);    box-shadow: 0 24px 60px -30px rgba(245,158,11,0.35); }
+
+  .card-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--line);
+  }
+
+  .num {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    color: #fff;
+    font-weight: 900;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .card.sources .num { background: var(--sources); }
+  .card.same    .num { background: var(--same); }
+  .card.diff    .num { background: var(--diff); }
+
+  .titles .eyebrow-sm {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .card.sources .titles .eyebrow-sm { color: var(--sources); }
+  .card.same    .titles .eyebrow-sm { color: var(--same); }
+  .card.diff    .titles .eyebrow-sm { color: var(--diff); }
+
+  .titles .title {
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  /* Items inside each card */
+  .items {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+  }
+  .item {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 9px 11px;
+    background: #fafafa;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    font-size: 12.5px;
+    line-height: 1.3;
+  }
+  .card.sources .item { background: #f0f9ff; border-color: var(--sources-soft); }
+  .card.same    .item { background: #f0fdf4; border-color: var(--same-soft); }
+  .card.diff    .item { background: #fffbeb; border-color: var(--diff-soft); }
+
+  .item .key {
+    font-weight: 800;
+    color: var(--ink);
+    white-space: nowrap;
+    font-size: 12.5px;
+  }
+  .item .arrow {
+    color: var(--muted);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .item .val {
+    color: var(--ink-2);
+    font-weight: 500;
+    flex: 1;
+  }
+  .card.sources .item .key { color: var(--sources); }
+  .card.same    .item .key { color: var(--same); }
+  .card.diff    .item .key { color: var(--diff); }
+
+  /* ---------- Callout (training data) ---------- */
+  .callout {
+    background: #fffbeb;
+    border: 1.5px dashed var(--diff);
+    border-radius: 12px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 13.5px;
+    color: var(--ink-2);
+    line-height: 1.4;
+  }
+  .callout-tag {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: var(--diff);
+    color: #fff;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .callout strong { color: var(--ink); font-weight: 800; }
+
+  /* ---------- Footer ---------- */
+  .foot {
+    background: var(--ink);
+    color: #fff;
+    border-radius: 14px;
+    padding: 16px 28px;
+    text-align: center;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  .foot .hl {
+    background: var(--highlight);
+    color: var(--ink);
+    padding: 1px 7px;
+    border-radius: 4px;
+    font-weight: 800;
+  }
+
+  @media (max-width: 1100px) {
+    .frame { aspect-ratio: auto; }
+    .grid { grid-template-columns: 1fr; }
+    h1 { font-size: 32px; }
+    .callout { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="frame">
+
+      <!-- Header -->
+      <div class="head">
+        <div class="eyebrow">Reality check</div>
+        <h1>AI SEO is (mostly) just <span class="mark">SEO</span>.</h1>
+        <div class="subhead">Everyone's selling AI SEO courses. Here's the truth.</div>
+      </div>
+
+      <!-- 3 cards -->
+      <div class="grid">
+
+        <!-- Section 1 — Where AI pulls from -->
+        <div class="card sources">
+          <div class="card-head">
+            <div class="num">1</div>
+            <div class="titles">
+              <div class="eyebrow-sm">Under the hood</div>
+              <div class="title">Where AI pulls from</div>
+            </div>
+          </div>
+          <ul class="items">
+            <li class="item">
+              <span class="key">Google AI Overviews</span>
+              <span class="arrow">→</span>
+              <span class="val">Google search results</span>
+            </li>
+            <li class="item">
+              <span class="key">ChatGPT Search</span>
+              <span class="arrow">→</span>
+              <span class="val">Bing's index</span>
+            </li>
+            <li class="item">
+              <span class="key">Perplexity</span>
+              <span class="arrow">→</span>
+              <span class="val">Live web + citations</span>
+            </li>
+            <li class="item">
+              <span class="key">Claude (web search)</span>
+              <span class="arrow">→</span>
+              <span class="val">Live web + citations</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Section 2 — 80% same -->
+        <div class="card same">
+          <div class="card-head">
+            <div class="num">2</div>
+            <div class="titles">
+              <div class="eyebrow-sm">80% same as SEO</div>
+              <div class="title">Already ranking? You're in.</div>
+            </div>
+          </div>
+          <ul class="items">
+            <li class="item">
+              <span class="key">Rank on Google</span>
+              <span class="arrow">=</span>
+              <span class="val">AI cites you</span>
+            </li>
+            <li class="item">
+              <span class="key">Good content</span>
+              <span class="arrow">=</span>
+              <span class="val">AI uses it as a source</span>
+            </li>
+            <li class="item">
+              <span class="key">Domain authority</span>
+              <span class="arrow">=</span>
+              <span class="val">AI trusts you</span>
+            </li>
+            <li class="item">
+              <span class="key">E-E-A-T signals</span>
+              <span class="arrow">=</span>
+              <span class="val">AI weighs them heavily</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Section 3 — 20% different -->
+        <div class="card diff">
+          <div class="card-head">
+            <div class="num">3</div>
+            <div class="titles">
+              <div class="eyebrow-sm">The 20% that's different</div>
+              <div class="title">Tweaks that help AI parse</div>
+            </div>
+          </div>
+          <ul class="items">
+            <li class="item">
+              <span class="key">Clean H2 / bullets</span>
+              <span class="arrow">→</span>
+              <span class="val">Easier for AI to parse</span>
+            </li>
+            <li class="item">
+              <span class="key">Direct answer in §1</span>
+              <span class="arrow">→</span>
+              <span class="val">AI extracts intros</span>
+            </li>
+            <li class="item">
+              <span class="key">FAQ schema</span>
+              <span class="arrow">→</span>
+              <span class="val">Cited directly in AI answers</span>
+            </li>
+            <li class="item">
+              <span class="key">Author bio + credentials</span>
+              <span class="arrow">→</span>
+              <span class="val">AI weighs authority hard</span>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Training-data callout -->
+      <div class="callout">
+        <span class="callout-tag">The real "AI SEO"</span>
+        <span>Earning mentions in <strong>training data</strong> — Reddit, Wikipedia, major news sites. That's <strong>backlinks + PR</strong>, not SEO tricks.</span>
+      </div>
+
+      <!-- Footer -->
+      <div class="foot">
+        Do traditional SEO right. You're already ranking in <span class="hl">ChatGPT</span>, <span class="hl">Perplexity</span>, and <span class="hl">Google AI Overviews</span>. No separate course needed.
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
