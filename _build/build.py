@@ -30,7 +30,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from data.site import SITE, NAV, FOOTER_COMPANY, FOOTER_LEGAL, FORBIDDEN_WORDING
-from data.catalog import CATEGORIES, LIFT_RANGES, TONNAGE_CHIPS, LEAD_TYPES
+from data.catalog import CATEGORIES, LIFT_RANGES, TONNAGE_CHIPS, LEAD_TYPES, BRANDS
 from data.pages import TRUST_PAGES, LEGAL_PAGES
 from data.articles import ARTICLES
 from markdown_lite import convert as md_to_html
@@ -39,13 +39,6 @@ from data import cities as cities_data
 ROOT = Path(__file__).resolve().parent.parent
 TPL = Path(__file__).resolve().parent / "templates"
 
-# Полный список брендов по всему каталогу, а не только по одной категории:
-# фильтр «Бренд» показывает его целиком в каждом разделе, чтобы человек
-# видел весь ассортимент, даже если конкретно в этом разделе примера под
-# бренд ещё нет (см. collect_filter_options).
-ALL_BRANDS = sorted({
-    p.get("brand") for c in CATEGORIES for p in c["products"] if p.get("brand")
-})
 
 # Версия статики в query-строке: меняйте, когда правите css/js, иначе у
 # посетителей останется закешированная старая версия.
@@ -617,7 +610,7 @@ def render_chip_filters(products, specs, tonnage):
             lift_chips.append(chip("range", "lift", value, label, count))
         rows.append(row("По высоте подъёма", lift_chips))
 
-    for spec, options, counts in collect_filter_options(products, specs, ALL_BRANDS):
+    for spec, options, counts in collect_filter_options(products, specs, BRANDS):
         rows.append(row(spec["label"], [
             chip("spec", spec["key"], value, label, counts[value])
             for value, label in options

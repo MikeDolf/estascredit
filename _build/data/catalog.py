@@ -41,9 +41,8 @@
 #   type "num"  — число, выводится как есть с `unit`;
 #   filter True — по характеристике можно отфильтровать выдачу.
 #
-# `values: None` у бренда — значения не фиксированы справочником, их собирает
-# сборка из самих позиций (брендов на вторичном рынке десятки, держать их
-# список тут значит забыть его обновить).
+# `values: None` у бренда — список значений не здесь, а в `BRANDS` ниже:
+# один справочник на все категории, а не то, что случайно попало в позиции.
 SPECS = [
     {"key": "condition", "label": "Состояние", "type": "enum", "filter": True,
      "values": [("new", "Новый"), ("used", "Б/у")]},
@@ -66,6 +65,18 @@ SPECS = [
     {"key": "aisle", "label": "Рабочий проход", "type": "num", "filter": False, "unit": " мм"},
     {"key": "year", "label": "Год выпуска", "type": "num", "filter": False, "unit": ""},
     {"key": "hours", "label": "Наработка", "type": "num", "filter": False, "unit": " м/ч"},
+]
+
+# Полный список брендов для фильтра «Бренд» — во всех категориях сразу,
+# как тоннажный ряд ниже: показывается целиком, а не только то, что уже
+# есть в образцах позиций. Список держит владелец сайта — сюда добавляют
+# бренд, как только с ним реально начинают работать.
+BRANDS = [
+    "Baoli", "Caterpillar", "Clark", "Combilift", "Crown", "Dalian", "Doosan",
+    "EP", "Hangcha", "Heli", "Hyster", "Hyundai", "JCB", "Jungheinrich",
+    "Kalmar", "Komatsu", "Linde", "LiuGong", "Lonking", "Manitou",
+    "Mitsubishi", "Nissan", "Noblelift", "Prolift", "SANY", "Still", "TCM",
+    "Toyota", "UniCarriers", "XCMG", "Yale", "YETT", "Zoomlion",
 ]
 
 # Тоннажный ряд для чипсов над каталогом. Это НЕ то же самое, что позиции:
