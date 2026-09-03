@@ -569,8 +569,18 @@ footer{padding:72px 0 28px;}
 .article-body table{width:100%; border-collapse:collapse; margin:24px 0; font-size:14.5px;}
 .article-body th, .article-body td{border:1px solid var(--panel-line); padding:10px 14px; text-align:left;}
 .article-body th{color:var(--text); font-family:'Oswald',sans-serif; font-weight:600; text-transform:uppercase; font-size:12px; letter-spacing:0.05em; background:var(--panel);}
-.article-cta{max-width:760px; margin-top:48px; padding:32px; border:1px solid var(--panel-line); background:var(--panel); display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;}
-.article-cta p{font-family:'Oswald',sans-serif; font-size:17px; color:var(--text); max-width:400px; text-transform:none;}
+.article-cta{
+  max-width:760px; margin-top:48px; padding:28px 32px;
+  border:1px solid var(--panel-line); border-left:4px solid var(--orange); background:var(--panel);
+  display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
+}
+.article-cta p{font-family:'Oswald',sans-serif; font-size:18px; font-weight:500; color:var(--text); max-width:400px; text-transform:none;}
+.article-cta .contact-max{
+  flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  font-family:'Oswald',sans-serif; font-weight:600; font-size:13.5px; letter-spacing:0.05em; text-transform:uppercase;
+  padding:14px 26px; border-radius:var(--radius); background:var(--orange); color:#fff; transition:all .15s ease;
+}
+.article-cta .contact-max:hover{background:var(--orange-soft); color:#fff; transform:translateY(-1px);}
 .article-nav{max-width:760px; margin-top:56px; padding-top:28px; border-top:1px solid var(--panel-line); font-size:13px; color:var(--text-faint);}
 
 /* Wide content inside articles scrolls in its own container instead of
