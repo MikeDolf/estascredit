@@ -30,7 +30,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from data.site import SITE, NAV, FOOTER_COMPANY, FOOTER_LEGAL, FORBIDDEN_WORDING
-from data.catalog import CATEGORIES, CAPACITY_RANGES, LEAD_TYPES
+from data.catalog import CATEGORIES, CAPACITY_RANGES, LIFT_RANGES, LEAD_TYPES, SPECS
 from data.pages import TRUST_PAGES, LEGAL_PAGES
 from data import cities as cities_data
 
@@ -39,7 +39,7 @@ TPL = Path(__file__).resolve().parent / "templates"
 
 # Версия статики в query-строке: меняйте, когда правите css/js, иначе у
 # посетителей останется закешированная старая версия.
-VER = "11"
+VER = "12"
 
 FORKLIFT_SVG = (
     '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="{w}" '
@@ -401,20 +401,38 @@ def render_product(product):
     badge = '<span class="product-badge sample">Образец</span>' if product.get("sample") else ""
     eager = product["_order"] == 1
 
-    specs = ['<span>{} кг</span>'.format(product["capacity"])]
-    if product.get("lift"):
-        specs.append("<span>{}</span>".format(e(product["lift"])))
+    # Два ключевых параметра — чипами наверху: по ним технику ищут в первую
+    # очередь. Остальное — списком ниже, чтобы карточка не превращалась
+    # в облако из десятка одинаковых плашек.
+    chips = ['<span>{} кг</span>'.format(product["capacity"])]
+    if product.get("lift_mm"):
+        chips.append("<span>{}</span>".format(e(format_lift(product["lift_mm"]))))
 
+    rows = []
+    data_attrs = []
+    for spec in SPECS:
+        value = product.get(spec["key"])
+        if value is None:
+            continue
+        rows.append(
+            "<div><dt>{}</dt><dd>{}</dd></div>".format(
+                e(spec["label"]), e(spec_value_label(spec, value)))
+        )
+        if spec.get("filter"):
+            data_attrs.append(' data-spec-{}="{}"'.format(e(spec["key"]), e(str(value))))
+
+    spec_list = '<dl class="product-spec-list">{}</dl>'.format("".join(rows)) if rows else ""
     desc = '<p class="product-desc">{}</p>'.format(e(product["desc"])) if product.get("desc") else ""
 
     return (
-        '            <div class="product-card" data-capacity="{cap}" '
-        'data-price="{budget}" data-order="{order}">\n'
+        '            <div class="product-card" data-capacity="{cap}" data-lift="{lift}" '
+        'data-price="{budget}" data-order="{order}"{attrs}>\n'
         '              <div class="product-img">{badge}{img}</div>\n'
         '              <div class="product-body">\n'
         '                <h3>{name}</h3>\n'
         '                {desc}\n'
-        '                <div class="product-specs">{specs}</div>\n'
+        '                <div class="product-specs">{chips}</div>\n'
+        '                {spec_list}\n'
         '                <div class="product-price">Цена по запросу</div>\n'
         '                <div class="product-actions">\n'
         '                  <button type="button" class="btn btn-primary" data-buy="select">Подобрать</button>\n'
@@ -423,37 +441,123 @@ def render_product(product):
         '            </div>'
     ).format(
         cap=product["capacity"],
+        lift=product.get("lift_mm", 0),
         budget=product["budget"],
         order=product["_order"],
+        attrs="".join(data_attrs),
         badge=badge,
         img=render_photo(product, eager),
         name=e(product["name"]),
         desc=desc,
-        specs="".join(specs),
+        chips="".join(chips),
+        spec_list=spec_list,
     )
 
 
-def render_filters():
-    ranges = "\n          ".join(
-        '<label class="filter-opt"><input type="checkbox" data-filter-group="capacity" '
-        'value="{}"> {}</label>'.format(e(value), e(label))
-        for value, label in CAPACITY_RANGES
-    )
-    return (
-        '        <aside class="filters" id="catalogFilters">\n'
-        '          <h2>Бюджет, ₽</h2>\n'
-        '          <div class="filter-price">\n'
+
+# ---- Характеристики позиций -------------------------------------------------
+# Единственный источник правды — SPECS в data/catalog.py. Здесь только вывод.
+
+SPEC_BY_KEY = {sp["key"]: sp for sp in SPECS}
+
+
+def spec_value_label(spec, value):
+    """Подпись значения: для enum — из справочника, для числа — само число."""
+    if spec["type"] == "num":
+        return "{}{}".format(value, spec.get("unit", ""))
+    if spec.get("values"):
+        for val, label in spec["values"]:
+            if val == value:
+                return label
+        # Значение, которого нет в справочнике, — опечатка в данных, а не
+        # повод молча отрисовать сырой код на странице.
+        raise AssertionError(
+            "неизвестное значение {!r} у характеристики {!r}".format(value, spec["key"]))
+    return str(value)
+
+
+def format_lift(mm):
+    """3000 -> «3,0 м». Хранится в мм, чтобы по высоте можно было фильтровать."""
+    return "{:.1f} м".format(mm / 1000).replace(".", ",")
+
+
+def collect_filter_options(products):
+    """Значения характеристик, которые реально есть у этих позиций.
+
+    Фильтр с одним значением не возвращается: выбирать не из чего, а место
+    в сайдбаре он занимает.
+    """
+    out = []
+    for spec in SPECS:
+        if not spec.get("filter"):
+            continue
+        present = [p.get(spec["key"]) for p in products if p.get(spec["key"]) is not None]
+        if len(set(present)) < 2:
+            continue
+        if spec.get("values"):
+            ordered = [(v, lab) for v, lab in spec["values"] if v in present]
+        else:
+            ordered = [(v, v) for v in sorted(set(present))]
+        counts = {v: present.count(v) for v, _ in ordered}
+        out.append((spec, ordered, counts))
+    return out
+
+
+def render_filters(products):
+    """Сайдбар фильтров. Состав зависит от того, что есть в этой категории."""
+    def checkbox(group, attr, value, label, count):
+        return (
+            '<label class="filter-opt"><input type="checkbox" data-filter-group="{group}" '
+            'data-attr="{attr}" value="{value}"> {label}<span class="count">{count}</span></label>'
+        ).format(group=e(group), attr=e(attr), value=e(value), label=e(label), count=count)
+
+    def block(title, options):
+        return "          <h2>{}</h2>\n          {}\n\n".format(
+            e(title), "\n          ".join(options))
+
+    def range_options(ranges, attr, values):
+        """Диапазон показываем, только если в него что-то попадает."""
+        out = []
+        for value, label in ranges:
+            lo, _, hi = value.partition("-")
+            lo_n = int(lo or 0)
+            hi_n = int(hi) if hi else None
+            count = sum(1 for v in values if v >= lo_n and (hi_n is None or v <= hi_n))
+            if count:
+                out.append(checkbox("range", attr, value, label, count))
+        return out
+
+    parts = [
+        '        <aside class="filters" id="catalogFilters">\n',
+        '          <h2>Бюджет, ₽</h2>\n',
+        '          <div class="filter-price">\n',
         '            <input type="number" data-filter-group="price-min" placeholder="от" min="0" '
-        'aria-label="Бюджет от">\n'
-        '            <span>—</span>\n'
+        'aria-label="Бюджет от">\n',
+        '            <span>—</span>\n',
         '            <input type="number" data-filter-group="price-max" placeholder="до" min="0" '
-        'aria-label="Бюджет до">\n'
-        '          </div>\n\n'
-        '          <h2>Грузоподъёмность</h2>\n'
-        '          {ranges}\n\n'
-        '          <button type="button" class="filters-reset">Сбросить фильтры</button>\n'
-        '        </aside>'
-    ).format(ranges=ranges)
+        'aria-label="Бюджет до">\n',
+        '          </div>\n\n',
+    ]
+
+    caps = [p["capacity"] for p in products if p.get("capacity")]
+    cap_opts = range_options(CAPACITY_RANGES, "capacity", caps)
+    if len(cap_opts) > 1:
+        parts.append(block("Грузоподъёмность", cap_opts))
+
+    lifts = [p["lift_mm"] for p in products if p.get("lift_mm")]
+    lift_opts = range_options(LIFT_RANGES, "lift", lifts)
+    if len(lift_opts) > 1:
+        parts.append(block("Высота подъёма", lift_opts))
+
+    for spec, options, counts in collect_filter_options(products):
+        parts.append(block(spec["label"], [
+            checkbox("spec", spec["key"], value, label, counts[value])
+            for value, label in options
+        ]))
+
+    parts.append('          <button type="button" class="filters-reset">Сбросить фильтры</button>\n')
+    parts.append('        </aside>')
+    return "".join(parts)
 
 
 def render_catalog_body(products, heading):
@@ -485,7 +589,7 @@ def render_catalog_body(products, heading):
       '          </div>\n'
       '        </div>\n'
       '      </div>'
-    ).format(filters=render_filters(), cards=cards, count=count, heading=e(heading))
+    ).format(filters=render_filters(products), cards=cards, count=count, heading=e(heading))
 
 
 def render_blocks(blocks, root):

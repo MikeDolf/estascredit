@@ -184,58 +184,92 @@ document.addEventListener('DOMContentLoaded', () => {
   if (productGrid && filtersPanel) {
     const cards = [...productGrid.querySelectorAll('.product-card')];
     const catBoxes = [...filtersPanel.querySelectorAll('[data-filter-group="cat"]')];
-    const capBoxes = [...filtersPanel.querySelectorAll('[data-filter-group="capacity"]')];
+    const rangeBoxes = [...filtersPanel.querySelectorAll('[data-filter-group="range"]')];
+    const specBoxes = [...filtersPanel.querySelectorAll('[data-filter-group="spec"]')];
     const stockBox = filtersPanel.querySelector('[data-filter-group="instock"]');
     const priceMin = filtersPanel.querySelector('[data-filter-group="price-min"]');
     const priceMax = filtersPanel.querySelector('[data-filter-group="price-max"]');
     const resetBtn = filtersPanel.querySelector('.filters-reset');
     const countEl = document.querySelector('.sort-bar .count');
     const catIconBtns = [...document.querySelectorAll('.cat-icon-btn')];
+    const allBoxes = [...catBoxes, ...rangeBoxes, ...specBoxes, stockBox].filter(Boolean);
 
-    const capMatches = (cardCap, ranges) => {
-      // ranges like "0-1500" or "3000-" (open-ended)
-      return ranges.some(r => {
-        const [lo, hi] = r.split('-');
-        const loN = Number(lo) || 0;
-        const hiN = hi ? Number(hi) : Infinity;
-        return cardCap >= loN && cardCap <= hiN;
+    // Галочки одной характеристики — это ИЛИ («трёх- или четырёхопорный»),
+    // а разные характеристики — И («трёхопорный И литиевый»). Поэтому
+    // сначала группируем по data-attr, потом проверяем каждую группу.
+    const groupBy = (boxes) => {
+      const map = new Map();
+      boxes.filter(b => b.checked).forEach(b => {
+        const attr = b.dataset.attr;
+        if (!map.has(attr)) map.set(attr, []);
+        map.get(attr).push(b.value);
       });
+      return map;
     };
+
+    // Диапазон вида "1500-3000" или "3000-" (без верхней границы).
+    const inRange = (num, ranges) => ranges.some(r => {
+      const [lo, hi] = r.split('-');
+      return num >= (Number(lo) || 0) && num <= (hi ? Number(hi) : Infinity);
+    });
 
     const applyFilters = () => {
       const activeCats = catBoxes.filter(b => b.checked).map(b => b.value);
-      const activeCaps = capBoxes.filter(b => b.checked).map(b => b.value);
+      const activeRanges = groupBy(rangeBoxes);
+      const activeSpecs = groupBy(specBoxes);
       const stockOnly = stockBox ? stockBox.checked : false;
       const min = priceMin && priceMin.value ? Number(priceMin.value) : 0;
       const max = priceMax && priceMax.value ? Number(priceMax.value) : Infinity;
 
       let visible = 0;
       cards.forEach(card => {
-        const cat = card.dataset.cat || '';
-        const cap = Number(card.dataset.capacity || 0);
         const price = Number(card.dataset.price || 0);
-        const inStock = card.dataset.instock === '1';
-
         let ok = true;
-        if (activeCats.length && !activeCats.includes(cat)) ok = false;
-        if (activeCaps.length && !capMatches(cap, activeCaps)) ok = false;
-        if (stockOnly && !inStock) ok = false;
+
+        if (activeCats.length && !activeCats.includes(card.dataset.cat || '')) ok = false;
+        if (stockOnly && card.dataset.instock !== '1') ok = false;
         if (price < min || price > max) ok = false;
+
+        activeRanges.forEach((values, attr) => {
+          if (!inRange(Number(card.dataset[attr] || 0), values)) ok = false;
+        });
+
+        // Позиция без этой характеристики не проходит фильтр по ней: у б/у
+        // техники без указанного года «Год выпуска» — это неизвестность,
+        // а не совпадение с любым выбранным значением.
+        activeSpecs.forEach((values, attr) => {
+          const own = card.dataset['spec' + attr.charAt(0).toUpperCase() + attr.slice(1)];
+          if (!own || !values.includes(own)) ok = false;
+        });
 
         card.classList.toggle('is-hidden', !ok);
         if (ok) visible++;
       });
 
       if (countEl) countEl.textContent = `Показано ${visible} из ${cards.length}`;
+      document.querySelectorAll('.catalog-pagination .count').forEach(el => {
+        el.textContent = `Показано ${visible} из ${cards.length}`;
+      });
+
+      let empty = productGrid.querySelector('.product-empty');
+      if (!visible) {
+        if (!empty) {
+          empty = document.createElement('p');
+          empty.className = 'product-empty';
+          empty.textContent = 'Под такие параметры в примерах ничего нет — опишите задачу, подберём под неё.';
+          productGrid.appendChild(empty);
+        }
+        empty.hidden = false;
+      } else if (empty) {
+        empty.hidden = true;
+      }
 
       catIconBtns.forEach(btn => btn.classList.toggle('active', activeCats.includes(btn.dataset.cat)));
     };
 
-    [...catBoxes, ...capBoxes, stockBox].filter(Boolean).forEach(el => {
-      el.addEventListener('change', applyFilters);
-    });
+    allBoxes.forEach(el => el.addEventListener('change', applyFilters));
     [priceMin, priceMax].filter(Boolean).forEach(el => {
-      el.addEventListener('change', applyFilters);
+      el.addEventListener('input', applyFilters);
     });
 
     // Icon strip is a shortcut into the matching sidebar checkbox, not a
@@ -253,8 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (resetBtn) {
       resetBtn.addEventListener('click', () => {
-        [...catBoxes, ...capBoxes].forEach(b => { b.checked = false; });
-        if (stockBox) stockBox.checked = false;
+        allBoxes.forEach(b => { b.checked = false; });
         if (priceMin) priceMin.value = '';
         if (priceMax) priceMax.value = '';
         applyFilters();
