@@ -39,6 +39,14 @@ from data import cities as cities_data
 ROOT = Path(__file__).resolve().parent.parent
 TPL = Path(__file__).resolve().parent / "templates"
 
+# Полный список брендов по всему каталогу, а не только по одной категории:
+# фильтр «Бренд» показывает его целиком в каждом разделе, чтобы человек
+# видел весь ассортимент, даже если конкретно в этом разделе примера под
+# бренд ещё нет (см. collect_filter_options).
+ALL_BRANDS = sorted({
+    p.get("brand") for c in CATEGORIES for p in c["products"] if p.get("brand")
+})
+
 # Версия статики в query-строке: меняйте, когда правите css/js, иначе у
 # посетителей останется закешированная старая версия.
 VER = "26"
@@ -502,23 +510,35 @@ def format_lift(mm):
     return "{:.1f} м".format(mm / 1000).replace(".", ",")
 
 
-def collect_filter_options(products, specs):
-    """Значения характеристик, которые реально есть у этих позиций.
+def collect_filter_options(products, specs, all_brands):
+    """Все значения характеристики, а не только те, что есть у этих позиций.
 
-    Фильтр с одним значением не возвращается: выбирать не из чего, а место
-    в сайдбаре он занимает.
+    Раньше фильтр показывал лишь варианты, под которые в разделе уже есть
+    техника — так пропадали, например, «Со свободным ходом» у мачты или
+    бренды, которых нет именно в этой категории. Теперь показываем весь
+    справочник значений (как тоннажные чипсы: непредставленный вариант не
+    прячется, а гасится — кликнуть по нему можно, выдача будет пустой, а
+    под ней форма заявки).
+
+    Характеристику, которая для этой категории вообще не заполняется ни у
+    одной позиции (например, «Аккумулятор» у дизельных), не показываем —
+    это не «вариант без примера», а поле, которого здесь в принципе не
+    бывает. Фильтр с одним значением тоже не возвращается: выбирать не
+    из чего, а место в сайдбаре он занимает.
     """
     out = []
     for spec in specs:
         if not spec.get("filter"):
             continue
         present = [p.get(spec["key"]) for p in products if p.get(spec["key"]) is not None]
-        if len(set(present)) < 2:
+        if not present:
             continue
         if spec.get("values"):
-            ordered = [(v, lab) for v, lab in spec["values"] if v in present]
+            ordered = list(spec["values"])
         else:
-            ordered = [(v, v) for v in sorted(set(present))]
+            ordered = [(v, v) for v in all_brands]
+        if len(ordered) < 2:
+            continue
         counts = {v: present.count(v) for v, _ in ordered}
         out.append((spec, ordered, counts))
     return out
@@ -597,7 +617,7 @@ def render_chip_filters(products, specs, tonnage):
             lift_chips.append(chip("range", "lift", value, label, count))
         rows.append(row("По высоте подъёма", lift_chips))
 
-    for spec, options, counts in collect_filter_options(products, specs):
+    for spec, options, counts in collect_filter_options(products, specs, ALL_BRANDS):
         rows.append(row(spec["label"], [
             chip("spec", spec["key"], value, label, counts[value])
             for value, label in options
