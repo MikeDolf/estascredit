@@ -26,7 +26,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/style.css?v=12">
+<link rel="stylesheet" href="../../assets/css/style.css?v=15">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"CollectionPage","@id":"https://estascredit.ru/catalog/gazoballonnye/","url":"https://estascredit.ru/catalog/gazoballonnye/","name":"Газобаллонные вилочные погрузчики — подбор моделей","description":"Газобаллонные вилочные погрузчики для помещения и улицы: грузоподъёмность, высота подъёма, характеристики. Подберём модель под ваши условия работы склада.","isPartOf":{"@id":"https://estascredit.ru/#website"},"inLanguage":"ru-RU","breadcrumb":{"@id":"https://estascredit.ru/catalog/gazoballonnye/#breadcrumb"}},{"@type":"WebSite","@id":"https://estascredit.ru/#website","url":"https://estascredit.ru/","name":"УралФорклифт","publisher":{"@id":"https://estascredit.ru/#organization"},"inLanguage":"ru-RU"},{"@type":"ProfessionalService","@id":"https://estascredit.ru/#organization","name":"УралФорклифт","url":"https://estascredit.ru/","serviceType":"Подбор вилочных погрузчиков","areaServed":{"@type":"AdministrativeArea","name":"Свердловская область"},"founder":{"@type":"Person","name":"Копырин Михаил Евгеньевич"},"openingHours":"Mo-Su 09:00-20:00","geo":{"@type":"GeoCoordinates","latitude":"56.880553","longitude":"60.631404"},"telephone":"+7 950 646-09-53","email":"mezdudelom73@gmail.com","address":{"@type":"PostalAddress","streetAddress":"ул. Фронтовых Бригад, д. 18","addressLocality":"Екатеринбург","postalCode":"620017","addressRegion":"Свердловская область","addressCountry":"RU"}},{"@type":"Service","@id":"https://estascredit.ru/catalog/gazoballonnye/#service","name":"Подбор: газобаллонные погрузчики","serviceType":"Подбор вилочных погрузчиков","provider":{"@id":"https://estascredit.ru/#organization"},"areaServed":{"@type":"AdministrativeArea","name":"Свердловская область"},"isRelatedTo":{"@id":"https://estascredit.ru/#website"}},{"@type":"BreadcrumbList","@id":"https://estascredit.ru/catalog/gazoballonnye/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Главная","item":"https://estascredit.ru/"},{"@type":"ListItem","position":2,"name":"Каталог","item":"https://estascredit.ru/#catalog"},{"@type":"ListItem","position":3,"name":"Газобаллонные погрузчики"}]}]}</script>
 </head>
 <body data-lead-endpoint="">
@@ -77,65 +77,70 @@
     <div class="wrap">
       <div class="catalog-layout">
 
-        <aside class="filters" id="catalogFilters">
-          <h2>Бюджет, ₽</h2>
-          <div class="filter-price">
-            <input type="number" data-filter-group="price-min" placeholder="от" min="0" aria-label="Бюджет от">
-            <span>—</span>
-            <input type="number" data-filter-group="price-max" placeholder="до" min="0" aria-label="Бюджет до">
+        <nav class="type-tiles" aria-label="Типы погрузчиков">
+            <a class="type-tile" href="../../catalog/elektricheskie/"><img src="../../assets/img/vilochnyy-pogruzchik-trekhopornyy-800.webp" alt="" width="80" height="1063" loading="lazy" decoding="async"><span>Электропогрузчики</span></a>
+            <a class="type-tile" href="../../catalog/dizelnye/"><img src="../../assets/img/vilochnyy-pogruzchik-sinii-800.webp" alt="" width="80" height="800" loading="lazy" decoding="async"><span>Дизельные погрузчики</span></a>
+            <a class="type-tile active" href="../../catalog/gazoballonnye/"><img src="../../assets/img/vilochnyy-pogruzchik-krasnyy-800.webp" alt="" width="80" height="640" loading="lazy" decoding="async"><span>Газобаллонные погрузчики</span></a>
+        </nav>
+
+        <h2 class="catalog-h2">Газобаллонные погрузчики: модели и характеристики</h2>
+
+        <button type="button" class="filters-toggle" aria-expanded="false" aria-controls="catalogFilters">Фильтры</button>
+
+        <div class="chip-filters" id="catalogFilters">
+          <div class="chip-row">
+            <span class="chip-row-label">По грузоподъёмности</span>
+            <div class="chip-set"><label class="chip is-empty"><input type="checkbox" data-filter-group="capacity" data-attr="capacity" value="1000">1 т</label><label class="chip is-empty"><input type="checkbox" data-filter-group="capacity" data-attr="capacity" value="1500">1,5 т</label><label class="chip is-empty"><input type="checkbox" data-filter-group="capacity" data-attr="capacity" value="1800">1,8 т</label><label class="chip"><input type="checkbox" data-filter-group="capacity" data-attr="capacity" value="2000">2 т<span class="chip-count">1</span></label><label class="chip is-empty"><input type="checkbox" data-filter-group="capacity" data-attr="capacity" value="2500">2,5 т</label><label class="chip"><input type="checkbox" data-filter-group="capacity" data-attr="capacity" value="3000">3 т<span class="chip-count">1</span></label><label class="chip is-empty"><input type="checkbox" data-filter-group="capacity" data-attr="capacity" value="3500">3,5 т</label><label class="chip is-empty"><input type="checkbox" data-filter-group="capacity" data-attr="capacity" value="5000">5 т</label><label class="chip is-empty"><input type="checkbox" data-filter-group="capacity" data-attr="capacity" value="7000">7 т</label></div>
           </div>
-
-          <h2>Грузоподъёмность</h2>
-          <label class="filter-opt"><input type="checkbox" data-filter-group="range" data-attr="capacity" value="0-1500"> до 1,5 т<span class="count">1</span></label>
-          <label class="filter-opt"><input type="checkbox" data-filter-group="range" data-attr="capacity" value="1500-3000"> 1,5–3 т<span class="count">2</span></label>
-          <label class="filter-opt"><input type="checkbox" data-filter-group="range" data-attr="capacity" value="3000-"> от 3 т<span class="count">1</span></label>
-
-          <h2>Высота подъёма</h2>
-          <label class="filter-opt"><input type="checkbox" data-filter-group="range" data-attr="lift" value="0-3300"> до 3,3 м<span class="count">2</span></label>
-          <label class="filter-opt"><input type="checkbox" data-filter-group="range" data-attr="lift" value="3300-4500"> 3,3–4,5 м<span class="count">1</span></label>
-
-          <h2>Состояние</h2>
-          <label class="filter-opt"><input type="checkbox" data-filter-group="spec" data-attr="condition" value="new"> Новый<span class="count">2</span></label>
-          <label class="filter-opt"><input type="checkbox" data-filter-group="spec" data-attr="condition" value="used"> Б/у<span class="count">1</span></label>
-
-          <h2>Бренд</h2>
-          <label class="filter-opt"><input type="checkbox" data-filter-group="spec" data-attr="brand" value="Hangcha"> Hangcha<span class="count">1</span></label>
-          <label class="filter-opt"><input type="checkbox" data-filter-group="spec" data-attr="brand" value="Heli"> Heli<span class="count">1</span></label>
-          <label class="filter-opt"><input type="checkbox" data-filter-group="spec" data-attr="brand" value="Nissan"> Nissan<span class="count">1</span></label>
-
-          <h2>Мачта</h2>
-          <label class="filter-opt"><input type="checkbox" data-filter-group="spec" data-attr="mast" value="two"> Двухсекционная<span class="count">2</span></label>
-          <label class="filter-opt"><input type="checkbox" data-filter-group="spec" data-attr="mast" value="three"> Трёхсекционная<span class="count">1</span></label>
-
-          <h2>Колёсная схема</h2>
-          <label class="filter-opt"><input type="checkbox" data-filter-group="spec" data-attr="wheels" value="three"> Трёхопорный<span class="count">1</span></label>
-          <label class="filter-opt"><input type="checkbox" data-filter-group="spec" data-attr="wheels" value="four"> Четырёхопорный<span class="count">2</span></label>
-
-          <h2>Боковое смещение</h2>
-          <label class="filter-opt"><input type="checkbox" data-filter-group="spec" data-attr="sideshift" value="yes"> Есть<span class="count">1</span></label>
-          <label class="filter-opt"><input type="checkbox" data-filter-group="spec" data-attr="sideshift" value="no"> Нет<span class="count">2</span></label>
-
-          <button type="button" class="filters-reset">Сбросить фильтры</button>
-        </aside>
-
-        <div>
-          <h2 class="catalog-h2">Газобаллонные погрузчики: модели и характеристики</h2>
-          <button type="button" class="filters-toggle" aria-expanded="false" aria-controls="catalogFilters">Фильтры</button>
-
-          <div class="sort-bar">
-            <span class="count">Показано 3 из 3</span>
-            <div class="sort-field">
-              <label for="catalogSort">Сортировка</label>
-              <select id="catalogSort" data-sort>
-                <option value="default">По умолчанию</option>
-                <option value="price-asc">Сначала дешевле</option>
-                <option value="price-desc">Сначала дороже</option>
-                <option value="capacity">По грузоподъёмности</option>
-              </select>
+          <div class="chip-row">
+            <span class="chip-row-label">По высоте подъёма</span>
+            <div class="chip-set"><label class="chip"><input type="checkbox" data-filter-group="range" data-attr="lift" value="0-3300">до 3,3 м<span class="chip-count">2</span></label><label class="chip"><input type="checkbox" data-filter-group="range" data-attr="lift" value="3300-4500">3,3–4,5 м<span class="chip-count">1</span></label><label class="chip is-empty"><input type="checkbox" data-filter-group="range" data-attr="lift" value="4500-">от 4,5 м</label></div>
+          </div>
+          <div class="chip-row">
+            <span class="chip-row-label">Состояние</span>
+            <div class="chip-set"><label class="chip"><input type="checkbox" data-filter-group="spec" data-attr="condition" value="new">Новый<span class="chip-count">2</span></label><label class="chip"><input type="checkbox" data-filter-group="spec" data-attr="condition" value="used">Б/у<span class="chip-count">1</span></label></div>
+          </div>
+          <div class="chip-row">
+            <span class="chip-row-label">Бренд</span>
+            <div class="chip-set"><label class="chip"><input type="checkbox" data-filter-group="spec" data-attr="brand" value="Hangcha">Hangcha<span class="chip-count">1</span></label><label class="chip"><input type="checkbox" data-filter-group="spec" data-attr="brand" value="Heli">Heli<span class="chip-count">1</span></label><label class="chip"><input type="checkbox" data-filter-group="spec" data-attr="brand" value="Nissan">Nissan<span class="chip-count">1</span></label></div>
+          </div>
+          <div class="chip-row">
+            <span class="chip-row-label">Мачта</span>
+            <div class="chip-set"><label class="chip"><input type="checkbox" data-filter-group="spec" data-attr="mast" value="two">Двухсекционная<span class="chip-count">2</span></label><label class="chip"><input type="checkbox" data-filter-group="spec" data-attr="mast" value="three">Трёхсекционная<span class="chip-count">1</span></label></div>
+          </div>
+          <div class="chip-row">
+            <span class="chip-row-label">Колёсная схема</span>
+            <div class="chip-set"><label class="chip"><input type="checkbox" data-filter-group="spec" data-attr="wheels" value="three">Трёхопорный<span class="chip-count">1</span></label><label class="chip"><input type="checkbox" data-filter-group="spec" data-attr="wheels" value="four">Четырёхопорный<span class="chip-count">2</span></label></div>
+          </div>
+          <div class="chip-row">
+            <span class="chip-row-label">Боковое смещение</span>
+            <div class="chip-set"><label class="chip"><input type="checkbox" data-filter-group="spec" data-attr="sideshift" value="yes">Есть<span class="chip-count">1</span></label><label class="chip"><input type="checkbox" data-filter-group="spec" data-attr="sideshift" value="no">Нет<span class="chip-count">2</span></label></div>
+          </div>
+          <div class="chip-row chip-row-budget">
+            <span class="chip-row-label">Бюджет, ₽</span>
+            <div class="filter-price">
+              <input type="number" data-filter-group="price-min" placeholder="от" min="0" aria-label="Бюджет от">
+              <span>—</span>
+              <input type="number" data-filter-group="price-max" placeholder="до" min="0" aria-label="Бюджет до">
             </div>
+            <button type="button" class="filters-reset">Сбросить</button>
           </div>
+        </div>
 
-          <div class="product-grid">
+        <div class="sort-bar">
+          <span class="count">Показано 3 из 3</span>
+          <div class="sort-field">
+            <label for="catalogSort">Сортировка</label>
+            <select id="catalogSort" data-sort>
+              <option value="default">По умолчанию</option>
+              <option value="price-asc">Сначала дешевле</option>
+              <option value="price-desc">Сначала дороже</option>
+              <option value="capacity">По грузоподъёмности</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="product-grid">
 
             <div class="product-card" data-capacity="2000" data-lift="3000" data-price="980000" data-order="1" data-spec-condition="new" data-spec-brand="Hangcha" data-spec-mast="two" data-spec-tires="solid" data-spec-wheels="four" data-spec-cabin="open" data-spec-sideshift="no">
               <div class="product-img"><span class="product-badge sample">Образец</span><img src="../../assets/img/vilochnyy-pogruzchik-zheltyy-800.webp" srcset="../../assets/img/vilochnyy-pogruzchik-zheltyy-800.webp 800w, ../../assets/img/vilochnyy-pogruzchik-zheltyy-1600.webp 1600w" sizes="(max-width: 620px) 100vw, (max-width: 1120px) 45vw, 30vw" width="800" height="632" alt="Жёлтый вилочный погрузчик, вид три четверти" loading="eager" decoding="async"></div>
@@ -179,15 +184,13 @@
               </div>
             </div>
 
-          </div>
+        </div>
 
-          <div class="catalog-pagination">
-            <span class="count">Показано 3 из 3</span>
-            <a href="#lead" class="btn btn-ghost btn-sm">Не нашли подходящее — опишите задачу →</a>
-          </div>
+        <div class="catalog-pagination">
+          <span class="count">Показано 3 из 3</span>
+          <a href="#lead" class="btn btn-ghost btn-sm">Не нашли подходящее — опишите задачу →</a>
         </div>
       </div>
-      <p class="cross-links">Другие типы двигателя: <a href="../../catalog/elektricheskie/">электропогрузчики</a> · <a href="../../catalog/dizelnye/">дизельные погрузчики</a></p>
     </div>
   </section>
 
@@ -287,6 +290,6 @@
   </div>
 </footer>
 
-<script src="../../assets/js/main.js?v=12"></script>
+<script src="../../assets/js/main.js?v=15"></script>
 </body>
 </html>

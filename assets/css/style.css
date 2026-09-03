@@ -265,8 +265,61 @@ section{padding:96px 0; position:relative;}
 .foot-geo a:hover{color:var(--orange);}
 
 /* ===== CATALOG: LAYOUT ===== */
-.catalog-layout{display:grid; grid-template-columns:260px minmax(0,1fr); gap:40px; align-items:start;}
+/* Каталог теперь в одну колонку: фильтры строками чипсов над сеткой, как в
+   прайсах поставщиков. Сайдбар на 260px забирал треть ширины ради восьми
+   галочек. */
+.catalog-layout{display:block;}
 .filters-toggle{display:none;}
+
+/* ===== CATALOG: TYPE TILES ===== */
+.type-tiles{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:28px;}
+.type-tile{
+  display:flex; align-items:center; gap:12px; padding:10px 14px 10px 10px;
+  border:1px solid var(--panel-line); background:var(--panel); color:var(--text);
+  font-family:'Oswald',sans-serif; font-size:13px; letter-spacing:0.02em;
+  transition:border-color .15s, color .15s;
+}
+.type-tile:hover{border-color:var(--orange); color:var(--orange);}
+.type-tile.active{border-color:var(--orange); background:var(--panel-alt);}
+.type-tile img{
+  width:56px; height:44px; object-fit:contain; background:#fff; flex-shrink:0;
+  border:1px solid var(--panel-line);
+}
+.type-tile span{min-width:0;}
+
+/* ===== CATALOG: CHIP FILTERS ===== */
+.chip-filters{
+  border:1px solid var(--panel-line); background:var(--panel);
+  padding:18px 20px; margin-bottom:24px; display:grid; gap:12px;
+}
+.chip-row{display:grid; grid-template-columns:170px minmax(0,1fr); gap:14px; align-items:baseline;}
+.chip-row-label{
+  font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:0.05em;
+  text-transform:uppercase; color:var(--text-faint);
+}
+.chip-set{display:flex; flex-wrap:wrap; gap:8px;}
+.chip{
+  display:inline-flex; align-items:center; gap:6px; cursor:pointer;
+  border:1px solid var(--panel-line); background:var(--bg); color:var(--text-dim);
+  padding:7px 12px; font-size:13px; line-height:1; white-space:nowrap;
+  transition:border-color .15s, color .15s, background .15s;
+}
+.chip:hover{border-color:var(--orange); color:var(--text);}
+/* Сам чекбокс не показываем, но и не убираем из потока: он остаётся
+   фокусируемым с клавиатуры, а :focus-visible подсвечивает всю плашку. */
+.chip input{position:absolute; opacity:0; width:0; height:0;}
+/* Состояние берём из самого чекбокса: JS для подсветки не нужен. Если
+   браузер не знает :has() — чипс просто не подсветится, фильтрация
+   останется рабочей. */
+.chip:has(input:checked){border-color:var(--orange); background:var(--orange); color:#fff;}
+.chip:focus-within{outline:2px solid var(--orange); outline-offset:2px;}
+.chip-count{font-size:11px; color:var(--text-faint);}
+.chip:has(input:checked) .chip-count{color:#fff;}
+/* Значение, под которое в разделе нет примеров: кликается, но видно, что
+   выдача будет пустой. */
+.chip.is-empty{opacity:0.45;}
+.chip-row-budget{align-items:center;}
+.chip-row-budget .filter-price{max-width:260px;}
 
 /* ===== CATALOG: FILTERS SIDEBAR ===== */
 .filters{
@@ -293,8 +346,8 @@ section{padding:96px 0; position:relative;}
 .filter-price span{color:var(--text-faint); font-size:12px; flex-shrink:0;}
 .filters .btn{width:100%; margin-top:16px;}
 .filters-reset{
-  display:block; width:100%; text-align:center; margin-top:10px;
-  font-size:12.5px; color:var(--text-faint); background:none; border:none; padding:6px;
+  font-size:12.5px; color:var(--text-faint); background:none; border:none;
+  padding:8px 12px; margin-left:12px; white-space:nowrap;
 }
 .filters-reset:hover{color:var(--orange);}
 
@@ -556,18 +609,18 @@ footer{padding:72px 0 28px;}
 
   /* Filters collapse behind a toggle button — a 260px sticky sidebar has no
      room next to a 2-column card grid at tablet widths. */
-  /* minmax(0,1fr), а не 1fr: у 1fr неявный min-width:auto, и колонка
-     не может стать уже своего содержимого — карточка с длинной строкой
-     характеристик выдавливала страницу вбок на 28px. */
-  .catalog-layout{grid-template-columns:minmax(0,1fr);}
+  .type-tiles{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .chip-row{grid-template-columns:minmax(0,1fr); gap:8px;}
+  .chip-row-budget{align-items:start;}
+  .filters-reset{margin-left:0;}
   .filters-toggle{
     display:flex; align-items:center; justify-content:center; gap:10px; width:100%;
     background:var(--panel); border:1px solid var(--panel-line); color:var(--text);
     padding:13px; font-family:'Oswald',sans-serif; font-size:13px; font-weight:600;
     letter-spacing:0.04em; text-transform:uppercase; margin-bottom:20px;
   }
-  .filters{display:none; position:static; margin-bottom:8px;}
-  .filters.open{display:block;}
+  .chip-filters{display:none;}
+  .chip-filters.open{display:grid;}
 }
 
 @media (max-width: 900px){

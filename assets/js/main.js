@@ -179,12 +179,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // .is-hidden — no re-render, so it works the same with 4 sample cards
   // now and 400 real ones later.
   const productGrid = document.querySelector('.product-grid');
-  const filtersPanel = document.querySelector('.filters');
+  const filtersPanel = document.querySelector('.chip-filters');
 
   if (productGrid && filtersPanel) {
     const cards = [...productGrid.querySelectorAll('.product-card')];
     const catBoxes = [...filtersPanel.querySelectorAll('[data-filter-group="cat"]')];
     const rangeBoxes = [...filtersPanel.querySelectorAll('[data-filter-group="range"]')];
+    const exactBoxes = [...filtersPanel.querySelectorAll('[data-filter-group="capacity"]')];
     const specBoxes = [...filtersPanel.querySelectorAll('[data-filter-group="spec"]')];
     const stockBox = filtersPanel.querySelector('[data-filter-group="instock"]');
     const priceMin = filtersPanel.querySelector('[data-filter-group="price-min"]');
@@ -192,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetBtn = filtersPanel.querySelector('.filters-reset');
     const countEl = document.querySelector('.sort-bar .count');
     const catIconBtns = [...document.querySelectorAll('.cat-icon-btn')];
-    const allBoxes = [...catBoxes, ...rangeBoxes, ...specBoxes, stockBox].filter(Boolean);
+    const allBoxes = [...catBoxes, ...rangeBoxes, ...exactBoxes, ...specBoxes, stockBox].filter(Boolean);
 
     // Галочки одной характеристики — это ИЛИ («трёх- или четырёхопорный»),
     // а разные характеристики — И («трёхопорный И литиевый»). Поэтому
@@ -216,6 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const applyFilters = () => {
       const activeCats = catBoxes.filter(b => b.checked).map(b => b.value);
       const activeRanges = groupBy(rangeBoxes);
+      const activeExact = groupBy(exactBoxes);
       const activeSpecs = groupBy(specBoxes);
       const stockOnly = stockBox ? stockBox.checked : false;
       const min = priceMin && priceMin.value ? Number(priceMin.value) : 0;
@@ -232,6 +234,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         activeRanges.forEach((values, attr) => {
           if (!inRange(Number(card.dataset[attr] || 0), values)) ok = false;
+        });
+
+        // Точное совпадение: тоннаж выбирают конкретный, а не «примерно».
+        activeExact.forEach((values, attr) => {
+          if (!values.includes(String(card.dataset[attr] || ''))) ok = false;
         });
 
         // Позиция без этой характеристики не проходит фильтр по ней: у б/у

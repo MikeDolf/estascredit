@@ -94,7 +94,11 @@ class Page(HTMLParser):
             self.description = a.get("content", "")
         elif tag == "meta" and (a.get("property") or a.get("name")):
             self.meta[a.get("property") or a.get("name")] = a.get("content", "")
-        elif tag == "img" and not a.get("alt"):
+        elif tag == "img" and a.get("alt") is None:
+            # alt="" — осознанное решение: картинка декоративная, и рядом уже
+            # есть текст, который её называет (плитка типа техники — картинка
+            # плюс подпись). Читать подпись дважды хуже, чем не читать
+            # картинку. Ошибка — это ОТСУТСТВУЮЩИЙ атрибут, а не пустой.
             self.imgs_no_alt += 1
         elif tag == "script":
             if a.get("type") == "application/ld+json":

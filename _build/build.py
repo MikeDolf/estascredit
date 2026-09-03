@@ -30,7 +30,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from data.site import SITE, NAV, FOOTER_COMPANY, FOOTER_LEGAL, FORBIDDEN_WORDING
-from data.catalog import CATEGORIES, CAPACITY_RANGES, LIFT_RANGES, LEAD_TYPES, SPECS
+from data.catalog import CATEGORIES, LIFT_RANGES, TONNAGE_CHIPS, LEAD_TYPES, SPECS
 from data.pages import TRUST_PAGES, LEGAL_PAGES
 from data import cities as cities_data
 
@@ -39,7 +39,7 @@ TPL = Path(__file__).resolve().parent / "templates"
 
 # Версия статики в query-строке: меняйте, когда правите css/js, иначе у
 # посетителей останется закешированная старая версия.
-VER = "12"
+VER = "15"
 
 FORKLIFT_SVG = (
     '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="{w}" '
@@ -503,93 +503,124 @@ def collect_filter_options(products):
     return out
 
 
-def render_filters(products):
-    """Сайдбар фильтров. Состав зависит от того, что есть в этой категории."""
-    def checkbox(group, attr, value, label, count):
+def render_type_tiles(active_slug):
+    """Плитки типов техники над каталогом — переход между разделами."""
+    tiles = []
+    for c in CATEGORIES:
+        cls = "type-tile active" if c["slug"] == active_slug else "type-tile"
+        img = ""
+        if c.get("photo"):
+            img = (
+                '<img src="@ROOT@assets/img/{photo}-800.webp" alt="" width="80" height="{h}" '
+                'loading="lazy" decoding="async">'
+            ).format(photo=e(c["photo"]), h=c.get("photo_height", 80))
+        tiles.append(
+            '            <a class="{cls}" href="@ROOT@catalog/{slug}/">{img}<span>{name}</span></a>'.format(
+                cls=cls, slug=e(c["slug"]), img=img, name=e(c["name"]))
+        )
+    return (
+        '        <nav class="type-tiles" aria-label="Типы погрузчиков">\n'
+        '{tiles}\n'
+        '        </nav>'
+    ).format(tiles="\n".join(tiles))
+
+
+def render_chip_filters(products):
+    """Фильтры строками чипсов над сеткой — как в прайсах поставщиков.
+
+    Чипс, под который в разделе нет ни одной позиции, не убирается, а
+    гасится: ряд грузоподъёмностей должен читаться как ряд, с дырками он
+    выглядит сломанным. Кликнуть по такому можно — выдача будет пустой,
+    а под ней форма: для сервиса подбора это заявка, а не тупик.
+    """
+    def chip(group, attr, value, label, count):
+        empty = "" if count else " is-empty"
+        note = '<span class="chip-count">{}</span>'.format(count) if count else ""
         return (
-            '<label class="filter-opt"><input type="checkbox" data-filter-group="{group}" '
-            'data-attr="{attr}" value="{value}"> {label}<span class="count">{count}</span></label>'
-        ).format(group=e(group), attr=e(attr), value=e(value), label=e(label), count=count)
+            '<label class="chip{empty}"><input type="checkbox" data-filter-group="{group}" '
+            'data-attr="{attr}" value="{value}">{label}{note}</label>'
+        ).format(empty=empty, group=e(group), attr=e(attr), value=e(str(value)),
+                 label=e(label), note=note)
 
-    def block(title, options):
-        return "          <h2>{}</h2>\n          {}\n\n".format(
-            e(title), "\n          ".join(options))
+    def row(title, chips):
+        return (
+            '          <div class="chip-row">\n'
+            '            <span class="chip-row-label">{title}</span>\n'
+            '            <div class="chip-set">{chips}</div>\n'
+            '          </div>\n'
+        ).format(title=e(title), chips="".join(chips))
 
-    def range_options(ranges, attr, values):
-        """Диапазон показываем, только если в него что-то попадает."""
-        out = []
-        for value, label in ranges:
-            lo, _, hi = value.partition("-")
-            lo_n = int(lo or 0)
-            hi_n = int(hi) if hi else None
-            count = sum(1 for v in values if v >= lo_n and (hi_n is None or v <= hi_n))
-            if count:
-                out.append(checkbox("range", attr, value, label, count))
-        return out
+    rows = []
 
-    parts = [
-        '        <aside class="filters" id="catalogFilters">\n',
-        '          <h2>Бюджет, ₽</h2>\n',
-        '          <div class="filter-price">\n',
-        '            <input type="number" data-filter-group="price-min" placeholder="от" min="0" '
-        'aria-label="Бюджет от">\n',
-        '            <span>—</span>\n',
-        '            <input type="number" data-filter-group="price-max" placeholder="до" min="0" '
-        'aria-label="Бюджет до">\n',
-        '          </div>\n\n',
-    ]
-
-    caps = [p["capacity"] for p in products if p.get("capacity")]
-    cap_opts = range_options(CAPACITY_RANGES, "capacity", caps)
-    if len(cap_opts) > 1:
-        parts.append(block("Грузоподъёмность", cap_opts))
+    caps = [p.get("capacity") for p in products]
+    rows.append(row("По грузоподъёмности", [
+        chip("capacity", "capacity", value, label, caps.count(value))
+        for value, label in TONNAGE_CHIPS
+    ]))
 
     lifts = [p["lift_mm"] for p in products if p.get("lift_mm")]
-    lift_opts = range_options(LIFT_RANGES, "lift", lifts)
-    if len(lift_opts) > 1:
-        parts.append(block("Высота подъёма", lift_opts))
+    lift_chips = []
+    for value, label in LIFT_RANGES:
+        lo, _, hi = value.partition("-")
+        lo_n, hi_n = int(lo or 0), (int(hi) if hi else None)
+        count = sum(1 for v in lifts if v >= lo_n and (hi_n is None or v <= hi_n))
+        lift_chips.append(chip("range", "lift", value, label, count))
+    rows.append(row("По высоте подъёма", lift_chips))
 
     for spec, options, counts in collect_filter_options(products):
-        parts.append(block(spec["label"], [
-            checkbox("spec", spec["key"], value, label, counts[value])
+        rows.append(row(spec["label"], [
+            chip("spec", spec["key"], value, label, counts[value])
             for value, label in options
         ]))
 
-    parts.append('          <button type="button" class="filters-reset">Сбросить фильтры</button>\n')
-    parts.append('        </aside>')
-    return "".join(parts)
+    return (
+        '        <div class="chip-filters" id="catalogFilters">\n'
+        '{rows}'
+        '          <div class="chip-row chip-row-budget">\n'
+        '            <span class="chip-row-label">Бюджет, ₽</span>\n'
+        '            <div class="filter-price">\n'
+        '              <input type="number" data-filter-group="price-min" placeholder="от" '
+        'min="0" aria-label="Бюджет от">\n'
+        '              <span>—</span>\n'
+        '              <input type="number" data-filter-group="price-max" placeholder="до" '
+        'min="0" aria-label="Бюджет до">\n'
+        '            </div>\n'
+        '            <button type="button" class="filters-reset">Сбросить</button>\n'
+        '          </div>\n'
+        '        </div>'
+    ).format(rows="".join(rows))
 
 
-def render_catalog_body(products, heading):
+def render_catalog_body(products, heading, active_slug):
     cards = "\n\n".join(render_product(p) for p in products)
     count = len(products)
     return (
       '      <div class="catalog-layout">\n\n'
-      '{filters}\n\n'
-      '        <div>\n'
-      '          <h2 class="catalog-h2">{heading}</h2>\n'
-      '          <button type="button" class="filters-toggle" aria-expanded="false" '
+      '{tiles}\n\n'
+      '        <h2 class="catalog-h2">{heading}</h2>\n\n'
+      '        <button type="button" class="filters-toggle" aria-expanded="false" '
       'aria-controls="catalogFilters">Фильтры</button>\n\n'
-      '          <div class="sort-bar">\n'
-      '            <span class="count">Показано {count} из {count}</span>\n'
-      '            <div class="sort-field">\n'
-      '              <label for="catalogSort">Сортировка</label>\n'
-      '              <select id="catalogSort" data-sort>\n'
-      '                <option value="default">По умолчанию</option>\n'
-      '                <option value="price-asc">Сначала дешевле</option>\n'
-      '                <option value="price-desc">Сначала дороже</option>\n'
-      '                <option value="capacity">По грузоподъёмности</option>\n'
-      '              </select>\n'
-      '            </div>\n'
-      '          </div>\n\n'
-      '          <div class="product-grid">\n\n{cards}\n\n          </div>\n\n'
-      '          <div class="catalog-pagination">\n'
-      '            <span class="count">Показано {count} из {count}</span>\n'
-      '            <a href="#lead" class="btn btn-ghost btn-sm">Не нашли подходящее — опишите задачу →</a>\n'
+      '{filters}\n\n'
+      '        <div class="sort-bar">\n'
+      '          <span class="count">Показано {count} из {count}</span>\n'
+      '          <div class="sort-field">\n'
+      '            <label for="catalogSort">Сортировка</label>\n'
+      '            <select id="catalogSort" data-sort>\n'
+      '              <option value="default">По умолчанию</option>\n'
+      '              <option value="price-asc">Сначала дешевле</option>\n'
+      '              <option value="price-desc">Сначала дороже</option>\n'
+      '              <option value="capacity">По грузоподъёмности</option>\n'
+      '            </select>\n'
       '          </div>\n'
+      '        </div>\n\n'
+      '        <div class="product-grid">\n\n{cards}\n\n        </div>\n\n'
+      '        <div class="catalog-pagination">\n'
+      '          <span class="count">Показано {count} из {count}</span>\n'
+      '          <a href="#lead" class="btn btn-ghost btn-sm">Не нашли подходящее — опишите задачу →</a>\n'
       '        </div>\n'
       '      </div>'
-    ).format(filters=render_filters(products), cards=cards, count=count, heading=e(heading))
+    ).format(tiles=render_type_tiles(active_slug), filters=render_chip_filters(products),
+             cards=cards, count=count, heading=e(heading))
 
 
 def render_blocks(blocks, root):
@@ -989,12 +1020,6 @@ def page_category(category):
         p["_order"] = i
         products.append(p)
 
-    others = [c for c in CATEGORIES if c["slug"] != category["slug"]]
-    cross = " · ".join(
-        '<a href="@ROOT@catalog/{}/">{}</a>'.format(e(c["slug"]), e(c["name"].lower()))
-        for c in others
-    )
-
     intro = '<p class="page-intro">{}</p>'.format(e(category["intro"])) if category["intro"] else ""
 
     body = (
@@ -1008,7 +1033,6 @@ def page_category(category):
         '  <section style="padding-top:32px;">\n'
         '    <div class="wrap">\n'
         '{catalog}\n'
-        '      <p class="cross-links">Другие типы двигателя: {cross}</p>\n'
         '    </div>\n'
         '  </section>\n\n'
         '{form}'
@@ -1020,8 +1044,8 @@ def page_category(category):
         ]),
         h1=e(category["h1"]),
         intro=intro,
-        catalog=render_catalog_body(products, "{}: модели и характеристики".format(category["name"])),
-        cross=cross,
+        catalog=render_catalog_body(products, "{}: модели и характеристики".format(category["name"]),
+                                    category["slug"]),
         form=render_lead_form(),
     )
 
