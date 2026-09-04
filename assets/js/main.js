@@ -93,6 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // а значение живёт в _build/data/site.py. Раньше оно было записано здесь
   // второй копией и могло разойтись с тем, что показывает страница.
   const LEAD_ENDPOINT = document.body.dataset.leadEndpoint || '';
+  const LEAD_KEY = document.body.dataset.leadKey || '';
 
   // Форм на коммерческой странице две — короткая в середине и полная внизу.
   // Обработчик ищет поля внутри своей формы, а не по глобальному id, иначе
@@ -157,15 +158,21 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const res = await fetch(LEAD_ENDPOINT, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
           body: JSON.stringify({
+            access_key: LEAD_KEY,               // публичный ключ Web3Forms
+            subject: 'Заявка с estascredit.ru',
+            from_name: 'УралФорклифт — заявка с сайта',
             name: val('name'), phone: val('phone'), type: val('type'),
             brand: val('brand'), comment: val('comment'),
             company: val('company'),             // honeypot, люди его не видят
             page: location.pathname,
           }),
         });
-        if (!res.ok) throw new Error(res.status);
+        // Web3Forms почти всегда отвечает 200 и решает успех полем success
+        // в теле — одного res.ok мало, неверный access_key тоже даёт 200.
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.success === false) throw new Error(data.message || String(res.status));
         showSuccess();
       } catch {
         showMessage('Не удалось отправить заявку.', true, true);

@@ -42,7 +42,7 @@ TPL = Path(__file__).resolve().parent / "templates"
 
 # Версия статики в query-строке: меняйте, когда правите css/js, иначе у
 # посетителей останется закешированная старая версия.
-VER = "26"
+VER = "27"
 
 FORKLIFT_SVG = (
     '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="{w}" '
@@ -290,7 +290,7 @@ def render_lead_form(selected_type=None):
         sel = " selected" if t == selected_type else ""
         options.append("<option{}>{}</option>".format(sel, e(t)))
 
-    live = bool(SITE.get("lead_endpoint"))
+    live = bool(SITE.get("lead_endpoint")) and bool(SITE.get("lead_access_key"))
 
     offline = ""
     if not live:
@@ -945,7 +945,8 @@ def render_page(page):
         "og_type": page.get("og_type", "website"),
         "site_name": e(SITE["name"]),
         "domain": e(SITE["domain"]),
-        "lead_endpoint": e(SITE.get("lead_endpoint", "")),
+        "lead_endpoint": e(SITE.get("lead_endpoint", "")) if SITE.get("lead_access_key") else "",
+        "lead_access_key": e(SITE.get("lead_access_key", "")),
         "robots": robots,
         "verification": verification,
         "jsonld": build_jsonld(page, canonical, trail),
