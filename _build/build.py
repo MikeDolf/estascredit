@@ -42,7 +42,7 @@ TPL = Path(__file__).resolve().parent / "templates"
 
 # Версия статики в query-строке: меняйте, когда правите css/js, иначе у
 # посетителей останется закешированная старая версия.
-VER = "30"
+VER = "31"
 
 FORKLIFT_SVG = (
     '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="{w}" '
@@ -1298,6 +1298,19 @@ def render_article_sources(sources):
     ).format(items)
 
 
+def render_article_cover(article):
+    """Широкая обложка над заголовком статьи — только если фото есть."""
+    if not article.get("cover"):
+        return ""
+    name = article["cover"]
+    return (
+        '      <div class="article-cover"><img src="@ROOT@assets/img/{name}-800.webp" '
+        'srcset="@ROOT@assets/img/{name}-800.webp 800w, @ROOT@assets/img/{name}-1600.webp 1600w" '
+        'sizes="(max-width: 760px) 100vw, 760px" '
+        'width="800" height="{h}" alt="{alt}" loading="eager" decoding="async"></div>\n'
+    ).format(name=e(name), h=article.get("cover_height", 450), alt=e(article.get("cover_alt", "")))
+
+
 def page_article(article):
     body_html = md_to_html(article["body_md"], LIVE_ARTICLE_SLUGS, root="@ROOT@")
     faq_html = render_article_faq(article["faq"])
@@ -1307,6 +1320,7 @@ def page_article(article):
         '  <section class="article-page">\n'
         '    <div class="wrap">\n'
         '      {crumbs}\n'
+        '{cover}'
         '      <div class="article-header">\n'
         '        <h1>{h1}</h1>\n'
         '        <div class="meta"><span>{author}</span><span>Опубликовано {published}</span></div>\n'
@@ -1328,6 +1342,7 @@ def page_article(article):
         crumbs=render_breadcrumbs("@ROOT@", [
             ("Главная", "index.html"), ("Статьи", "articles/index.html"), (article["h1"], None),
         ]),
+        cover=render_article_cover(article),
         h1=e(article["h1"]),
         author=e(article["author_name"]),
         published=format_date_ru(article["published"]),
@@ -1355,6 +1370,25 @@ def page_article(article):
     }
 
 
+def render_article_thumb(article):
+    """Обложка карточки статьи: фото, если есть, иначе нейтральная заглушка-SVG."""
+    if not article.get("cover"):
+        return (
+            '<div class="thumb"><svg viewBox="0 0 100 100" fill="none" stroke="currentColor" '
+            'stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            '<rect x="16" y="62" width="52" height="10" rx="5"/><circle cx="28" cy="78" r="8"/>'
+            '<circle cx="56" cy="78" r="8"/><path d="M24 62 L24 46 L52 46 L62 34 L76 34 L76 54 L62 62 Z"/>'
+            '<rect x="30" y="38" width="16" height="12"/></svg></div>'
+        )
+    name = article["cover"]
+    return (
+        '<div class="thumb"><img src="@ROOT@assets/img/{name}-800.webp" '
+        'srcset="@ROOT@assets/img/{name}-800.webp 800w, @ROOT@assets/img/{name}-1600.webp 1600w" '
+        'sizes="(max-width: 620px) 100vw, (max-width: 1120px) 45vw, 30vw" '
+        'width="800" height="{h}" alt="{alt}" loading="lazy" decoding="async"></div>'
+    ).format(name=e(name), h=article.get("cover_height", 450), alt=e(article.get("cover_alt", "")))
+
+
 def render_article_cards():
     if not ARTICLES:
         return ""
@@ -1363,11 +1397,7 @@ def render_article_cards():
     for a in ordered:
         cards.append((
             '        <a class="article-card" href="@ROOT@articles/{slug}/">\n'
-            '          <div class="thumb"><svg viewBox="0 0 100 100" fill="none" stroke="currentColor" '
-            'stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
-            '<rect x="16" y="62" width="52" height="10" rx="5"/><circle cx="28" cy="78" r="8"/>'
-            '<circle cx="56" cy="78" r="8"/><path d="M24 62 L24 46 L52 46 L62 34 L76 34 L76 54 L62 62 Z"/>'
-            '<rect x="30" y="38" width="16" height="12"/></svg></div>\n'
+            '          {thumb}\n'
             '          <div class="body">\n'
             '            <span class="date">{date}</span>\n'
             '            <h2>{h1}</h2>\n'
@@ -1375,7 +1405,7 @@ def render_article_cards():
             '            <span class="readmore">Читать →</span>\n'
             '          </div>\n'
             '        </a>\n'
-        ).format(slug=e(a["slug"]), date=format_date_ru(a["published"]),
+        ).format(slug=e(a["slug"]), thumb=render_article_thumb(a), date=format_date_ru(a["published"]),
                  h1=e(a["h1"]), desc=e(a["og_description"])))
     return "".join(cards)
 
