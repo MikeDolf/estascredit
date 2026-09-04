@@ -58,7 +58,7 @@ SITE = {
     "yandex_verification": "",
     "google_verification": "ztP0zlvfaFUUHGJSzRPzwpWFdSAOGgEQwcLUjfLiPlI",
     "bing_verification": "F3F372EF91051356765262FF858FA046",
-    "metrika_id": "",
+    "metrika_id": "112285489",
 }
 
 # Модель работы раскрыта на двух страницах — «О сервисе» и «Условия оказания
