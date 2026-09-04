@@ -42,7 +42,7 @@ TPL = Path(__file__).resolve().parent / "templates"
 
 # Версия статики в query-строке: меняйте, когда правите css/js, иначе у
 # посетителей останется закешированная старая версия.
-VER = "32"
+VER = "33"
 
 FORKLIFT_SVG = (
     '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="{w}" '
@@ -135,6 +135,7 @@ def render_header(root, slug, has_form):
     phone_block = ""
     tb_phone = ""
     nav_phone = ""
+    phone_icon = ""
     if SITE["phone"]:
         phone_block = (
             '<a class="phone-block" href="tel:{href}">'
@@ -146,6 +147,15 @@ def render_header(root, slug, has_form):
             href=e(SITE["phone_href"]), num=e(SITE["phone"]))
         nav_phone = '<a class="nav-cta-phone" href="tel:{href}">{num}</a>'.format(
             href=e(SITE["phone_href"]), num=e(SITE["phone"]))
+        phone_icon = (
+            '<a class="phone-icon-btn" href="tel:{href}" aria-label="Позвонить {num}">'
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+            'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 '
+            '19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11'
+            'L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>'
+            '</svg></a>'
+        ).format(href=e(SITE["phone_href"]), num=e(SITE["phone"]))
 
     tb_email = ""
     if SITE["email"]:
@@ -171,6 +181,7 @@ def render_header(root, slug, has_form):
         '    </nav>\n'
         '    <div class="nav-right">\n'
         '      {phone}\n'
+        '      {phone_icon}\n'
         '      <a href="{cta}" class="btn btn-primary">Оставить заявку</a>\n'
         '      <button class="burger" type="button" aria-label="Меню" aria-expanded="false" '
         'aria-controls="mainnav"><span></span></button>\n'
@@ -188,6 +199,7 @@ def render_header(root, slug, has_form):
         links="\n      ".join(links),
         nav_phone=nav_phone,
         phone=phone_block,
+        phone_icon=phone_icon,
         # На странице без формы вести на #lead нельзя — якоря там нет.
         cta="#lead" if has_form else e(root + "kontakty/"),
     )
