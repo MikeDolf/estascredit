@@ -946,6 +946,8 @@ def render_page(page):
         verification += '<meta name="yandex-verification" content="{}">\n'.format(e(SITE["yandex_verification"]))
     if SITE["google_verification"]:
         verification += '<meta name="google-site-verification" content="{}">\n'.format(e(SITE["google_verification"]))
+    if SITE["bing_verification"]:
+        verification += '<meta name="msvalidate.01" content="{}">\n'.format(e(SITE["bing_verification"]))
 
     robots = ""
     if page.get("noindex"):
