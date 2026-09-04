@@ -56,7 +56,7 @@ SITE = {
 
     # TODO: коды после регистрации в вебмастерах и Метрике.
     "yandex_verification": "",
-    "google_verification": "",
+    "google_verification": "ztP0zlvfaFUUHGJSzRPzwpWFdSAOGgEQwcLUjfLiPlI",
     "metrika_id": "",
 }
 
