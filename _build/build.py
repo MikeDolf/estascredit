@@ -42,7 +42,7 @@ TPL = Path(__file__).resolve().parent / "templates"
 
 # Версия статики в query-строке: меняйте, когда правите css/js, иначе у
 # посетителей останется закешированная старая версия.
-VER = "29"
+VER = "30"
 
 FORKLIFT_SVG = (
     '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="{w}" '

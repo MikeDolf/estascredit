@@ -100,7 +100,10 @@ header{
 .contact-max svg{width:16px; height:16px; flex-shrink:0;}
 .contact-max:hover{color:var(--orange);}
 .topbar .contact-max{font-size:13px;}
-.foot-col .contact-max{font-size:14px; color:var(--text-dim);}
+.foot-col .contact-max{
+  font-size:14px; color:var(--text-dim);
+  font-family:'Manrope',sans-serif; font-weight:400; letter-spacing:normal;
+}
 .foot-col .contact-max:hover{color:var(--orange);}
 .topbar .tb-right{display:flex; align-items:center; gap:24px;}
 .tb-phone{font-family:'Oswald',sans-serif; font-weight:600; font-size:13px; color:var(--text); letter-spacing:0.03em; transition:color .15s;}
