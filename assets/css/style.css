@@ -141,9 +141,9 @@ nav.mainnav .nav-cta{display:none;}
 nav.mainnav .nav-cta-phone{display:none;}
 .nav-right{display:flex; align-items:center; gap:22px;}
 .phone-block{text-align:right; display:block; line-height:1.25;}
-/* Кнопка-иконка звонка — запасной вариант для самых узких экранов,
-   включается только в медиа-запросе ≤430px ниже. */
-.phone-icon-btn{display:none;}
+/* Кнопки-иконки звонка и MAX — запасной вариант для самых узких экранов,
+   включаются только в медиа-запросе ≤430px ниже. */
+.phone-icon-btn, .max-icon-btn{display:none;}
 .phone-block .num{font-family:'Oswald',sans-serif; font-weight:600; font-size:16px; display:block;}
 .phone-block:hover .num{color:var(--orange);}
 .phone-block .hrs{font-size:11px; color:var(--text-faint); display:block;}
@@ -712,13 +712,23 @@ footer{padding:72px 0 28px;}
    номер остаётся виден в выпадающем меню (nav-cta-phone). */
 @media (max-width: 430px){
   .nav-right .phone-block{display:none;}
-  .phone-icon-btn{
-    display:flex; align-items:center; justify-content:center; flex-shrink:0;
-    width:40px; height:40px; border:1px solid var(--panel-line); color:var(--text);
+  .phone-icon-btn, .max-icon-btn, .burger{
+    width:38px; height:38px;
   }
-  .phone-icon-btn svg{width:18px; height:18px;}
-  .phone-icon-btn:active{border-color:var(--orange); color:var(--orange);}
-  .nav-right{gap:10px;}
+  .phone-icon-btn, .max-icon-btn{
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    border:1px solid var(--panel-line); color:var(--text);
+  }
+  .phone-icon-btn svg, .max-icon-btn svg{width:17px; height:17px;}
+  .phone-icon-btn:active, .max-icon-btn:active{border-color:var(--orange); color:var(--orange);}
+  .nav-right{gap:5px;}
+  .navrow{padding:14px;}
+  /* Три иконки плюс бургер рядом с логотипом — тесно. Тэглайн под именем
+     убираем здесь: название бренда важнее подписи под ним, а сама подпись
+     повторяется на первом экране страницы. */
+  .logo small{display:none;}
+  .logo .mark{width:32px; height:32px;}
+  .logo{font-size:16px;}
 }
 
 @media (prefers-reduced-motion: reduce){

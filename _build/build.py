@@ -42,7 +42,7 @@ TPL = Path(__file__).resolve().parent / "templates"
 
 # Версия статики в query-строке: меняйте, когда правите css/js, иначе у
 # посетителей останется закешированная старая версия.
-VER = "33"
+VER = "34"
 
 FORKLIFT_SVG = (
     '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="{w}" '
@@ -161,6 +161,11 @@ def render_header(root, slug, has_form):
     if SITE["email"]:
         tb_email = '<a class="tb-email" href="mailto:{0}">{0}</a>'.format(e(SITE["email"]))
 
+    max_icon = (
+        '<a class="max-icon-btn" href="{url}" target="_blank" rel="noopener" '
+        'aria-label="Написать в MAX">{svg}</a>'
+    ).format(url=e(SITE["max_url"]), svg=MAX_SVG)
+
     return (
         '<header>\n'
         '  <div class="topbar">\n'
@@ -182,6 +187,7 @@ def render_header(root, slug, has_form):
         '    <div class="nav-right">\n'
         '      {phone}\n'
         '      {phone_icon}\n'
+        '      {max_icon}\n'
         '      <a href="{cta}" class="btn btn-primary">Оставить заявку</a>\n'
         '      <button class="burger" type="button" aria-label="Меню" aria-expanded="false" '
         'aria-controls="mainnav"><span></span></button>\n'
@@ -200,6 +206,7 @@ def render_header(root, slug, has_form):
         nav_phone=nav_phone,
         phone=phone_block,
         phone_icon=phone_icon,
+        max_icon=max_icon,
         # На странице без формы вести на #lead нельзя — якоря там нет.
         cta="#lead" if has_form else e(root + "kontakty/"),
     )
