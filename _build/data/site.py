@@ -52,7 +52,7 @@ SITE = {
     # и раньше, интерфейс не притворяется рабочим. Оба значения уходят в
     # data-атрибуты, main.js читает оттуда и собирает JSON для API.
     "lead_endpoint": "https://api.web3forms.com/submit",
-    "lead_access_key": "",
+    "lead_access_key": "4c17cc27-0b22-40b7-bea5-47ff348ef6c8",
 
     # TODO: коды после регистрации в вебмастерах и Метрике.
     "yandex_verification": "",

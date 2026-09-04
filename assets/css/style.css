@@ -105,6 +105,8 @@ header{
 .topbar .tb-right{display:flex; align-items:center; gap:24px;}
 .tb-phone{font-family:'Oswald',sans-serif; font-weight:600; font-size:13px; color:var(--text); letter-spacing:0.03em; transition:color .15s;}
 .tb-phone:hover{color:var(--orange);}
+.tb-email{color:var(--text-faint); transition:color .15s;}
+.tb-email:hover{color:var(--orange);}
 /* Телефон в navrow — дубликат tb-phone для планшета/мобильного, где topbar
    скрыт (см. медиа-запрос ниже). На десктопе строка сверху уже его несёт. */
 .nav-right .phone-block{display:none;}

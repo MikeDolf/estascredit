@@ -42,7 +42,7 @@ TPL = Path(__file__).resolve().parent / "templates"
 
 # Версия статики в query-строке: меняйте, когда правите css/js, иначе у
 # посетителей останется закешированная старая версия.
-VER = "27"
+VER = "28"
 
 FORKLIFT_SVG = (
     '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="{w}" '
@@ -147,12 +147,17 @@ def render_header(root, slug, has_form):
         nav_phone = '<a class="nav-cta-phone" href="tel:{href}">{num}</a>'.format(
             href=e(SITE["phone_href"]), num=e(SITE["phone"]))
 
+    tb_email = ""
+    if SITE["email"]:
+        tb_email = '<a class="tb-email" href="mailto:{0}">{0}</a>'.format(e(SITE["email"]))
+
     return (
         '<header>\n'
         '  <div class="topbar">\n'
         '    <span>{left}</span>\n'
         '    <div class="tb-right">\n'
         '      {tb_phone}\n'
+        '      {tb_email}\n'
         '      <span>{hours}</span>\n'
         '      <span>{max}</span>\n'
         '    </div>\n'
@@ -176,6 +181,7 @@ def render_header(root, slug, has_form):
     ).format(
         left=e(topbar_left),
         tb_phone=tb_phone,
+        tb_email=tb_email,
         hours=e(hours),
         max=max_link(),
         logo=render_logo(root),
