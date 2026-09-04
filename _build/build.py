@@ -42,7 +42,7 @@ TPL = Path(__file__).resolve().parent / "templates"
 
 # Версия статики в query-строке: меняйте, когда правите css/js, иначе у
 # посетителей останется закешированная старая версия.
-VER = "28"
+VER = "29"
 
 FORKLIFT_SVG = (
     '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="{w}" '
@@ -413,7 +413,7 @@ def render_photo(product, eager=False):
              loading="eager" if eager else "lazy")
 
 
-def render_product(product, specs):
+def render_product(product, specs, cat_slug):
     """Карточка позиции в справочнике подбора.
 
     Здесь нет ни «в наличии», ни цены: наличие подтверждает поставщик под
@@ -451,7 +451,7 @@ def render_product(product, specs):
     desc = '<p class="product-desc">{}</p>'.format(e(product["desc"])) if product.get("desc") else ""
 
     return (
-        '            <div class="product-card" data-capacity="{cap}" data-lift="{lift}" '
+        '            <div class="product-card" data-cat="{cat}" data-capacity="{cap}" data-lift="{lift}" '
         'data-price="{budget}" data-order="{order}"{attrs}>\n'
         '              <div class="product-img">{badge}{img}</div>\n'
         '              <div class="product-body">\n'
@@ -466,6 +466,7 @@ def render_product(product, specs):
         '              </div>\n'
         '            </div>'
     ).format(
+        cat=e(cat_slug),
         cap=product.get("capacity", 0),
         lift=product.get("lift_mm", 0),
         budget=product["budget"],
@@ -641,7 +642,7 @@ def render_chip_filters(products, specs, tonnage):
 
 
 def render_catalog_body(products, heading, active_slug, specs, tonnage):
-    cards = "\n\n".join(render_product(p, specs) for p in products)
+    cards = "\n\n".join(render_product(p, specs, active_slug) for p in products)
     count = len(products)
     return (
       '      <div class="catalog-layout">\n\n'

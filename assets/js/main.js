@@ -349,7 +349,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const brandField = leadForm.querySelector('[data-field="brand"]');
         const commentField = leadForm.querySelector('[data-field="comment"]');
         const name = card.querySelector('h3')?.textContent.trim() || '';
-        const typeByCat = { elektro: 'Электропогрузчик', dizel: 'Дизельный погрузчик', gaz: 'Газобаллонный погрузчик' };
+        const typeByCat = {
+          elektricheskie: 'Электропогрузчик',
+          dizelnye: 'Дизельный погрузчик',
+          gazoballonnye: 'Газобаллонный погрузчик',
+          benzinovye: 'Бензиновый погрузчик',
+          mini: 'Мини-погрузчик',
+          vnedorozhnye: 'Внедорожный погрузчик',
+          'navesnoe-oborudovanie': 'Навесное оборудование',
+        };
         if (typeField && typeByCat[card.dataset.cat]) typeField.value = typeByCat[card.dataset.cat];
         if (brandField) brandField.value = name;
         if (commentField && !commentField.value) {
