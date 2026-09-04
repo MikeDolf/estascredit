@@ -42,7 +42,7 @@ TPL = Path(__file__).resolve().parent / "templates"
 
 # Версия статики в query-строке: меняйте, когда правите css/js, иначе у
 # посетителей останется закешированная старая версия.
-VER = "31"
+VER = "32"
 
 FORKLIFT_SVG = (
     '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="{w}" '
@@ -1384,7 +1384,7 @@ def render_article_thumb(article):
     return (
         '<div class="thumb"><img src="@ROOT@assets/img/{name}-800.webp" '
         'srcset="@ROOT@assets/img/{name}-800.webp 800w, @ROOT@assets/img/{name}-1600.webp 1600w" '
-        'sizes="(max-width: 620px) 100vw, (max-width: 1120px) 45vw, 30vw" '
+        'sizes="(max-width: 620px) 100vw, 45vw" '
         'width="800" height="{h}" alt="{alt}" loading="lazy" decoding="async"></div>'
     ).format(name=e(name), h=article.get("cover_height", 450), alt=e(article.get("cover_alt", "")))
 
@@ -1401,12 +1401,11 @@ def render_article_cards():
             '          <div class="body">\n'
             '            <span class="date">{date}</span>\n'
             '            <h2>{h1}</h2>\n'
-            '            <p>{desc}</p>\n'
             '            <span class="readmore">Читать →</span>\n'
             '          </div>\n'
             '        </a>\n'
         ).format(slug=e(a["slug"]), thumb=render_article_thumb(a), date=format_date_ru(a["published"]),
-                 h1=e(a["h1"]), desc=e(a["og_description"])))
+                 h1=e(a["h1"])))
     return "".join(cards)
 
 

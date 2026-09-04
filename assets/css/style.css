@@ -527,11 +527,14 @@ footer{padding:72px 0 28px;}
 .articles-hero{padding:64px 0 8px;}
 .articles-hero h1{font-size:clamp(30px,4vw,48px); margin:16px 0 14px;}
 .articles-hero p{color:var(--text-dim); max-width:560px; font-size:15.5px;}
-.articles-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin-top:48px;}
+.articles-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:28px; margin-top:48px;}
 .article-card{border:1px solid var(--panel-line); background:var(--panel); display:flex; flex-direction:column; transition:border-color .18s;}
 .article-card:hover{border-color:var(--orange);}
+/* Фото — почти в исходных пропорциях (2752×1536, ≈16:9): фиксированная
+   высота в 150px обрезала кадр настолько, что лого и часть подписи с
+   обложки уходили за край. aspect-ratio режет только по бокам, а не сверху. */
 .article-card .thumb{
-  height:150px; background:var(--panel-alt); border-bottom:1px solid var(--panel-line);
+  aspect-ratio:16/9; background:var(--panel-alt); border-bottom:1px solid var(--panel-line);
   display:flex; align-items:center; justify-content:center; color:var(--text-faint); position:relative;
   overflow:hidden;
 }
@@ -541,11 +544,12 @@ footer{padding:72px 0 28px;}
   position:absolute; top:12px; left:12px; background:var(--teal); color:#fff;
   font-family:'Oswald',sans-serif; font-size:10.5px; font-weight:700; letter-spacing:0.08em; padding:5px 10px;
 }
-.article-card .body{padding:22px 22px 24px; display:flex; flex-direction:column; gap:12px; flex-grow:1;}
+/* Текстовый блок нарочно короче фото: только дата, заголовок и ссылка —
+   без затравки под ним, чтобы карточка читалась как обложка, а не текст. */
+.article-card .body{padding:18px 20px 20px; display:flex; flex-direction:column; gap:8px;}
 .article-card .date{font-size:11.5px; letter-spacing:0.06em; color:var(--text-faint); text-transform:uppercase;}
 .article-card h2{font-size:17px; text-transform:none; letter-spacing:0; font-weight:600;}
-.article-card p{color:var(--text-dim); font-size:13.5px; flex-grow:1;}
-.article-card .readmore{font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:0.06em; text-transform:uppercase; color:var(--orange); margin-top:6px;}
+.article-card .readmore{font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:0.06em; text-transform:uppercase; color:var(--orange); margin-top:4px;}
 
 /* ===== ARTICLES: SINGLE POST ===== */
 .article-page{padding:56px 0 96px;}
