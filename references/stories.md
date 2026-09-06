@@ -82,5 +82,6 @@
 |---|---|
 | `/articles/vilochnyy-pogruzchik/` | Балканкар, который пережил свой гидроцилиндр |
 | `/articles/kak-vybrat-vilochnyy-pogruzchik/` | Перегруз на глаз |
+| `/articles/elektricheskiy-vilochnyy-pogruzchik/` | Батарея, которой не было в объявлении |
 
 Перед новым материалом свериться с таблицей и дописать в неё строку.
