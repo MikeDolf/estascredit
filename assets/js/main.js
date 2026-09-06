@@ -181,6 +181,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Категория карточки -> значение для поля «Тип техники» в форме заявки.
+  // Общая для кнопки «Подобрать» на карточке и для пустой выдачи фильтра.
+  const typeByCat = {
+    elektricheskie: 'Электропогрузчик',
+    dizelnye: 'Дизельный погрузчик',
+    gazoballonnye: 'Газобаллонный погрузчик',
+    benzinovye: 'Бензиновый погрузчик',
+    mini: 'Мини-погрузчик',
+    vnedorozhnye: 'Внедорожный погрузчик',
+    'navesnoe-oborudovanie': 'Навесное оборудование',
+  };
+
   // ---- Catalog filters -----------------------------------------------
   // Filters read data-* attributes off each .product-card and toggle
   // .is-hidden — no re-render, so it works the same with 4 sample cards
@@ -201,6 +213,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const countEl = document.querySelector('.sort-bar .count');
     const catIconBtns = [...document.querySelectorAll('.cat-icon-btn')];
     const allBoxes = [...catBoxes, ...rangeBoxes, ...exactBoxes, ...specBoxes, stockBox].filter(Boolean);
+
+    // Название чипа без счётчика: у отмеченных чипов textContent — это
+    // подпись, слипшаяся с числом позиций ("1,5 т1"), число нужно убрать.
+    const chipLabel = (box) => {
+      const label = box.closest('label');
+      if (!label) return box.value;
+      const clone = label.cloneNode(true);
+      clone.querySelector('.chip-count')?.remove();
+      clone.querySelector('input')?.remove();
+      return clone.textContent.trim();
+    };
 
     // Галочки одной характеристики — это ИЛИ («трёх- или четырёхопорный»),
     // а разные характеристики — И («трёхопорный И литиевый»). Поэтому
@@ -268,9 +291,28 @@ document.addEventListener('DOMContentLoaded', () => {
       let empty = productGrid.querySelector('.product-empty');
       if (!visible) {
         if (!empty) {
-          empty = document.createElement('p');
+          empty = document.createElement('div');
           empty.className = 'product-empty';
-          empty.textContent = 'Под такие параметры в примерах ничего нет — опишите задачу, подберём под неё.';
+          empty.innerHTML =
+            '<p>Под такие параметры карточки-примера нет — это не значит, что такой техники '
+            + 'не бывает: подбираем именно её под запрос у поставщиков.</p>'
+            + '<button type="button" class="btn btn-primary" data-empty-select>Подобрать</button>';
+          empty.querySelector('[data-empty-select]').addEventListener('click', () => {
+            const leadForm = document.getElementById('leadForm');
+            if (leadForm) {
+              const typeField = leadForm.querySelector('[data-field="type"]');
+              const commentField = leadForm.querySelector('[data-field="comment"]');
+              const pageCat = cards[0]?.dataset.cat || '';
+              if (typeField && typeByCat[pageCat]) typeField.value = typeByCat[pageCat];
+              const picked = allBoxes.filter(b => b.checked).map(chipLabel);
+              if (priceMin?.value) picked.push(`от ${priceMin.value} ₽`);
+              if (priceMax?.value) picked.push(`до ${priceMax.value} ₽`);
+              if (commentField && !commentField.value && picked.length) {
+                commentField.value = `Интересует: ${picked.join(', ')}`;
+              }
+            }
+            document.getElementById('lead')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
           productGrid.appendChild(empty);
         }
         empty.hidden = false;
@@ -349,15 +391,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const brandField = leadForm.querySelector('[data-field="brand"]');
         const commentField = leadForm.querySelector('[data-field="comment"]');
         const name = card.querySelector('h3')?.textContent.trim() || '';
-        const typeByCat = {
-          elektricheskie: 'Электропогрузчик',
-          dizelnye: 'Дизельный погрузчик',
-          gazoballonnye: 'Газобаллонный погрузчик',
-          benzinovye: 'Бензиновый погрузчик',
-          mini: 'Мини-погрузчик',
-          vnedorozhnye: 'Внедорожный погрузчик',
-          'navesnoe-oborudovanie': 'Навесное оборудование',
-        };
         if (typeField && typeByCat[card.dataset.cat]) typeField.value = typeByCat[card.dataset.cat];
         if (brandField) brandField.value = name;
         if (commentField && !commentField.value) {
