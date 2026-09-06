@@ -333,9 +333,10 @@ section{padding:96px 0; position:relative;}
 .chip:focus-within{outline:2px solid var(--orange); outline-offset:2px;}
 .chip-count{font-size:11px; color:var(--text-faint);}
 .chip:has(input:checked) .chip-count{color:#fff;}
-/* Значение, под которое в разделе нет примеров: кликается, но видно, что
-   выдача будет пустой. */
-.chip.is-empty{opacity:0.45;}
+/* Значение, под которое в разделе нет карточки-примера, выглядит и
+   работает как любое другое: мы подбираем технику под запрос, а не
+   торгуем со склада, так что тусклый вид читался бы как «этого нет»,
+   а это неправда. Счётчик рядом просто не появляется — молча. */
 .chip-row-budget{align-items:center;}
 .chip-row-budget .filter-price{max-width:260px;}
 

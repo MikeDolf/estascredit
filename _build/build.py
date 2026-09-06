@@ -42,7 +42,7 @@ TPL = Path(__file__).resolve().parent / "templates"
 
 # Версия статики в query-строке: меняйте, когда правите css/js, иначе у
 # посетителей останется закешированная старая версия.
-VER = "38"
+VER = "39"
 
 FORKLIFT_SVG = (
     '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="{w}" '
@@ -592,22 +592,23 @@ def render_type_tiles(active_slug):
 def render_chip_filters(products, specs, tonnage):
     """Фильтры строками чипсов над сеткой — как в прайсах поставщиков.
 
-    Чипс, под который в разделе нет ни одной позиции, не убирается, а
-    гасится: ряд грузоподъёмностей должен читаться как ряд, с дырками он
-    выглядит сломанным. Кликнуть по такому можно — выдача будет пустой,
-    а под ней форма: для сервиса подбора это заявка, а не тупик.
+    Чипс, под который в разделе нет ни одной позиции, не убирается и не
+    гасится — выглядит и работает как любой другой: мы подбираем технику
+    под запрос, а не торгуем со склада, и тусклая плашка читалась бы как
+    «этого нет», хотя это не так. Разница только в счётчике — у него его
+    просто нет. Кликнуть можно всегда — выдача будет пустой, а под ней
+    форма: для сервиса подбора это заявка, а не тупик.
 
     `tonnage=False` (навесное оборудование) убирает ряды грузоподъёмности
     машины и высоты подъёма целиком — это не тоннажный товар, и пустой ряд
-    с одними погашенными чипсами выглядел бы хуже, чем его отсутствие.
+    выглядел бы хуже, чем его отсутствие.
     """
     def chip(group, attr, value, label, count):
-        empty = "" if count else " is-empty"
         note = '<span class="chip-count">{}</span>'.format(count) if count else ""
         return (
-            '<label class="chip{empty}"><input type="checkbox" data-filter-group="{group}" '
+            '<label class="chip"><input type="checkbox" data-filter-group="{group}" '
             'data-attr="{attr}" value="{value}">{label}{note}</label>'
-        ).format(empty=empty, group=e(group), attr=e(attr), value=e(str(value)),
+        ).format(group=e(group), attr=e(attr), value=e(str(value)),
                  label=e(label), note=note)
 
     def row(title, chips):
