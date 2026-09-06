@@ -516,8 +516,11 @@ form.lead .btn{width:100%; margin-top:6px; padding:16px;}
 footer{padding:72px 0 28px;}
 .foot-grid{display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:40px; margin-bottom:56px;}
 .foot-col h2, .foot-geo h2{font-size:12px; letter-spacing:0.1em; color:var(--text-faint); margin-bottom:18px; text-transform:uppercase; font-family:'Oswald',sans-serif;}
-.foot-col ul li{margin-bottom:10px;}
-.foot-col ul li a{font-size:14px; color:var(--text-dim);}
+/* font-size/color на самом <li>, а не только на вложенном <a>: адрес в
+   колонке «Контакты» — это простой текст без ссылки, и без этого он
+   наследовал крупный шрифт секции вместо мелкого текста колонки. */
+.foot-col ul li{margin-bottom:10px; font-size:14px; color:var(--text-dim);}
+.foot-col ul li a{color:var(--text-dim);}
 .foot-col ul li a:hover{color:var(--orange);}
 .foot-about p{color:var(--text-dim); font-size:14px; max-width:320px; margin:16px 0 20px;}
 .foot-bottom{display:flex; justify-content:space-between; align-items:center; padding-top:28px; border-top:1px solid var(--panel-line); flex-wrap:wrap; gap:12px;}
