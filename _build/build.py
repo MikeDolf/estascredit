@@ -432,6 +432,14 @@ def render_photo(product, eager=False):
              loading="eager" if eager else "lazy")
 
 
+def image_entry(name, alt, height_800):
+    """Запись для og:image, JSON-LD и картиночного sitemap: путь к версии
+    1600px, альт-текст и реальные размеры этой версии — ширина всегда
+    1600, высота вдвое больше той, что хранится для версии 800px."""
+    return {"path": "assets/img/{}-1600.webp".format(name), "alt": alt or "",
+            "width": 1600, "height": height_800 * 2}
+
+
 def render_product(product, specs, cat_slug):
     """Карточка позиции в справочнике подбора.
 
@@ -795,10 +803,16 @@ def render_contacts():
 # Разметка schema.org
 # --------------------------------------------------------------------------
 
-def build_jsonld(page, canonical, trail):
+def build_jsonld(page, canonical, trail, images, domain):
     """Граф разметки: Organization + WebSite на всех страницах, плюс тип
-    самой страницы, хлебные крошки и FAQ, если они есть."""
-    domain = SITE["domain"]
+    самой страницы, хлебные крошки и FAQ, если они есть.
+
+    `images` — реальные фото этой страницы (обложка статьи, фото категории
+    и её позиций), а не брендовая заглушка соцсетей: свойство `image`
+    в разметке добавляем, только если у страницы действительно есть своя
+    картинка — иначе это ничего не даёт для поиска по картинкам и просто
+    приписывает шаблонной странице (юр. документы, «О сервисе») чужое фото.
+    """
 
     # ProfessionalService, а не Organization с товарами: мы оказываем услугу
     # подбора, техникой не торгуем. areaServed заменяет адрес — площадки нет.
@@ -852,6 +866,12 @@ def build_jsonld(page, canonical, trail):
         "isPartOf": {"@id": domain + "/#website"},
         "inLanguage": "ru-RU",
     }
+    if images:
+        page_node["image"] = [
+            {"@type": "ImageObject", "url": "{}/{}".format(domain, img["path"]),
+             "width": img["width"], "height": img["height"]}
+            for img in images
+        ]
 
     graph = [page_node, website, organization]
 
@@ -954,6 +974,18 @@ def render_page(page):
     if page.get("noindex"):
         robots = '<meta name="robots" content="noindex, follow">\n'
 
+    # og:image/twitter:image берут первую картинку страницы (обложка статьи,
+    # фото категории и т.д.) — если своей нет, показываем брендовую
+    # заглушку, а не оставляем соцсети без превью вовсе.
+    images = page.get("images") or []
+    if images:
+        primary_image = images[0]
+    else:
+        primary_image = {"path": "assets/og/cover.jpg",
+                          "alt": "{} — подбор вилочных погрузчиков".format(SITE["name"]),
+                          "width": 1200, "height": 630}
+    og_image = "{}/{}".format(SITE["domain"], primary_image["path"])
+
     metrika = ""
     if SITE["metrika_id"]:
         metrika = (
@@ -986,7 +1018,11 @@ def render_page(page):
         "lead_access_key": e(SITE.get("lead_access_key", "")),
         "robots": robots,
         "verification": verification,
-        "jsonld": build_jsonld(page, canonical, trail),
+        "og_image": e(og_image),
+        "og_image_width": str(primary_image["width"]),
+        "og_image_height": str(primary_image["height"]),
+        "og_image_alt": e(primary_image["alt"]),
+        "jsonld": build_jsonld(page, canonical, trail, images, SITE["domain"]),
         "metrika": metrika,
         "root": root,
         "ver": VER,
@@ -1129,6 +1165,7 @@ def page_home():
         "schema_type": "WebPage",
         "service": "Подбор вилочных погрузчиков",
         "trail": [("Главная", None)],
+        "images": [image_entry(c["photo"], c["photo_alt"], c["photo_height"]) for c in CATEGORIES],
         "body": body,
     }
 
@@ -1141,6 +1178,16 @@ def page_category(category):
         products.append(p)
 
     intro = '<p class="page-intro">{}</p>'.format(e(category["intro"])) if category["intro"] else ""
+
+    # Обложка категории + фото каждой позиции — по одной записи на уникальный
+    # снимок (один и тот же стоковый кадр может стоять у нескольких позиций,
+    # см. комментарий в data/catalog.py, дублировать его в sitemap незачем).
+    images = [image_entry(category["photo"], category["photo_alt"], category["photo_height"])]
+    seen_photos = {category["photo"]}
+    for p in products:
+        if p.get("photo") and p["photo"] not in seen_photos:
+            seen_photos.add(p["photo"])
+            images.append(image_entry(p["photo"], p.get("photo_alt", p["name"]), p.get("photo_height", 600)))
 
     body = (
         '  <section style="padding-top:40px; padding-bottom:0;">\n'
@@ -1176,6 +1223,7 @@ def page_category(category):
         "schema_type": "CollectionPage",
         "service": "Подбор: {}".format(category["name"].lower()),
         "trail": [("Главная", "index.html"), ("Каталог", "index.html#catalog"), (category["name"], None)],
+        "images": images,
         "body": body,
     }
 
@@ -1389,6 +1437,8 @@ def page_article(article):
         "description": article["description"],
         "schema_type": "Article",
         "trail": [("Главная", "index.html"), ("Статьи", "articles/index.html"), (article["h1"], None)],
+        "images": [image_entry(article["cover"], article.get("cover_alt", article["h1"]),
+                                article.get("cover_height", 450))] if article.get("cover") else [],
         "article": {
             "headline": article["h1"],
             "published": article["published"],
@@ -1457,12 +1507,18 @@ def page_articles():
         intro=intro, grid=grid,
     )
 
+    images = [
+        image_entry(a["cover"], a.get("cover_alt", a["h1"]), a.get("cover_height", 450))
+        for a in ARTICLES if a.get("cover")
+    ]
+
     return {
         "slug": "articles",
         "title": "Статьи о вилочных погрузчиках — выбор и эксплуатация",
         "description": "Материалы о выборе и эксплуатации вилочных погрузчиков: типы двигателей, грузоподъёмность, высота подъёма, обслуживание и типичные ошибки покупателей.",
         "schema_type": "CollectionPage",
         "trail": [("Главная", "index.html"), ("Статьи", None)],
+        "images": images,
         "body": body,
     }
 
@@ -1488,17 +1544,28 @@ def main():
 
     written = [render_page(p) for p in pages]
 
-    # sitemap — только индексируемые страницы
+    # sitemap — только индексируемые страницы. Расширение image: — это то,
+    # что Яндекс.Вебмастер и Google явно используют для поиска по картинкам:
+    # без него страница индексируется как текст, а её фото — только если
+    # робот сам наткнётся на них при обходе. Картинка-заглушка соцсетей
+    # (assets/og/cover.jpg) сюда не попадает — в sitemap кладём только
+    # то, что реально относится к содержимому страницы.
     urls = []
     for p in pages:
         if p.get("noindex"):
             continue
         slug = p["slug"]
-        urls.append("  <url><loc>{}/{}</loc><changefreq>weekly</changefreq></url>".format(
-            SITE["domain"], slug + "/" if slug else ""))
+        img_tags = "".join(
+            '\n    <image:image><image:loc>{}/{}</image:loc><image:title>{}</image:title></image:image>'.format(
+                SITE["domain"], img["path"], e(img["alt"]))
+            for img in p.get("images", []) if img.get("alt")
+        )
+        urls.append("  <url><loc>{}/{}</loc><changefreq>weekly</changefreq>{}\n  </url>".format(
+            SITE["domain"], slug + "/" if slug else "", img_tags))
     (ROOT / "sitemap.xml").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n'
-        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+        'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
         + "\n".join(urls) + "\n</urlset>\n",
         encoding="utf-8",
     )

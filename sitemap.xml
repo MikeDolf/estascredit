@@ -1,24 +1,89 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://estascredit.ru/</loc><changefreq>weekly</changefreq></url>
-  <url><loc>https://estascredit.ru/catalog/elektricheskie/</loc><changefreq>weekly</changefreq></url>
-  <url><loc>https://estascredit.ru/catalog/dizelnye/</loc><changefreq>weekly</changefreq></url>
-  <url><loc>https://estascredit.ru/catalog/gazoballonnye/</loc><changefreq>weekly</changefreq></url>
-  <url><loc>https://estascredit.ru/catalog/mini/</loc><changefreq>weekly</changefreq></url>
-  <url><loc>https://estascredit.ru/catalog/benzinovye/</loc><changefreq>weekly</changefreq></url>
-  <url><loc>https://estascredit.ru/catalog/vnedorozhnye/</loc><changefreq>weekly</changefreq></url>
-  <url><loc>https://estascredit.ru/catalog/navesnoe-oborudovanie/</loc><changefreq>weekly</changefreq></url>
-  <url><loc>https://estascredit.ru/o-servise/</loc><changefreq>weekly</changefreq></url>
-  <url><loc>https://estascredit.ru/kak-rabotaem/</loc><changefreq>weekly</changefreq></url>
-  <url><loc>https://estascredit.ru/garantiya-i-servis/</loc><changefreq>weekly</changefreq></url>
-  <url><loc>https://estascredit.ru/kontakty/</loc><changefreq>weekly</changefreq></url>
-  <url><loc>https://estascredit.ru/usloviya/</loc><changefreq>weekly</changefreq></url>
-  <url><loc>https://estascredit.ru/politika-konfidencialnosti/</loc><changefreq>weekly</changefreq></url>
-  <url><loc>https://estascredit.ru/articles/vilochnyy-pogruzchik/</loc><changefreq>weekly</changefreq></url>
-  <url><loc>https://estascredit.ru/articles/kak-vybrat-vilochnyy-pogruzchik/</loc><changefreq>weekly</changefreq></url>
-  <url><loc>https://estascredit.ru/articles/elektricheskiy-dizelnyy-ili-gazoballonnyy-vilochnyy-pogruzchik/</loc><changefreq>weekly</changefreq></url>
-  <url><loc>https://estascredit.ru/articles/elektricheskiy-vilochnyy-pogruzchik/</loc><changefreq>weekly</changefreq></url>
-  <url><loc>https://estascredit.ru/articles/dizelnyy-vilochnyy-pogruzchik/</loc><changefreq>weekly</changefreq></url>
-  <url><loc>https://estascredit.ru/articles/gazoballonnyy-i-benzinovyy-vilochnyy-pogruzchik/</loc><changefreq>weekly</changefreq></url>
-  <url><loc>https://estascredit.ru/articles/</loc><changefreq>weekly</changefreq></url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url><loc>https://estascredit.ru/</loc><changefreq>weekly</changefreq>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-trekhopornyy-1600.webp</image:loc><image:title>Электрический вилочный погрузчик с трёхопорной схемой</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-sinii-1600.webp</image:loc><image:title>Дизельный вилочный погрузчик с защитным навесом</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-krasnyy-1600.webp</image:loc><image:title>Газобаллонный вилочный погрузчик с мачтой</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-limonnyy-1600.webp</image:loc><image:title>Компактный вилочный погрузчик, вид сбоку</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-zheltyy-1600.webp</image:loc><image:title>Бензиновый вилочный погрузчик, вид три четверти</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-biryuzovyy-1600.webp</image:loc><image:title>Внедорожный вилочный погрузчик повышенной проходимости 4х4</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-oranzhevyy-1600.webp</image:loc><image:title>Вилочный погрузчик с навесным оборудованием</image:title></image:image>
+  </url>
+  <url><loc>https://estascredit.ru/catalog/elektricheskie/</loc><changefreq>weekly</changefreq>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-trekhopornyy-1600.webp</image:loc><image:title>Электрический вилочный погрузчик с трёхопорной схемой</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-krasnyy-1600.webp</image:loc><image:title>Электрический вилочный погрузчик, вид сбоку</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-zheltyy-1600.webp</image:loc><image:title>Жёлтый вилочный погрузчик с поднятой мачтой, вид три четверти</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-limonnyy-1600.webp</image:loc><image:title>Подержанный электрический вилочный погрузчик, вид сбоку</image:title></image:image>
+  </url>
+  <url><loc>https://estascredit.ru/catalog/dizelnye/</loc><changefreq>weekly</changefreq>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-sinii-1600.webp</image:loc><image:title>Дизельный вилочный погрузчик с защитным навесом</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-zheltyy-1600.webp</image:loc><image:title>Дизельный вилочный погрузчик, вид три четверти</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-krasnyy-1600.webp</image:loc><image:title>Красный вилочный погрузчик с мачтой, вид сбоку</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-oranzhevyy-1600.webp</image:loc><image:title>Подержанный дизельный вилочный погрузчик, вид три четверти</image:title></image:image>
+  </url>
+  <url><loc>https://estascredit.ru/catalog/gazoballonnye/</loc><changefreq>weekly</changefreq>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-krasnyy-1600.webp</image:loc><image:title>Газобаллонный вилочный погрузчик с мачтой</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-zheltyy-1600.webp</image:loc><image:title>Жёлтый вилочный погрузчик, вид три четверти</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-trekhopornyy-1600.webp</image:loc><image:title>Компактный газобаллонный вилочный погрузчик, вид сбоку</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-limonnyy-1600.webp</image:loc><image:title>Подержанный газобаллонный вилочный погрузчик, вид три четверти</image:title></image:image>
+  </url>
+  <url><loc>https://estascredit.ru/catalog/mini/</loc><changefreq>weekly</changefreq>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-limonnyy-1600.webp</image:loc><image:title>Компактный вилочный погрузчик, вид сбоку</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-krasnyy-1600.webp</image:loc><image:title>Компактный вилочный погрузчик, вид сбоку</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-trekhopornyy-1600.webp</image:loc><image:title>Подержанный компактный вилочный погрузчик, вид сбоку</image:title></image:image>
+  </url>
+  <url><loc>https://estascredit.ru/catalog/benzinovye/</loc><changefreq>weekly</changefreq>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-zheltyy-1600.webp</image:loc><image:title>Бензиновый вилочный погрузчик, вид три четверти</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-sinii-1600.webp</image:loc><image:title>Бензиновый вилочный погрузчик, вид три четверти</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-krasnyy-1600.webp</image:loc><image:title>Подержанный бензиновый вилочный погрузчик, вид сбоку</image:title></image:image>
+  </url>
+  <url><loc>https://estascredit.ru/catalog/vnedorozhnye/</loc><changefreq>weekly</changefreq>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-biryuzovyy-1600.webp</image:loc><image:title>Внедорожный вилочный погрузчик повышенной проходимости 4х4</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-sinii-1600.webp</image:loc><image:title>Синий внедорожный вилочный погрузчик, вид три четверти</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-krasnyy-1600.webp</image:loc><image:title>Подержанный внедорожный вилочный погрузчик, вид сбоку</image:title></image:image>
+  </url>
+  <url><loc>https://estascredit.ru/catalog/navesnoe-oborudovanie/</loc><changefreq>weekly</changefreq>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-oranzhevyy-1600.webp</image:loc><image:title>Вилочный погрузчик с навесным оборудованием</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-trekhopornyy-1600.webp</image:loc><image:title>Каретка бокового смещения на вилочном погрузчике</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-zheltyy-1600.webp</image:loc><image:title>Ковш на вилочном погрузчике</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/vilochnyy-pogruzchik-sinii-1600.webp</image:loc><image:title>Удлинители вил на вилочном погрузчике</image:title></image:image>
+  </url>
+  <url><loc>https://estascredit.ru/o-servise/</loc><changefreq>weekly</changefreq>
+  </url>
+  <url><loc>https://estascredit.ru/kak-rabotaem/</loc><changefreq>weekly</changefreq>
+  </url>
+  <url><loc>https://estascredit.ru/garantiya-i-servis/</loc><changefreq>weekly</changefreq>
+  </url>
+  <url><loc>https://estascredit.ru/kontakty/</loc><changefreq>weekly</changefreq>
+  </url>
+  <url><loc>https://estascredit.ru/usloviya/</loc><changefreq>weekly</changefreq>
+  </url>
+  <url><loc>https://estascredit.ru/politika-konfidencialnosti/</loc><changefreq>weekly</changefreq>
+  </url>
+  <url><loc>https://estascredit.ru/articles/vilochnyy-pogruzchik/</loc><changefreq>weekly</changefreq>
+    <image:image><image:loc>https://estascredit.ru/assets/img/cover-vilochnyy-pogruzchik-1600.webp</image:loc><image:title>Вилочные погрузчики в проходе между стеллажами склада</image:title></image:image>
+  </url>
+  <url><loc>https://estascredit.ru/articles/kak-vybrat-vilochnyy-pogruzchik/</loc><changefreq>weekly</changefreq>
+    <image:image><image:loc>https://estascredit.ru/assets/img/cover-kak-vybrat-vilochnyy-pogruzchik-1600.webp</image:loc><image:title>Погрузка вилочным погрузчиком в грузовик на складе</image:title></image:image>
+  </url>
+  <url><loc>https://estascredit.ru/articles/elektricheskiy-dizelnyy-ili-gazoballonnyy-vilochnyy-pogruzchik/</loc><changefreq>weekly</changefreq>
+    <image:image><image:loc>https://estascredit.ru/assets/img/cover-elektricheskiy-dizelnyy-ili-gazoballonnyy-vilochnyy-pogruzchik-1600.webp</image:loc><image:title>Электрический и газобаллонный вилочные погрузчики на складе</image:title></image:image>
+  </url>
+  <url><loc>https://estascredit.ru/articles/elektricheskiy-vilochnyy-pogruzchik/</loc><changefreq>weekly</changefreq>
+    <image:image><image:loc>https://estascredit.ru/assets/img/cover-elektricheskiy-vilochnyy-pogruzchik-1600.webp</image:loc><image:title>Электрический вилочный погрузчик заряжается на разгрузочной площадке склада</image:title></image:image>
+  </url>
+  <url><loc>https://estascredit.ru/articles/dizelnyy-vilochnyy-pogruzchik/</loc><changefreq>weekly</changefreq>
+    <image:image><image:loc>https://estascredit.ru/assets/img/cover-dizelnyy-vilochnyy-pogruzchik-1600.webp</image:loc><image:title>Дизельный вилочный погрузчик перевозит паллеты на складе</image:title></image:image>
+  </url>
+  <url><loc>https://estascredit.ru/articles/gazoballonnyy-i-benzinovyy-vilochnyy-pogruzchik/</loc><changefreq>weekly</changefreq>
+    <image:image><image:loc>https://estascredit.ru/assets/img/cover-gazoballonnyy-i-benzinovyy-vilochnyy-pogruzchik-1600.webp</image:loc><image:title>Газобаллонный и бензиновый вилочные погрузчики на складе</image:title></image:image>
+  </url>
+  <url><loc>https://estascredit.ru/articles/</loc><changefreq>weekly</changefreq>
+    <image:image><image:loc>https://estascredit.ru/assets/img/cover-vilochnyy-pogruzchik-1600.webp</image:loc><image:title>Вилочные погрузчики в проходе между стеллажами склада</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/cover-kak-vybrat-vilochnyy-pogruzchik-1600.webp</image:loc><image:title>Погрузка вилочным погрузчиком в грузовик на складе</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/cover-elektricheskiy-dizelnyy-ili-gazoballonnyy-vilochnyy-pogruzchik-1600.webp</image:loc><image:title>Электрический и газобаллонный вилочные погрузчики на складе</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/cover-elektricheskiy-vilochnyy-pogruzchik-1600.webp</image:loc><image:title>Электрический вилочный погрузчик заряжается на разгрузочной площадке склада</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/cover-dizelnyy-vilochnyy-pogruzchik-1600.webp</image:loc><image:title>Дизельный вилочный погрузчик перевозит паллеты на складе</image:title></image:image>
+    <image:image><image:loc>https://estascredit.ru/assets/img/cover-gazoballonnyy-i-benzinovyy-vilochnyy-pogruzchik-1600.webp</image:loc><image:title>Газобаллонный и бензиновый вилочные погрузчики на складе</image:title></image:image>
+  </url>
 </urlset>
