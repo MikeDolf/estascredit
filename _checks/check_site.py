@@ -166,6 +166,21 @@ def main() -> int:
         print("Не найдено ни одной HTML-страницы")
         return 1
 
+    # Страницы-редиректы со старых адресов: это не страницы, а указатели.
+    # Проверяем только одно — что новый адрес действительно существует.
+    redirect_errors = []
+    real_files = []
+    for f in files:
+        src = f.read_text(encoding="utf-8")
+        m = re.search(r'http-equiv="refresh" content="0; url=https://[^/]+/([^"]*)"', src)
+        if not m:
+            real_files.append(f)
+            continue
+        target = ROOT / m.group(1) / "index.html"
+        if not target.exists() or 'http-equiv="refresh"' in target.read_text(encoding="utf-8"):
+            redirect_errors.append(f"{f.relative_to(ROOT)}: редирект ведёт в никуда ({m.group(1)})")
+    files = real_files
+
     pages: dict[Path, Page] = {}
     raw: dict[Path, str] = {}
     for f in files:
@@ -175,7 +190,7 @@ def main() -> int:
         p.feed(src)
         pages[f] = p
 
-    problems: list[str] = []
+    problems: list[str] = list(redirect_errors)
     titles, descriptions = defaultdict(list), defaultdict(list)
     anchor_targets: dict[str, set[str]] = defaultdict(set)
 

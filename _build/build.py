@@ -1114,11 +1114,11 @@ def page_home():
             '  <section id="articles" style="padding-top:0;">\n'
             '    <div class="wrap">\n'
             '      <div class="section-head"><div><h2>Полезные статьи</h2></div>\n'
-            '        <p><a href="@ROOT@articles/index.html" class="inline-link">Все статьи →</a></p></div>\n'
+            '        <p><a href="@ROOT@{section}/" class="inline-link">Все статьи →</a></p></div>\n'
             '      <div class="articles-grid">\n{grid}      </div>\n'
             '    </div>\n'
             '  </section>\n\n'
-        ).format(grid=render_article_cards())
+        ).format(grid=render_article_cards(), section=SECTION)
 
     body = (
         '  <section id="catalog" style="padding-top:48px;">\n'
@@ -1342,7 +1342,47 @@ def format_date_ru(iso_date):
     return "{} {} {}".format(int(d), RU_MONTHS[int(m)], y)
 
 
-LIVE_ARTICLE_SLUGS = {a["slug"] for a in ARTICLES}
+# Статьи живут не в «блоговой» папке /articles/, а в тематическом разделе
+# /vilochnye-pogruzchiki/: хаб-статья — его корень, остальные — подразделы.
+# Ключ — исходный slug статьи (по нему ссылаются тексты и ветка с
+# черновиками), значение — путь внутри раздела. Старые адреса /articles/…
+# не пропадают: на них собираются страницы-редиректы (см. write_redirects).
+SECTION = "vilochnye-pogruzchiki"
+SECTION_PATHS = {
+    "vilochnyy-pogruzchik": "",
+    "kak-vybrat-vilochnyy-pogruzchik": "kak-vybrat",
+    "elektricheskiy-dizelnyy-ili-gazoballonnyy-vilochnyy-pogruzchik": "elektricheskiy-dizelnyy-ili-gazoballonnyy",
+    "elektricheskiy-vilochnyy-pogruzchik": "elektricheskiy",
+    "dizelnyy-vilochnyy-pogruzchik": "dizelnyy",
+    "gazoballonnyy-i-benzinovyy-vilochnyy-pogruzchik": "gazoballonnyy-i-benzinovyy",
+    "polnoprivodnyy-vilochnyy-pogruzchik": "polnoprivodnyy",
+    "bokovoy-vilochnyy-pogruzchik": "bokovoy",
+    "vnedorozhnyy-vilochnyy-pogruzchik-povyshennoy-prohodimosti": "vnedorozhnyy",
+    "ustroystvo-vilochnogo-pogruzchika-i-princip-upravleniya": "ustroystvo-i-upravlenie",
+    "bezopasnost-pri-rabote-na-vilochnom-pogruzchike": "bezopasnost",
+    "machta-vysota-podema-i-gabarity-vilochnogo-pogruzchika": "machta-i-gabarity",
+    "vilochnyy-pogruzchik-i-avtopogruzchik": "avtopogruzchik",
+    "vilochnyy-pogruzchik-1-t": "1-tonna",
+    "vilochnyy-pogruzchik-2-t": "2-tonny",
+    "vilochnyy-pogruzchik-3-t": "3-tonny",
+    "vilochnyy-pogruzchik-5-t": "5-tonn",
+    "vilochnyy-pogruzchik-6-t": "6-tonn",
+    "vilochnyy-pogruzchik-7-t": "7-tonn",
+    "vilochnyy-pogruzchik-8-t": "8-tonn",
+    "vilochnyy-pogruzchik-10-t": "10-tonn",
+}
+HUB_SLUG = "vilochnyy-pogruzchik"
+
+
+def article_path(slug):
+    """Путь страницы статьи от корня сайта, без ведущего и конечного «/».
+    Статья без записи в SECTION_PATHS — ошибка: молча отдать её по
+    старому адресу значит снова завести второй раздел статей."""
+    sub = SECTION_PATHS[slug]
+    return SECTION + ("/" + sub if sub else "")
+
+
+LIVE_ARTICLE_PATHS = {a["slug"]: article_path(a["slug"]) for a in ARTICLES}
 
 
 def render_article_faq(faq):
@@ -1390,7 +1430,21 @@ def render_article_cover(article):
 
 
 def page_article(article):
-    body_html = md_to_html(article["body_md"], LIVE_ARTICLE_SLUGS, root="@ROOT@")
+    """Страница статьи в разделе /vilochnye-pogruzchiki/. Хаб-статья — сам
+    раздел: под её текстом сетка всех остальных материалов раздела, поэтому
+    отдельная страница-список статей больше не нужна."""
+    body_html = md_to_html(article["body_md"], LIVE_ARTICLE_PATHS, root="@ROOT@")
+    is_hub = article["slug"] == HUB_SLUG
+    if is_hub:
+        trail = [("Главная", "index.html"), (article["h1"], None)]
+    else:
+        trail = [("Главная", "index.html"), ("Вилочные погрузчики", SECTION + "/"), (article["h1"], None)]
+    section_grid = ""
+    if is_hub:
+        section_grid = (
+            '      <div class="section-head" style="margin-top:56px;"><div><h2>Все материалы раздела</h2></div></div>\n'
+            '      <div class="articles-grid">\n{}      </div>\n'
+        ).format(render_article_cards(exclude=HUB_SLUG))
     faq_html = render_article_faq(article["faq"])
     sources_html = render_article_sources(article["sources"])
 
@@ -1412,14 +1466,16 @@ def page_article(article):
         '        <p>Опишите задачу — подберём модель под неё.</p>\n'
         '        {contact}\n'
         '      </div>\n'
-        '      <div class="article-nav"><a href="@ROOT@articles/index.html">← Все статьи</a></div>\n'
+        '{nav}'
+        '{section_grid}'
         '    </div>\n'
         '  </section>\n'
         '{form}'
     ).format(
-        crumbs=render_breadcrumbs("@ROOT@", [
-            ("Главная", "index.html"), ("Статьи", "articles/index.html"), (article["h1"], None),
-        ]),
+        crumbs=render_breadcrumbs("@ROOT@", trail),
+        nav="" if is_hub else
+            '      <div class="article-nav"><a href="@ROOT@{}/">← Все статьи раздела</a></div>\n'.format(SECTION),
+        section_grid=section_grid,
         cover=render_article_cover(article),
         h1=e(article["h1"]),
         author=e(article["author_name"]),
@@ -1432,13 +1488,14 @@ def page_article(article):
     )
 
     return {
-        "slug": "articles/" + article["slug"],
+        "slug": article_path(article["slug"]),
         "title": article["title"],
         "description": article["description"],
         "schema_type": "Article",
-        "trail": [("Главная", "index.html"), ("Статьи", "articles/index.html"), (article["h1"], None)],
-        "images": [image_entry(article["cover"], article.get("cover_alt", article["h1"]),
-                                article.get("cover_height", 450))] if article.get("cover") else [],
+        "trail": trail,
+        "images": ([image_entry(article["cover"], article.get("cover_alt", article["h1"]),
+                                 article.get("cover_height", 450))] if article.get("cover") else [])
+                  + (section_images(exclude=HUB_SLUG) if is_hub else []),
         "article": {
             "headline": article["h1"],
             "published": article["published"],
@@ -1469,14 +1526,14 @@ def render_article_thumb(article):
     ).format(name=e(name), h=article.get("cover_height", 450), alt=e(article.get("cover_alt", "")))
 
 
-def render_article_cards():
+def render_article_cards(exclude=None):
     if not ARTICLES:
         return ""
-    ordered = sorted(ARTICLES, key=lambda a: a["order"])
+    ordered = sorted((a for a in ARTICLES if a["slug"] != exclude), key=lambda a: a["order"])
     cards = []
     for a in ordered:
         cards.append((
-            '        <a class="article-card" href="@ROOT@articles/{slug}/">\n'
+            '        <a class="article-card" href="@ROOT@{path}/">\n'
             '          {thumb}\n'
             '          <div class="body">\n'
             '            <span class="date">{date}</span>\n'
@@ -1484,48 +1541,57 @@ def render_article_cards():
             '            <span class="readmore">Читать →</span>\n'
             '          </div>\n'
             '        </a>\n'
-        ).format(slug=e(a["slug"]), thumb=render_article_thumb(a), date=format_date_ru(a["published"]),
+        ).format(path=e(article_path(a["slug"])), thumb=render_article_thumb(a), date=format_date_ru(a["published"]),
                  h1=e(a["h1"])))
     return "".join(cards)
 
 
-def page_articles():
-    grid = render_article_cards()
-    intro = ("Разборы по выбору и эксплуатации техники." if ARTICLES
-             else "Разборы по выбору и эксплуатации техники. Раздел наполняется.")
-    body = (
-        '  <section style="padding-top:40px;">\n'
-        '    <div class="wrap">\n'
-        '      {crumbs}\n'
-        '      <h1 class="page-h1">Статьи о вилочных погрузчиках</h1>\n'
-        '      <p class="page-intro">{intro}</p>\n'
-        '      <div class="articles-grid">\n{grid}      </div>\n'
-        '    </div>\n'
-        '  </section>'
-    ).format(
-        crumbs=render_breadcrumbs("@ROOT@", [("Главная", "index.html"), ("Статьи", None)]),
-        intro=intro, grid=grid,
-    )
-
-    images = [
+def section_images(exclude=None):
+    """Обложки статей раздела — для og:image и картиночного sitemap хаба."""
+    return [
         image_entry(a["cover"], a.get("cover_alt", a["h1"]), a.get("cover_height", 450))
-        for a in ARTICLES if a.get("cover")
+        for a in sorted(ARTICLES, key=lambda a: a["order"])
+        if a.get("cover") and a["slug"] != exclude
     ]
-
-    return {
-        "slug": "articles",
-        "title": "Статьи о вилочных погрузчиках — выбор и эксплуатация",
-        "description": "Материалы о выборе и эксплуатации вилочных погрузчиков: типы двигателей, грузоподъёмность, высота подъёма, обслуживание и типичные ошибки покупателей.",
-        "schema_type": "CollectionPage",
-        "trail": [("Главная", "index.html"), ("Статьи", None)],
-        "images": images,
-        "body": body,
-    }
 
 
 # --------------------------------------------------------------------------
 # Точка входа
 # --------------------------------------------------------------------------
+
+REDIRECT_TPL = """<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Страница переехала</title>
+<link rel="canonical" href="{url}">
+<meta http-equiv="refresh" content="0; url={url}">
+<script>location.replace({url_js});</script>
+</head>
+<body>
+<p>Страница переехала: <a href="{url}">{url}</a></p>
+</body>
+</html>
+"""
+
+
+def write_redirects():
+    """Старые адреса /articles/… -> новые адреса в разделе.
+
+    GitHub Pages не умеет серверный 301, поэтому на старом URL лежит
+    страница с мгновенным meta refresh и canonical на новый адрес. И Яндекс,
+    и Google трактуют refresh с нулевой задержкой как постоянный редирект:
+    вес ссылок, которые уже успели прийти на старые адреса, переходит на
+    новые. В sitemap эти страницы не попадают — это не страницы сайта."""
+    moves = {"articles": SECTION}
+    moves.update({"articles/" + slug: path for slug, path in LIVE_ARTICLE_PATHS.items()})
+    for old, new in moves.items():
+        url = "{}/{}/".format(SITE["domain"], new)
+        dest = ROOT / old / "index.html"
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(REDIRECT_TPL.format(url=e(url), url_js=json.dumps(url)), encoding="utf-8")
+    return len(moves)
+
 
 def main():
     force_all = "--all" in sys.argv
@@ -1536,13 +1602,13 @@ def main():
     pages += [page_text(p) for p in LEGAL_PAGES]
     pages += [page_city(c) for c in cities_data.CITIES]
     pages += [page_article(a) for a in ARTICLES]
-    pages.append(page_articles())
 
     if force_all:
         for p in pages:
             p["noindex"] = False
 
     written = [render_page(p) for p in pages]
+    redirects = write_redirects()
 
     # sitemap — только индексируемые страницы. Расширение image: — это то,
     # что Яндекс.Вебмастер и Google явно используют для поиска по картинкам:
@@ -1577,6 +1643,7 @@ def main():
 
     print("Собрано страниц: {}".format(len(written)))
     print("В sitemap: {}".format(len(urls)))
+    print("Редиректов со старых адресов: {}".format(redirects))
 
     # Мы оказываем услугу подбора, а не торгуем. Формулировки продавца на
     # сайте — это и введение покупателя в заблуждение, и готовое основание

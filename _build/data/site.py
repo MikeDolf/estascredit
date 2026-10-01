@@ -76,7 +76,7 @@ FORBIDDEN_WORDING = [
 
 NAV = [
     ("Каталог", "index.html#catalog"),
-    ("Статьи", "articles/index.html"),
+    ("Статьи", "vilochnye-pogruzchiki/"),
     ("Как это работает", "kak-rabotaem/"),
     ("Гарантия и сервис", "garantiya-i-servis/"),
     ("О сервисе", "o-servise/"),
@@ -87,7 +87,7 @@ FOOTER_COMPANY = [
     ("О сервисе", "o-servise/"),
     ("Как это работает", "kak-rabotaem/"),
     ("Гарантия и сервис", "garantiya-i-servis/"),
-    ("Статьи", "articles/index.html"),
+    ("Статьи", "vilochnye-pogruzchiki/"),
 ]
 
 FOOTER_LEGAL = [

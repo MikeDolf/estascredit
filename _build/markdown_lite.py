@@ -26,9 +26,12 @@ def inline(text, live_articles, root):
         label_html = re.sub(r'\*\*(.+?)\*\*', lambda b: '<strong>' + b.group(1) + '</strong>', label)
         if url.startswith('#'):
             return '<a href="{}">{}</a>'.format(url, label_html)
+        # В текстах ссылки пишутся по исходному slug (/articles/<slug>/) —
+        # так их пишет ветка с черновиками. Реальный адрес статьи берётся
+        # из live_articles (slug -> путь от корня сайта).
         m2 = re.match(r'^/articles/([a-z0-9\-]+)/$', url)
         if m2 and m2.group(1) in live_articles:
-            return '<a href="{}articles/{}/">{}</a>'.format(root, m2.group(1), label_html)
+            return '<a href="{}{}/">{}</a>'.format(root, live_articles[m2.group(1)], label_html)
         # Статья ещё не опубликована — ссылку не даём (битая ссылка хуже,
         # чем упоминание без гиперссылки), но текст анкора сохраняем.
         return label_html
